@@ -5,18 +5,26 @@ class EndpointList(QtGui.QListWidget):
     def __init__(self):
         super(EndpointList, self).__init__()
 
-    def add_endpoint_error(self, error):
+    def add_endpoint_error(self, e, error):
         item = QtGui.QListWidgetItem(error)
+        item.endpoint = e
         item.setForeground(QtGui.QBrush(QtGui.QColor(200, 0, 0)))
+        self.addItem(item)
+
+    def add_endpoint(self, e):
+        item = QtGui.QListWidgetItem('Configured')
+        item.endpoint = e
         self.addItem(item)
 
     def refresh(self, endpoints):
         self.clear()
 
         for e in endpoints:
-            if not re.match(r'^[a-fA-F\d]{40}$', e.fingerprint):
-                self.add_endpoint_error('Not configured')
+            if not re.match(r'^[a-f\d]{40}$', e.fingerprint.strip().replace(' ','').lower()):
+                self.add_endpoint_error(e, 'Not configured')
                 continue
+
+            self.add_endpoint(e)
 
 class EndpointSelection(QtGui.QVBoxLayout):
     add_endpoint_signal = QtCore.pyqtSignal()

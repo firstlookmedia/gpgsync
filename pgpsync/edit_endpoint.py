@@ -8,6 +8,7 @@ class EditEndpoint(QtGui.QVBoxLayout):
 
     def __init__(self):
         super(EditEndpoint, self).__init__()
+        self.endpoint = None
 
         # Signing key fingerprint
         fingerprint_label = QtGui.QLabel("Signing key fingerprint")
@@ -27,15 +28,15 @@ class EditEndpoint(QtGui.QVBoxLayout):
         self.use_proxy.setCheckState(QtCore.Qt.Unchecked)
 
         proxy_host_label = QtGui.QLabel('Host')
-        self.proxy_host_text = QtGui.QLineEdit()
+        self.proxy_host_edit = QtGui.QLineEdit()
         proxy_port_label = QtGui.QLabel('Port')
-        self.proxy_port_text = QtGui.QLineEdit()
+        self.proxy_port_edit = QtGui.QLineEdit()
 
         proxy_hlayout = QtGui.QHBoxLayout()
         proxy_hlayout.addWidget(proxy_host_label)
-        proxy_hlayout.addWidget(self.proxy_host_text)
+        proxy_hlayout.addWidget(self.proxy_host_edit)
         proxy_hlayout.addWidget(proxy_port_label)
-        proxy_hlayout.addWidget(self.proxy_port_text)
+        proxy_hlayout.addWidget(self.proxy_port_edit)
 
         proxy_vlayout = QtGui.QVBoxLayout()
         proxy_vlayout.addWidget(self.use_proxy)
@@ -70,6 +71,8 @@ class EditEndpoint(QtGui.QVBoxLayout):
         self.addStretch(1)
 
     def set_endpoint(self, endpoint):
+        self.endpoint = endpoint
+
         self.fingerprint_edit.setText(endpoint.fingerprint)
         self.url_edit.setText(endpoint.url)
         self.keyserver_edit.setText(endpoint.keyserver)
@@ -79,9 +82,9 @@ class EditEndpoint(QtGui.QVBoxLayout):
         else:
             self.use_proxy.setCheckState(QtCore.Qt.Unchecked)
 
-        self.proxy_host_text.setText(endpoint.proxy_host)
+        self.proxy_host_edit.setText(endpoint.proxy_host)
         proxy_port_label = QtGui.QLabel('Port')
-        self.proxy_port_text.setText(endpoint.proxy_port)
+        self.proxy_port_edit.setText(endpoint.proxy_port)
 
     def save(self):
         self.save_signal.emit()
