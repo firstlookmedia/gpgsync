@@ -17,11 +17,11 @@ class PGPSync(QtGui.QWidget):
         # todo: load these from file
 
         # Endpoint selection GUI
-        endpoint_selection = EndpointSelection()
+        self.endpoint_selection = EndpointSelection()
         endpoint_selection_wrapper = QtGui.QWidget()
-        endpoint_selection_wrapper.setLayout(endpoint_selection)
+        endpoint_selection_wrapper.setLayout(self.endpoint_selection)
 
-        endpoint_selection.add_endpoint_signal.connect(self.add_endpoint)
+        self.endpoint_selection.add_endpoint_signal.connect(self.add_endpoint)
 
         # Edit endpoint GUI
         edit_endpoint = EditEndpoint()
