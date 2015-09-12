@@ -10,6 +10,9 @@ class InvalidKeyserver(Exception):
 class NotFoundOnKeyserver(Exception):
     pass
 
+class NotFoundInKeyring(Exception):
+    pass
+
 class RevokedKey(Exception):
     pass
 
@@ -47,12 +50,15 @@ class GnuPG(object):
         if "No keyserver available" in err:
             raise InvalidKeyserver(keyserver)
 
-        if "not found on keyserver" in err:
+        if "not found on keyserver" in err or "keyserver receive failed: No data" in err:
             raise NotFoundOnKeyserver(fp)
 
     def test_key(self, fp):
         fp = common.clean_fp(fp)
         out,err = self._gpg(['--with-colons', '--list-keys', fp])
+
+        if "error reading key: No public key" in err:
+            raise NotFoundInKeyring(fp)
 
         for line in out:
             if line.startswith('pub:'):

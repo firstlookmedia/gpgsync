@@ -74,9 +74,14 @@ class EditEndpoint(QtGui.QVBoxLayout):
         self.addLayout(button_layout)
         self.addStretch(1)
 
+    def show_loading_animation(self):
+        self.loading_animation.show()
+
+    def hide_loading_animation(self):
+        self.loading_animation.hide()
+
     def set_endpoint(self, endpoint):
         self.endpoint = endpoint
-        self.loading_animation.hide()
 
         self.fingerprint_edit.setText(endpoint.fingerprint)
         self.url_edit.setText(endpoint.url)
@@ -92,7 +97,6 @@ class EditEndpoint(QtGui.QVBoxLayout):
         self.proxy_port_edit.setText(endpoint.proxy_port)
 
     def save(self):
-        self.loading_animation.show()
         self.save_signal.emit()
 
     def delete(self):

@@ -1,13 +1,19 @@
 import sys, platform
 from PyQt4 import QtCore, QtGui
 
-from gnupg import GnuPG, InvalidFingerprint, InvalidKeyserver, NotFoundOnKeyserver, RevokedKey, ExpiredKey
+from gnupg import GnuPG, InvalidFingerprint, InvalidKeyserver, NotFoundOnKeyserver, NotFoundInKeyring, RevokedKey, ExpiredKey
 from settings import Settings
 import common
 
 from endpoint_selection import EndpointSelection
 from edit_endpoint import EditEndpoint
 from endpoint import Endpoint
+
+class Application(QtGui.QApplication):
+    def __init__(self):
+        if platform.system() == 'Linux':
+            self.setAttribute(QtCore.Qt.AA_X11InitThreads, True)
+        QtGui.QApplication.__init__(self, sys.argv)
 
 class PGPSync(QtGui.QWidget):
     def __init__(self, app):
@@ -56,6 +62,26 @@ class PGPSync(QtGui.QWidget):
         self.setLayout(layout)
         self.show()
 
+    def edit_endpoint_alert_error(self, msg, icon=QtGui.QMessageBox.Warning):
+        self.edit_endpoint.hide_loading_animation()
+        common.alert(msg, icon)
+
+    def edit_endpoint_save(self, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port):
+        # Save the settings
+        self.settings.endpoints[self.current_endpoint].update(fingerprint=fingerprint,
+            url=url, keyserver=keyserver, use_proxy=use_proxy,
+            proxy_host=proxy_host, proxy_port=proxy_port)
+        self.settings.save()
+
+        # Unselect endpoint
+        self.endpoint_selection.endpoint_list.setCurrentItem(None)
+        self.edit_endpoint_wrapper.hide()
+        self.current_endpoint = None
+
+        # Refresh the display
+        self.edit_endpoint.hide_loading_animation()
+        self.endpoint_selection.refresh(self.settings.endpoints)
+
     def add_endpoint(self):
         e = Endpoint()
         print e.fingerprint
@@ -69,22 +95,19 @@ class PGPSync(QtGui.QWidget):
         self.endpoint_selection.endpoint_list.itemClicked.emit(item)
 
     def save_endpoint(self):
-        # Get values for endpoint
-        fingerprint = str(self.edit_endpoint.fingerprint_edit.text())
-        url         = str(self.edit_endpoint.url_edit.text())
-        keyserver   = str(self.edit_endpoint.keyserver_edit.text())
-        use_proxy   = self.edit_endpoint.use_proxy.checkState() == QtCore.Qt.Checked
-        proxy_host  = str(self.edit_endpoint.proxy_host_edit.text())
-        proxy_port  = str(self.edit_endpoint.proxy_port_edit.text())
+        class Verifier(QtCore.QThread):
+            alert_error = QtCore.pyqtSignal(str)
+            success = QtCore.pyqtSignal(str, str, str, bool, str, str)
 
-        class SigningKeyVerifier(QtCore.QThread):
-            success = QtCore.pyqtSignal()
-
-            def __init__(self, gpg, keyserver, fingerprint):
-                super(SigningKeyVerifier, self).__init__()
+            def __init__(self, gpg, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port):
+                super(Verifier, self).__init__()
                 self.gpg = gpg
+                self.fingerprint = fingerprint
+                self.url = url
                 self.keyserver = keyserver
-                self.fingerprint = common.clean_fp(fingerprint)
+                self.use_proxy = use_proxy
+                self.proxy_host = proxy_host
+                self.proxy_port = proxy_port
 
             def run(self):
                 # Test fingerprint and keyserver
@@ -92,11 +115,13 @@ class PGPSync(QtGui.QWidget):
                 try:
                     self.gpg.recv_key(self.keyserver, self.fingerprint)
                 except InvalidFingerprint:
-                    common.alert('Invalid signing key fingerprint.')
+                    self.alert_error.emit('Invalid signing key fingerprint.')
                 except InvalidKeyserver:
-                    common.alert('Invalid keyserver.')
+                    self.alert_error.emit('Invalid keyserver.')
                 except NotFoundOnKeyserver:
-                    common.alert('Signing key is not found on keyserver. Upload signing key and try again.')
+                    self.alert_error.emit('Signing key is not found on keyserver. Upload signing key and try again.')
+                except NotFoundInKeyring:
+                    self.alert_error.emit('Signing key is not found in keyring. Something went wrong.')
                 else:
                     recv_key_success = True
 
@@ -110,9 +135,9 @@ class PGPSync(QtGui.QWidget):
                 try:
                     self.gpg.test_key(self.fingerprint)
                 except RevokedKey:
-                    common.alert('The signing key is revoked.')
+                    self.alert_error.emit('The signing key is revoked.')
                 except ExpiredKey:
-                    common.alert('The signing key is expired.')
+                    self.alert_error.emit('The signing key is expired.')
                 else:
                     pubkey_success = True
 
@@ -121,27 +146,22 @@ class PGPSync(QtGui.QWidget):
                     return
 
                 # Signing key looks good
-                self.success.emit()
+                self.success.emit(fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
                 self.finished.emit()
 
-        def save():
-            # Save the settings
-            self.settings.endpoints[self.current_endpoint].update(fingerprint=fingerprint,
-                url=url, keyserver=keyserver, use_proxy=use_proxy,
-                proxy_host=proxy_host, proxy_port=proxy_port)
-            self.settings.save()
-
-            # Unselect endpoint
-            self.endpoint_selection.endpoint_list.setCurrentItem(None)
-            self.edit_endpoint_wrapper.hide()
-            self.current_endpoint = None
-
-            # Refresh the display
-            self.endpoint_selection.refresh(self.settings.endpoints)
+        # Get values for endpoint
+        fingerprint = common.clean_fp(str(self.edit_endpoint.fingerprint_edit.text()))
+        url         = str(self.edit_endpoint.url_edit.text())
+        keyserver   = str(self.edit_endpoint.keyserver_edit.text())
+        use_proxy   = self.edit_endpoint.use_proxy.checkState() == QtCore.Qt.Checked
+        proxy_host  = str(self.edit_endpoint.proxy_host_edit.text())
+        proxy_port  = str(self.edit_endpoint.proxy_port_edit.text())
 
         # Run the verifier inside a new thread
-        self.verifier = SigningKeyVerifier(self.gpg, keyserver, common.clean_fp(fingerprint))
-        self.verifier.success.connect(save)
+        self.edit_endpoint.show_loading_animation()
+        self.verifier = Verifier(self.gpg, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
+        self.verifier.alert_error.connect(self.edit_endpoint_alert_error)
+        self.verifier.success.connect(self.edit_endpoint_save)
         self.verifier.start()
 
     def delete_endpoint(self):
@@ -170,7 +190,7 @@ class PGPSync(QtGui.QWidget):
             self.edit_endpoint_wrapper.show()
 
 def main():
-    app = QtGui.QApplication(sys.argv)
+    app = Application()
     gui = PGPSync(app)
 
     sys.exit(app.exec_())
