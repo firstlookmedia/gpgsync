@@ -19,6 +19,9 @@ class RevokedKey(Exception):
 class ExpiredKey(Exception):
     pass
 
+class VerificationError(Exception):
+    pass
+
 class GnuPG(object):
     def __init__(self):
         self.system = platform.system()
@@ -75,6 +78,13 @@ class GnuPG(object):
             if line.startswith('uid:'):
                 chunks = line.split(':')
                 return chunks[9]
+
+    def verify(self, msg, fp):
+        fp = common.clean_fp(fp)
+        out,err = self._gpg(['--verify'], msg)
+
+        if 'no valid OpenPGP data found' in err or 'the signature could not be verified' in err:
+            raise VerificationError()
 
     def _gpg(self, args, input=None):
         p = subprocess.Popen([self.gpg_path, '--batch', '--no-tty'] + args,

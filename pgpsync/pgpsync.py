@@ -2,7 +2,7 @@ import sys, platform, Queue, urlparse
 import requests, requesocks
 from PyQt4 import QtCore, QtGui
 
-from gnupg import GnuPG, InvalidFingerprint, InvalidKeyserver, NotFoundOnKeyserver, NotFoundInKeyring, RevokedKey, ExpiredKey
+from gnupg import *
 from settings import Settings
 import common
 
@@ -234,7 +234,15 @@ class PGPSync(QtGui.QMainWindow):
                     if not success:
                         return self.finish_with_failure()
 
-                # TODO: After downloading URL, test that it's signed by signing key
+                # After downloading URL, test that it's signed by signing key
+                success = False
+                try:
+                    self.q.add_message('Verifying signature')
+                    self.gpg.verify(msg, self.fingerprint)
+                except VerificationError:
+                    self.alert_error.emit('Signature does not verify.')
+                else:
+                    success = True
 
                 # TODO: After verifying sig, test that it's a list of fingerprints
 
