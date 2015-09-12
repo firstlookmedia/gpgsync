@@ -1,6 +1,7 @@
 from PyQt4 import QtCore, QtGui
 
 from endpoint import Endpoint
+import common
 
 class EditEndpoint(QtGui.QVBoxLayout):
     save_signal = QtCore.pyqtSignal()
@@ -50,10 +51,13 @@ class EditEndpoint(QtGui.QVBoxLayout):
         self.save_btn.clicked.connect(self.save)
         self.delete_btn = QtGui.QPushButton("Delete")
         self.delete_btn.clicked.connect(self.delete)
+        self.loading_animation = common.LoadingAnimation()
+        self.loading_animation.hide()
 
         button_layout = QtGui.QHBoxLayout()
         button_layout.addWidget(self.save_btn)
         button_layout.addWidget(self.delete_btn)
+        button_layout.addWidget(self.loading_animation)
 
         # Add all the widgets to the layout
         self.addWidget(fingerprint_label)
@@ -72,6 +76,7 @@ class EditEndpoint(QtGui.QVBoxLayout):
 
     def set_endpoint(self, endpoint):
         self.endpoint = endpoint
+        self.loading_animation.hide()
 
         self.fingerprint_edit.setText(endpoint.fingerprint)
         self.url_edit.setText(endpoint.url)
@@ -87,6 +92,7 @@ class EditEndpoint(QtGui.QVBoxLayout):
         self.proxy_port_edit.setText(endpoint.proxy_port)
 
     def save(self):
+        self.loading_animation.show()
         self.save_signal.emit()
 
     def delete(self):
