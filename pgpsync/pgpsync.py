@@ -1,4 +1,5 @@
 import sys, platform, Queue, urlparse
+import requests, requesocks
 from PyQt4 import QtCore, QtGui
 
 from gnupg import GnuPG, InvalidFingerprint, InvalidKeyserver, NotFoundOnKeyserver, NotFoundInKeyring, RevokedKey, ExpiredKey
@@ -89,7 +90,7 @@ class PGPSync(QtGui.QMainWindow):
 
         for event in events:
             if event['type'] == 'update':
-                self.status_bar.showMessage(event['msg'], 4000)
+                self.status_bar.showMessage(event['msg'], event['timeout'])
             elif event['type'] == 'clear':
                 self.status_bar.clearMessage()
 
@@ -186,19 +187,58 @@ class PGPSync(QtGui.QMainWindow):
                 o = urlparse.urlparse(self.url)
                 if (o.scheme != 'http' and o.scheme != 'https') or o.netloc == '':
                     self.alert_error.emit('Signed fingerprints URL is invalid.')
+                else:
+                    success = True
 
                 if not success:
                     return self.finish_with_failure()
 
-                # TODO: If use_proxy, test loading URL over proxy
+                msg = None
+                if self.use_proxy:
+                    success = False
 
-                # TODO: If not use_proxy, test loading URL not over proxy
+                    # Test loading URL over proxy
+                    try:
+                        proxy_url = 'socks5://{}:{}'.format(self.proxy_host, self.proxy_port)
+                        self.q.add_message('Loading {} using proxy {}'.format(self.url, proxy_url))
+                        session = requesocks.session()
+                        session.proxies = {
+                            'http': proxy_url,
+                            'https': proxy_url
+                        }
+                        r = session.get(self.url)
+                        msg = r.text
+                    except requesocks.exceptions.ConnectionError:
+                        self.alert_error.emit('Invalid proxy server.')
+                    except:
+                        self.alert_error.emit('URL failed to download.')
+                    else:
+                        success = True
+
+                    if not success:
+                        return self.finish_with_failure()
+
+                else:
+                    success = False
+
+                    # Test loading URL not over proxy
+                    try:
+                        self.q.add_message('Loading {}'.format(self.url))
+                        r = requests.get(self.url)
+                        msg = r.text
+                    except:
+                        self.alert_error.emit('URL failed to download.')
+                    else:
+                        success = True
+
+                    if not success:
+                        return self.finish_with_failure()
 
                 # TODO: After downloading URL, test that it's signed by signing key
 
                 # TODO: After verifying sig, test that it's a list of fingerprints
 
-                self.q.add_message('Endpoint saved')
+                self.q.add_message('Endpoint saved', timeout=4000)
                 self.success.emit(fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
                 self.finished.emit()
 

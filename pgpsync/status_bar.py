@@ -22,8 +22,9 @@ class MessageQueue(Queue.Queue):
     def __init(self):
         super(MessageQueue, self).__init__()
 
-    def add_message(self, msg=None, type='update'):
+    def add_message(self, msg=None, type='update', timeout=0):
         self.put({
             'type': type,
-            'msg': msg
+            'msg': msg,
+            'timeout': timeout
         })
