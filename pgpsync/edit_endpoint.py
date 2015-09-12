@@ -1,6 +1,7 @@
 from PyQt4 import QtCore, QtGui
 
 from endpoint import Endpoint
+from loading_animation import LoadingAnimation
 import common
 
 class EditEndpoint(QtGui.QVBoxLayout):
@@ -51,7 +52,7 @@ class EditEndpoint(QtGui.QVBoxLayout):
         self.save_btn.clicked.connect(self.save)
         self.delete_btn = QtGui.QPushButton("Delete")
         self.delete_btn.clicked.connect(self.delete)
-        self.loading_animation = common.LoadingAnimation()
+        self.loading_animation = LoadingAnimation()
         self.loading_animation.hide()
 
         button_layout = QtGui.QHBoxLayout()
