@@ -24,7 +24,7 @@ class PGPSync(QtGui.QWidget):
             if self.system == 'Darwin':
                 common.alert('GnuPG doesn\'t seem to be installed. Install <a href="https://gpgtools.org/">GPGTools</a>.')
             if self.system == 'Windows':
-                common.alert('GPG doesn\'t seem to be installed. Install <a href="http://gpg4win.org/">Gpg4win</a>.')
+                common.alert('GnuPG doesn\'t seem to be installed. Install <a href="http://gpg4win.org/">Gpg4win</a>.')
             sys.exit()
 
         # Load settings
