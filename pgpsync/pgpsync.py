@@ -38,7 +38,7 @@ class PGPSync(QtGui.QWidget):
         self.current_endpoint = None
 
         # Endpoint selection GUI
-        self.endpoint_selection = EndpointSelection()
+        self.endpoint_selection = EndpointSelection(self.gpg)
         self.endpoint_selection.refresh(self.settings.endpoints)
         endpoint_selection_wrapper = QtGui.QWidget()
         endpoint_selection_wrapper.setLayout(self.endpoint_selection)

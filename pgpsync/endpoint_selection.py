@@ -4,8 +4,9 @@ from PyQt4 import QtCore, QtGui
 import common
 
 class EndpointList(QtGui.QListWidget):
-    def __init__(self):
+    def __init__(self, gpg):
         super(EndpointList, self).__init__()
+        self.gpg = gpg
 
     def add_endpoint_error(self, e, error):
         item = QtGui.QListWidgetItem(error)
@@ -14,7 +15,13 @@ class EndpointList(QtGui.QListWidget):
         self.addItem(item)
 
     def add_endpoint(self, e):
-        item = QtGui.QListWidgetItem('Configured')
+        uid = self.gpg.get_uid(e.fingerprint)
+        keyid = '0x{}'.format(e.fingerprint[16:].upper())
+        last_updated_time = 'never' #todo: fix this
+
+        s = '{}\n{}\nLast updated: {}'.format(uid, keyid, last_updated_time)
+
+        item = QtGui.QListWidgetItem(s)
         item.endpoint = e
         self.addItem(item)
 
@@ -31,10 +38,11 @@ class EndpointList(QtGui.QListWidget):
 class EndpointSelection(QtGui.QVBoxLayout):
     add_endpoint_signal = QtCore.pyqtSignal()
 
-    def __init__(self):
+    def __init__(self, gpg):
         super(EndpointSelection, self).__init__()
+        self.gpg = gpg
 
-        self.endpoint_list = EndpointList()
+        self.endpoint_list = EndpointList(gpg)
 
         self.add_btn = QtGui.QPushButton("Add Endpoint")
         self.add_btn.clicked.connect(self.add_endpoint)

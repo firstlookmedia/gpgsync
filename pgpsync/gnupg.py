@@ -60,13 +60,21 @@ class GnuPG(object):
         if "error reading key: No public key" in err:
             raise NotFoundInKeyring(fp)
 
-        for line in out:
+        for line in out.split('\n'):
             if line.startswith('pub:'):
                 chunks = line.split(':')
                 if chunks[1] == 'r':
                     raise RevokedKey(fp)
                 if chunks[1] == 'e':
                     raise ExpiredKey(fp)
+
+    def get_uid(self, fp):
+        fp = common.clean_fp(fp)
+        out,err = self._gpg(['--with-colons', '--list-keys', fp])
+        for line in out.split('\n'):
+            if line.startswith('uid:'):
+                chunks = line.split(':')
+                return chunks[9]
 
     def _gpg(self, args, input=None):
         p = subprocess.Popen([self.gpg_path, '--batch', '--no-tty'] + args,
