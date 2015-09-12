@@ -1,6 +1,8 @@
 import re
 from PyQt4 import QtCore, QtGui
 
+import common
+
 class EndpointList(QtGui.QListWidget):
     def __init__(self):
         super(EndpointList, self).__init__()
@@ -20,7 +22,7 @@ class EndpointList(QtGui.QListWidget):
         self.clear()
 
         for e in endpoints:
-            if not re.match(r'^[a-f\d]{40}$', e.fingerprint.strip().replace(' ','').lower()):
+            if not common.valid_fp(e.fingerprint):
                 self.add_endpoint_error(e, 'Not configured')
                 continue
 
