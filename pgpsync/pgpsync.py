@@ -199,8 +199,8 @@ class PGPSync(QtGui.QMainWindow):
 
                     # Test loading URL over proxy
                     try:
+                        self.q.add_message('Loading {} using proxy'.format(self.url))
                         proxy_url = 'socks5://{}:{}'.format(self.proxy_host, self.proxy_port)
-                        self.q.add_message('Loading {} using proxy {}'.format(self.url, proxy_url))
                         session = requesocks.session()
                         session.proxies = {
                             'http': proxy_url,
