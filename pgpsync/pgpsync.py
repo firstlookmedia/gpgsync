@@ -1,4 +1,4 @@
-import sys, platform, Queue
+import sys, platform, Queue, urlparse
 from PyQt4 import QtCore, QtGui
 
 from gnupg import GnuPG, InvalidFingerprint, InvalidKeyserver, NotFoundOnKeyserver, NotFoundInKeyring, RevokedKey, ExpiredKey
@@ -141,9 +141,13 @@ class PGPSync(QtGui.QMainWindow):
                 self.proxy_host = proxy_host
                 self.proxy_port = proxy_port
 
+            def finish_with_failure(self):
+                self.q.add_message(type='clear')
+                self.finished.emit()
+
             def run(self):
                 # Test fingerprint and keyserver
-                recv_key_success = False
+                success = False
                 try:
                     self.q.add_message('Downloading {} from keyserver {}'.format(common.fp_to_keyid(self.fingerprint), self.keyserver))
                     self.gpg.recv_key(self.keyserver, self.fingerprint)
@@ -156,16 +160,14 @@ class PGPSync(QtGui.QMainWindow):
                 except NotFoundInKeyring:
                     self.alert_error.emit('Signing key is not found in keyring. Something went wrong.')
                 else:
-                    recv_key_success = True
+                    success = True
 
-                if not recv_key_success:
-                    self.q.add_message(type='clear')
-                    self.finished.emit()
-                    return
+                if not success:
+                    return self.finish_with_failure()
 
                 # Fingerprint is valid, and we have retrived it from the keyserver
                 # Check if the key is revoked or expired
-                pubkey_success = False
+                success = False
                 try:
                     self.q.add_message('Testing for valid signing key {}'.format(common.fp_to_keyid(self.fingerprint)))
                     self.gpg.test_key(self.fingerprint)
@@ -174,14 +176,19 @@ class PGPSync(QtGui.QMainWindow):
                 except ExpiredKey:
                     self.alert_error.emit('The signing key is expired.')
                 else:
-                    pubkey_success = True
+                    success = True
 
-                if not pubkey_success:
-                    self.q.add_message(type='clear')
-                    self.finished.emit()
-                    return
+                if not success:
+                    return self.finish_with_failure()
 
-                # TODO: Make sure URL is in the right format
+                # Make sure URL is in the right format
+                success = False
+                o = urlparse.urlparse(self.url)
+                if (o.scheme != 'http' and o.scheme != 'https') or o.netloc == '':
+                    self.alert_error.emit('Signed fingerprints URL is invalid.')
+
+                if not success:
+                    return self.finish_with_failure()
 
                 # TODO: If use_proxy, test loading URL over proxy
 
