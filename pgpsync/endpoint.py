@@ -11,16 +11,16 @@ class Endpoint(object):
 
     def update(self, fingerprint=None, url=None, keyserver=None, use_proxy=None, proxy_host=None, proxy_port=None, last_checked=None):
         if fingerprint != None:
-            self.fingerprint = fingerprint
+            self.fingerprint = str(fingerprint)
         if url != None:
-            self.url = url
+            self.url = str(url)
         if keyserver != None:
-            self.keyserver = keyserver
+            self.keyserver = str(keyserver)
         if use_proxy != None:
-            self.use_proxy = use_proxy
+            self.use_proxy = bool(use_proxy)
         if proxy_host != None:
-            self.proxy_host = proxy_host
+            self.proxy_host = str(proxy_host)
         if proxy_port != None:
-            self.proxy_port = proxy_port
+            self.proxy_port = str(proxy_port)
         if last_checked != None:
             self.last_checked = False
