@@ -8,6 +8,7 @@ import common
 from endpoint_selection import EndpointSelection
 from edit_endpoint import EditEndpoint
 from endpoint import Endpoint
+from status_bar import StatusBar
 
 class Application(QtGui.QApplication):
     def __init__(self):
@@ -15,7 +16,7 @@ class Application(QtGui.QApplication):
             self.setAttribute(QtCore.Qt.AA_X11InitThreads, True)
         QtGui.QApplication.__init__(self, sys.argv)
 
-class PGPSync(QtGui.QWidget):
+class PGPSync(QtGui.QMainWindow):
     def __init__(self, app):
         super(PGPSync, self).__init__()
         self.app = app
@@ -57,11 +58,17 @@ class PGPSync(QtGui.QWidget):
         self.edit_endpoint.save_signal.connect(self.save_endpoint)
         self.edit_endpoint.delete_signal.connect(self.delete_endpoint)
 
+        # Status bar
+        self.status_bar = StatusBar()
+        self.setStatusBar(self.status_bar)
+
         # Layout
         layout = QtGui.QHBoxLayout()
         layout.addWidget(endpoint_selection_wrapper)
         layout.addWidget(self.edit_endpoint_wrapper)
-        self.setLayout(layout)
+        central_widget = QtGui.QWidget()
+        central_widget.setLayout(layout)
+        self.setCentralWidget(central_widget)
         self.show()
 
     def edit_endpoint_alert_error(self, msg, icon=QtGui.QMessageBox.Warning):
@@ -156,7 +163,7 @@ class PGPSync(QtGui.QWidget):
                 # TODO: After downloading URL, test that it's signed by signing key
 
                 # TODO: After verifying sig, test that it's a list of fingerprints
-                
+
                 self.success.emit(fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
                 self.finished.emit()
 
