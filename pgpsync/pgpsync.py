@@ -77,42 +77,72 @@ class PGPSync(QtGui.QWidget):
         proxy_host  = str(self.edit_endpoint.proxy_host_edit.text())
         proxy_port  = str(self.edit_endpoint.proxy_port_edit.text())
 
-        # Test fingerprint and keyserver
-        fingerprint = common.clean_fp(fingerprint)
-        try:
-            self.gpg.recv_key(keyserver, fingerprint)
-        except InvalidFingerprint:
-            common.alert('Invalid signing key fingerprint.')
-        except InvalidKeyserver:
-            common.alert('Invalid keyserver.')
-        except NotFoundOnKeyserver:
-            common.alert('Signing key is not found on keyserver. Upload signing key and try again.')
-        else:
-            # Fingerprint is valid, and we have retrived it from the keyserver
+        class SigningKeyVerifier(QtCore.QThread):
+            success = QtCore.pyqtSignal()
 
-            # Check if the key is revoked or expired
-            try:
-                self.gpg.test_key(fingerprint)
-            except RevokedKey:
-                common.alert('The signing key is revoked.')
-            except ExpiredKey:
-                common.alert('The signing key is expired.')
-            else:
+            def __init__(self, gpg, keyserver, fingerprint):
+                super(SigningKeyVerifier, self).__init__()
+                self.gpg = gpg
+                self.keyserver = keyserver
+                self.fingerprint = common.clean_fp(fingerprint)
+
+            def run(self):
+                # Test fingerprint and keyserver
+                recv_key_success = False
+                try:
+                    self.gpg.recv_key(self.keyserver, self.fingerprint)
+                except InvalidFingerprint:
+                    common.alert('Invalid signing key fingerprint.')
+                except InvalidKeyserver:
+                    common.alert('Invalid keyserver.')
+                except NotFoundOnKeyserver:
+                    common.alert('Signing key is not found on keyserver. Upload signing key and try again.')
+                else:
+                    recv_key_success = True
+
+                if not recv_key_success:
+                    self.finished.emit()
+                    return
+
+                # Fingerprint is valid, and we have retrived it from the keyserver
+                # Check if the key is revoked or expired
+                pubkey_success = False
+                try:
+                    self.gpg.test_key(self.fingerprint)
+                except RevokedKey:
+                    common.alert('The signing key is revoked.')
+                except ExpiredKey:
+                    common.alert('The signing key is expired.')
+                else:
+                    pubkey_success = True
+
+                if not pubkey_success:
+                    self.finished.emit()
+                    return
+
                 # Signing key looks good
+                self.success.emit()
+                self.finished.emit()
 
-                # Save the settings
-                self.settings.endpoints[self.current_endpoint].update(fingerprint=fingerprint,
-                    url=url, keyserver=keyserver, use_proxy=use_proxy,
-                    proxy_host=proxy_host, proxy_port=proxy_port)
-                self.settings.save()
+        def save():
+            # Save the settings
+            self.settings.endpoints[self.current_endpoint].update(fingerprint=fingerprint,
+                url=url, keyserver=keyserver, use_proxy=use_proxy,
+                proxy_host=proxy_host, proxy_port=proxy_port)
+            self.settings.save()
 
-                # Unselect endpoint
-                self.endpoint_selection.endpoint_list.setCurrentItem(None)
-                self.edit_endpoint_wrapper.hide()
-                self.current_endpoint = None
+            # Unselect endpoint
+            self.endpoint_selection.endpoint_list.setCurrentItem(None)
+            self.edit_endpoint_wrapper.hide()
+            self.current_endpoint = None
 
-                # Refresh the display
-                self.endpoint_selection.refresh(self.settings.endpoints)
+            # Refresh the display
+            self.endpoint_selection.refresh(self.settings.endpoints)
+
+        # Run the verifier inside a new thread
+        self.verifier = SigningKeyVerifier(self.gpg, keyserver, common.clean_fp(fingerprint))
+        self.verifier.success.connect(save)
+        self.verifier.start()
 
     def delete_endpoint(self):
         self.edit_endpoint_wrapper.hide()
