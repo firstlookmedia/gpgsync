@@ -41,6 +41,7 @@ class PGPSync(QtGui.QWidget):
         self.endpoint_selection = EndpointSelection(self.gpg)
         self.endpoint_selection.refresh(self.settings.endpoints)
         endpoint_selection_wrapper = QtGui.QWidget()
+        endpoint_selection_wrapper.setMinimumWidth(300)
         endpoint_selection_wrapper.setLayout(self.endpoint_selection)
 
         self.endpoint_selection.add_endpoint_signal.connect(self.add_endpoint)
@@ -49,6 +50,7 @@ class PGPSync(QtGui.QWidget):
         # Edit endpoint GUI
         self.edit_endpoint = EditEndpoint()
         self.edit_endpoint_wrapper = QtGui.QWidget()
+        self.edit_endpoint_wrapper.setMinimumWidth(400)
         self.edit_endpoint_wrapper.setLayout(self.edit_endpoint)
         self.edit_endpoint_wrapper.hide() # starts out hidden
 
@@ -145,7 +147,16 @@ class PGPSync(QtGui.QWidget):
                     self.finished.emit()
                     return
 
-                # Signing key looks good
+                # TODO: Make sure URL is in the right format
+
+                # TODO: If use_proxy, test loading URL over proxy
+
+                # TODO: If not use_proxy, test loading URL not over proxy
+
+                # TODO: After downloading URL, test that it's signed by signing key
+
+                # TODO: After verifying sig, test that it's a list of fingerprints
+                
                 self.success.emit(fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
                 self.finished.emit()
 
