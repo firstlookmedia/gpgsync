@@ -16,7 +16,7 @@ class EndpointList(QtGui.QListWidget):
 
     def add_endpoint(self, e):
         uid = self.gpg.get_uid(e.fingerprint)
-        keyid = '0x{}'.format(e.fingerprint[16:].upper())
+        keyid = common.fp_to_keyid(e.fingerprint)
         last_updated_time = 'never' # TODO: Fix this
 
         s = '{}\n{}\nLast updated: {}'.format(uid, keyid, last_updated_time)

@@ -1,4 +1,4 @@
-import sys, platform
+import sys, platform, Queue
 from PyQt4 import QtCore, QtGui
 
 from gnupg import GnuPG, InvalidFingerprint, InvalidKeyserver, NotFoundOnKeyserver, NotFoundInKeyring, RevokedKey, ExpiredKey
@@ -8,7 +8,7 @@ import common
 from endpoint_selection import EndpointSelection
 from edit_endpoint import EditEndpoint
 from endpoint import Endpoint
-from status_bar import StatusBar
+from status_bar import StatusBar, MessageQueue
 
 class Application(QtGui.QApplication):
     def __init__(self):
@@ -58,10 +58,6 @@ class PGPSync(QtGui.QMainWindow):
         self.edit_endpoint.save_signal.connect(self.save_endpoint)
         self.edit_endpoint.delete_signal.connect(self.delete_endpoint)
 
-        # Status bar
-        self.status_bar = StatusBar()
-        self.setStatusBar(self.status_bar)
-
         # Layout
         layout = QtGui.QHBoxLayout()
         layout.addWidget(endpoint_selection_wrapper)
@@ -70,6 +66,32 @@ class PGPSync(QtGui.QMainWindow):
         central_widget.setLayout(layout)
         self.setCentralWidget(central_widget)
         self.show()
+
+        # Status bar
+        self.status_bar = StatusBar()
+        self.setStatusBar(self.status_bar)
+
+        # Check for status bar messages from other threads
+        self.status_q = MessageQueue()
+        self.status_bar_timer = QtCore.QTimer()
+        QtCore.QObject.connect(self.status_bar_timer, QtCore.SIGNAL("timeout()"), self.status_bar_update)
+        self.status_bar_timer.start(500)
+
+    def status_bar_update(self):
+        events = []
+        done = False
+        while not done:
+            try:
+                ev = self.status_q.get(False)
+                events.append(ev)
+            except Queue.Empty:
+                done = True
+
+        for event in events:
+            if event['type'] == 'update':
+                self.status_bar.showMessage(event['msg'], 4000)
+            elif event['type'] == 'clear':
+                self.status_bar.clearMessage()
 
     def edit_endpoint_alert_error(self, msg, icon=QtGui.QMessageBox.Warning):
         self.status_bar.hide_loading()
@@ -108,9 +130,10 @@ class PGPSync(QtGui.QMainWindow):
             alert_error = QtCore.pyqtSignal(str)
             success = QtCore.pyqtSignal(str, str, str, bool, str, str)
 
-            def __init__(self, gpg, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port):
+            def __init__(self, gpg, q, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port):
                 super(Verifier, self).__init__()
                 self.gpg = gpg
+                self.q = q
                 self.fingerprint = fingerprint
                 self.url = url
                 self.keyserver = keyserver
@@ -122,6 +145,7 @@ class PGPSync(QtGui.QMainWindow):
                 # Test fingerprint and keyserver
                 recv_key_success = False
                 try:
+                    self.q.add_message('Downloading {} from keyserver {}'.format(common.fp_to_keyid(self.fingerprint), self.keyserver))
                     self.gpg.recv_key(self.keyserver, self.fingerprint)
                 except InvalidFingerprint:
                     self.alert_error.emit('Invalid signing key fingerprint.')
@@ -135,6 +159,7 @@ class PGPSync(QtGui.QMainWindow):
                     recv_key_success = True
 
                 if not recv_key_success:
+                    self.q.add_message(type='clear')
                     self.finished.emit()
                     return
 
@@ -142,6 +167,7 @@ class PGPSync(QtGui.QMainWindow):
                 # Check if the key is revoked or expired
                 pubkey_success = False
                 try:
+                    self.q.add_message('Testing for valid signing key {}'.format(common.fp_to_keyid(self.fingerprint)))
                     self.gpg.test_key(self.fingerprint)
                 except RevokedKey:
                     self.alert_error.emit('The signing key is revoked.')
@@ -151,6 +177,7 @@ class PGPSync(QtGui.QMainWindow):
                     pubkey_success = True
 
                 if not pubkey_success:
+                    self.q.add_message(type='clear')
                     self.finished.emit()
                     return
 
@@ -164,6 +191,7 @@ class PGPSync(QtGui.QMainWindow):
 
                 # TODO: After verifying sig, test that it's a list of fingerprints
 
+                self.q.add_message('Endpoint saved')
                 self.success.emit(fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
                 self.finished.emit()
 
@@ -177,7 +205,7 @@ class PGPSync(QtGui.QMainWindow):
 
         # Run the verifier inside a new thread
         self.status_bar.show_loading()
-        self.verifier = Verifier(self.gpg, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
+        self.verifier = Verifier(self.gpg, self.status_q, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
         self.verifier.alert_error.connect(self.edit_endpoint_alert_error)
         self.verifier.success.connect(self.edit_endpoint_save)
         self.verifier.start()

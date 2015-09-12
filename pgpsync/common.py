@@ -14,6 +14,9 @@ def valid_fp(fp):
 def clean_fp(fp):
     return fp.strip().replace(' ','').upper()
 
+def fp_to_keyid(fp):
+    return '0x{}'.format(clean_fp(fp)[16:])
+
 def clean_keyserver(keyserver):
     if '://' not in keyserver:
         return 'hkp://{s:0}'.format(keyserver)

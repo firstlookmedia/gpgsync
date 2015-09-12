@@ -1,3 +1,4 @@
+import Queue
 from PyQt4 import QtCore, QtGui
 
 from loading_animation import LoadingAnimation
@@ -15,3 +16,14 @@ class StatusBar(QtGui.QStatusBar):
 
         def hide_loading(self):
             self.loading_animation.hide()
+
+
+class MessageQueue(Queue.Queue):
+    def __init(self):
+        super(MessageQueue, self).__init__()
+
+    def add_message(self, msg=None, type='update'):
+        self.put({
+            'type': type,
+            'msg': msg
+        })
