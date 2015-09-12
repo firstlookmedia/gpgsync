@@ -1,5 +1,9 @@
-import sys
+import sys, platform
 from PyQt4 import QtCore, QtGui
+
+from gnupg import GnuPG
+from settings import Settings
+import common
 
 from endpoint_selection import EndpointSelection
 from edit_endpoint import EditEndpoint
@@ -9,15 +13,27 @@ class PGPSync(QtGui.QWidget):
     def __init__(self, app):
         super(PGPSync, self).__init__()
         self.app = app
+        self.system = platform.system()
         self.setWindowTitle('PGP Sync')
 
-        # List of configured endpoints
+        # Initialize gpg
+        self.gpg = GnuPG()
+        if not self.gpg.is_gpg_available():
+            if self.system == 'Linux':
+                common.alert('GnuPG 2.x doesn\'t seem to be installed. Install your operating system\'s gnupg2 package.')
+            if self.system == 'Darwin':
+                common.alert('GnuPG doesn\'t seem to be installed. Install <a href="https://gpgtools.org/">GPGTools</a>.')
+            if self.system == 'Windows':
+                common.alert('GPG doesn\'t seem to be installed. Install <a href="http://gpg4win.org/">Gpg4win</a>.')
+            sys.exit()
+
+        # Load settings
+        self.settings = Settings()
         self.current_endpoint = None
-        self.endpoints = []
-        # todo: load these from file
 
         # Endpoint selection GUI
         self.endpoint_selection = EndpointSelection()
+        self.endpoint_selection.refresh(self.settings.endpoints)
         endpoint_selection_wrapper = QtGui.QWidget()
         endpoint_selection_wrapper.setLayout(self.endpoint_selection)
 
@@ -43,8 +59,8 @@ class PGPSync(QtGui.QWidget):
     def add_endpoint(self):
         e = Endpoint()
         print e.fingerprint
-        self.endpoints.append(e)
-        self.endpoint_selection.refresh(self.endpoints)
+        self.settings.endpoints.append(e)
+        self.endpoint_selection.refresh(self.settings.endpoints)
 
         # Click on the newest endpoint
         count = self.endpoint_selection.endpoint_list.count()
@@ -61,9 +77,10 @@ class PGPSync(QtGui.QWidget):
         proxy_host  = str(self.edit_endpoint.proxy_host_edit.text())
         proxy_port  = str(self.edit_endpoint.proxy_port_edit.text())
 
-        self.endpoints[self.current_endpoint].update(fingerprint=fingerprint,
-            url=url, keyserver=keyserver,
-            use_proxy=use_proxy, proxy_host=proxy_host, proxy_port=proxy_port)
+        self.settings.endpoints[self.current_endpoint].update(fingerprint=fingerprint,
+            url=url, keyserver=keyserver, use_proxy=use_proxy,
+            proxy_host=proxy_host, proxy_port=proxy_port)
+        self.settings.save()
 
         # Unselect endpoint
         self.endpoint_selection.endpoint_list.setCurrentItem(None)
@@ -71,17 +88,17 @@ class PGPSync(QtGui.QWidget):
         self.current_endpoint = None
 
         # Refresh the display
-        self.endpoint_selection.refresh(self.endpoints)
+        self.endpoint_selection.refresh(self.settings.endpoints)
 
     def delete_endpoint(self):
         self.edit_endpoint_wrapper.hide()
-        self.endpoints.remove(self.endpoints[self.current_endpoint])
-        self.endpoint_selection.refresh(self.endpoints)
+        self.settings.endpoints.remove(self.settings.endpoints[self.current_endpoint])
+        self.endpoint_selection.refresh(self.settings.endpoints)
         self.current_endpoint = None
 
     def endpoint_clicked(self, item):
         try:
-            i = self.endpoints.index(item.endpoint)
+            i = self.settings.endpoints.index(item.endpoint)
         except ValueError:
             print 'ERROR: Invalid endpoint'
             return
