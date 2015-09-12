@@ -52,13 +52,10 @@ class EditEndpoint(QtGui.QVBoxLayout):
         self.save_btn.clicked.connect(self.save)
         self.delete_btn = QtGui.QPushButton("Delete")
         self.delete_btn.clicked.connect(self.delete)
-        self.loading_animation = LoadingAnimation()
-        self.loading_animation.hide()
 
         button_layout = QtGui.QHBoxLayout()
         button_layout.addWidget(self.save_btn)
         button_layout.addWidget(self.delete_btn)
-        button_layout.addWidget(self.loading_animation)
 
         # Add all the widgets to the layout
         self.addWidget(fingerprint_label)
@@ -74,12 +71,6 @@ class EditEndpoint(QtGui.QVBoxLayout):
         self.addStretch(1)
         self.addLayout(button_layout)
         self.addStretch(1)
-
-    def show_loading_animation(self):
-        self.loading_animation.show()
-
-    def hide_loading_animation(self):
-        self.loading_animation.hide()
 
     def set_endpoint(self, endpoint):
         self.endpoint = endpoint
