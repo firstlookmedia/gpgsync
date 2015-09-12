@@ -9,10 +9,10 @@ def alert(msg, icon=QtGui.QMessageBox.Warning):
     d.exec_()
 
 def valid_fp(fp):
-    return re.match(r'^[a-f\d]{40}$', clean_fp(fp))
+    return re.match(r'^[A-F\d]{40}$', clean_fp(fp))
 
 def clean_fp(fp):
-    return fp.strip().replace(' ','').lower()
+    return fp.strip().replace(' ','').upper()
 
 def clean_keyserver(keyserver):
     if '://' not in keyserver:
