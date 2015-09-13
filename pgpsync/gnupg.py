@@ -23,7 +23,10 @@ class VerificationError(Exception):
     pass
 
 class GnuPG(object):
-    def __init__(self):
+    def __init__(self, homedir=None, debug=False):
+        self.homedir = homedir
+        self.debug = debug
+
         self.system = platform.system()
         self.creationflags = 0
         if self.system == 'Darwin':
@@ -87,7 +90,11 @@ class GnuPG(object):
             raise VerificationError()
 
     def _gpg(self, args, input=None):
-        p = subprocess.Popen([self.gpg_path, '--batch', '--no-tty'] + args,
+        default_args = [self.gpg_path, '--batch', '--no-tty']
+        if self.homedir:
+            default_args += ['--homedir', self.homedir]
+
+        p = subprocess.Popen(default_args + args,
             stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         if input:
             (out, err) = p.communicate(input)
@@ -96,8 +103,9 @@ class GnuPG(object):
             out = p.stdout.read()
             err = p.stderr.read()
 
-        if out != '':
-            print 'stdout', out
-        if err != '':
-            print 'stderr', err
+        if self.debug:
+            if out != '':
+                print 'stdout', out
+            if err != '':
+                print 'stderr', err
         return out, err
