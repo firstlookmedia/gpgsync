@@ -15,11 +15,11 @@ def clean_fp(fp):
     return fp.strip().replace(' ','').upper()
 
 def fp_to_keyid(fp):
-    return '0x{}'.format(clean_fp(fp)[16:])
+    return '0x{}'.format(clean_fp(fp)[-16:])
 
 def clean_keyserver(keyserver):
     if '://' not in keyserver:
-        return 'hkp://{s:0}'.format(keyserver)
+        return 'hkp://{}'.format(keyserver)
     return keyserver
 
 def get_image_path(filename):
