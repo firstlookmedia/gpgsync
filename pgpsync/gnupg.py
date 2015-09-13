@@ -60,6 +60,9 @@ class GnuPG(object):
             raise NotFoundOnKeyserver(fp)
 
     def test_key(self, fp):
+        if not common.valid_fp(fp):
+            raise InvalidFingerprint(fp)
+
         fp = common.clean_fp(fp)
         out,err = self._gpg(['--with-colons', '--list-keys', fp])
 
@@ -75,6 +78,9 @@ class GnuPG(object):
                     raise ExpiredKey(fp)
 
     def get_uid(self, fp):
+        if not common.valid_fp(fp):
+            raise InvalidFingerprint(fp)
+
         fp = common.clean_fp(fp)
         out,err = self._gpg(['--with-colons', '--list-keys', fp])
         for line in out.split('\n'):
@@ -83,6 +89,9 @@ class GnuPG(object):
                 return chunks[9]
 
     def verify(self, msg, fp):
+        if not common.valid_fp(fp):
+            raise InvalidFingerprint(fp)
+        
         fp = common.clean_fp(fp)
         out,err = self._gpg(['--verify'], msg)
 
