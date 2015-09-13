@@ -44,6 +44,12 @@ def test_gpg_recv_key_not_found_on_keyserver():
     gpg.recv_key('hkp://keys.gnupg.net', '0000000000000000000000000000000000000000')
 
 @with_setup(setup_func)
+@raises(InvalidFingerprint)
+def test_gpg_test_key_invalid_fingerprint():
+    gpg = GnuPG(homedir=gpg_homedir)
+    gpg.test_key('deadbeef')
+
+@with_setup(setup_func)
 @raises(NotFoundInKeyring)
 def test_gpg_test_key_not_found_in_keyring():
     gpg = GnuPG(homedir=gpg_homedir)
