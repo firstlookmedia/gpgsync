@@ -57,3 +57,5 @@ docs/_build/
 # PyBuilder
 target/
 
+# gpg homedir, for tests
+test/homedir
