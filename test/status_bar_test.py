@@ -1,7 +1,5 @@
 from nose import with_setup
-
 from pgpsync import StatusBar, MessageQueue
-import test_helpers
 
 def test_status_bar_show_loading_animation():
     status_bar = StatusBar()
