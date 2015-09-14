@@ -71,8 +71,31 @@ def test_gpg_test_key_expired():
 
 @with_setup(setup_func)
 def test_gpg_get_uid():
-    pass
+    gpg = GnuPG(homedir=gpg_homedir)
+    import_key('pgpsync_multiple_uids.asc')
+    import_key('pgpsync_test_suite_pubkey.asc')
+
+    # should return the primary uid
+    assert gpg.get_uid('D86B 4D4B B5DF DD37 8B58  D4D3 F121 AC62 3039 6C33') == 'PGP Sync Test uid 3 <pgpsync-uid3@example.com>'
+    assert gpg.get_uid('ABCF D99F A161 7E55 B8CD  E5AD E36F D670 7779 47EB') == 'PGP Sync Test Suite Key'
 
 @with_setup(setup_func)
 def test_gpg_verify():
+    # test a message that works to verify
+    pass
+
+@with_setup(setup_func)
+def test_gpg_verify_revoked():
+    pass
+
+@with_setup(setup_func)
+def test_gpg_verify_expired():
+    pass
+
+@with_setup(setup_func)
+def test_gpg_verify_invalid_sig():
+    pass
+
+@with_setup(setup_func)
+def test_gpg_verify_wrong_key():
     pass
