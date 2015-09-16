@@ -1,8 +1,8 @@
 import os, sys, re, platform
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtWidgets
 
-def alert(msg, icon=QtGui.QMessageBox.Warning):
-    d = QtGui.QMessageBox()
+def alert(msg, icon=QtWidgets.QMessageBox.Warning):
+    d = QtWidgets.QMessageBox()
     d.setWindowTitle('PGP Sync')
     d.setText(msg)
     d.setIcon(icon)

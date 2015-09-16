@@ -53,10 +53,10 @@ class GnuPG(object):
 
         out,err = self._gpg(['--keyserver', keyserver, '--recv-keys', fp])
 
-        if "No keyserver available" in err:
+        if b"No keyserver available" in err:
             raise InvalidKeyserver(keyserver)
 
-        if "not found on keyserver" in err or "keyserver receive failed: No data" in err:
+        if b"not found on keyserver" in err or b"keyserver receive failed: No data" in err:
             raise NotFoundOnKeyserver(fp)
 
     def test_key(self, fp):
@@ -66,15 +66,15 @@ class GnuPG(object):
         fp = common.clean_fp(fp)
         out,err = self._gpg(['--with-colons', '--list-keys', fp])
 
-        if "error reading key: No public key" in err:
+        if b"error reading key: No public key" in err:
             raise NotFoundInKeyring(fp)
 
-        for line in out.split('\n'):
-            if line.startswith('pub:'):
-                chunks = line.split(':')
-                if chunks[1] == 'r':
+        for line in out.split(b'\n'):
+            if line.startswith(b'pub:'):
+                chunks = line.split(b':')
+                if chunks[1] == b'r':
                     raise RevokedKey(fp)
-                if chunks[1] == 'e':
+                if chunks[1] == b'e':
                     raise ExpiredKey(fp)
 
     def get_uid(self, fp):
@@ -83,19 +83,19 @@ class GnuPG(object):
 
         fp = common.clean_fp(fp)
         out,err = self._gpg(['--with-colons', '--list-keys', fp])
-        for line in out.split('\n'):
-            if line.startswith('uid:'):
-                chunks = line.split(':')
+        for line in out.split(b'\n'):
+            if line.startswith(b'uid:'):
+                chunks = line.split(b':')
                 return chunks[9]
 
     def verify(self, msg, fp):
         if not common.valid_fp(fp):
             raise InvalidFingerprint(fp)
-        
+
         fp = common.clean_fp(fp)
         out,err = self._gpg(['--verify'], msg)
 
-        if 'no valid OpenPGP data found' in err or 'the signature could not be verified' in err:
+        if b'no valid OpenPGP data found' in err or b'the signature could not be verified' in err:
             raise VerificationError()
 
     def _gpg(self, args, input=None):
@@ -114,7 +114,7 @@ class GnuPG(object):
 
         if self.debug:
             if out != '':
-                print 'stdout', out
+                print('stdout', out)
             if err != '':
-                print 'stderr', err
+                print('stderr', err)
         return out, err

@@ -1,10 +1,10 @@
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtWidgets
 
 from endpoint import Endpoint
 from loading_animation import LoadingAnimation
 import common
 
-class EditEndpoint(QtGui.QVBoxLayout):
+class EditEndpoint(QtWidgets.QVBoxLayout):
     save_signal = QtCore.pyqtSignal()
     delete_signal = QtCore.pyqtSignal()
 
@@ -13,47 +13,47 @@ class EditEndpoint(QtGui.QVBoxLayout):
         self.endpoint = None
 
         # Signing key fingerprint
-        fingerprint_label = QtGui.QLabel("Signing key fingerprint")
-        self.fingerprint_edit = QtGui.QLineEdit()
+        fingerprint_label = QtWidgets.QLabel("Signing key fingerprint")
+        self.fingerprint_edit = QtWidgets.QLineEdit()
 
         # Signed-fingerprints URL
-        url_label = QtGui.QLabel("Signed fingerprints URL")
-        self.url_edit = QtGui.QLineEdit()
+        url_label = QtWidgets.QLabel("Signed fingerprints URL")
+        self.url_edit = QtWidgets.QLineEdit()
 
         # Keyserver
-        keyserver_label = QtGui.QLabel("Key server")
-        self.keyserver_edit = QtGui.QLineEdit()
+        keyserver_label = QtWidgets.QLabel("Key server")
+        self.keyserver_edit = QtWidgets.QLineEdit()
 
         # SOCKS5 proxy settings
-        self.use_proxy = QtGui.QCheckBox()
+        self.use_proxy = QtWidgets.QCheckBox()
         self.use_proxy.setText("Load URL through SOCKS5 proxy (e.g. Tor)")
         self.use_proxy.setCheckState(QtCore.Qt.Unchecked)
 
-        proxy_host_label = QtGui.QLabel('Host')
-        self.proxy_host_edit = QtGui.QLineEdit()
-        proxy_port_label = QtGui.QLabel('Port')
-        self.proxy_port_edit = QtGui.QLineEdit()
+        proxy_host_label = QtWidgets.QLabel('Host')
+        self.proxy_host_edit = QtWidgets.QLineEdit()
+        proxy_port_label = QtWidgets.QLabel('Port')
+        self.proxy_port_edit = QtWidgets.QLineEdit()
 
-        proxy_hlayout = QtGui.QHBoxLayout()
+        proxy_hlayout = QtWidgets.QHBoxLayout()
         proxy_hlayout.addWidget(proxy_host_label)
         proxy_hlayout.addWidget(self.proxy_host_edit)
         proxy_hlayout.addWidget(proxy_port_label)
         proxy_hlayout.addWidget(self.proxy_port_edit)
 
-        proxy_vlayout = QtGui.QVBoxLayout()
+        proxy_vlayout = QtWidgets.QVBoxLayout()
         proxy_vlayout.addWidget(self.use_proxy)
         proxy_vlayout.addLayout(proxy_hlayout)
 
-        proxy_group = QtGui.QGroupBox("Proxy Configuration")
+        proxy_group = QtWidgets.QGroupBox("Proxy Configuration")
         proxy_group.setLayout(proxy_vlayout)
 
         # Buttons
-        self.save_btn = QtGui.QPushButton("Save")
+        self.save_btn = QtWidgets.QPushButton("Save")
         self.save_btn.clicked.connect(self.save)
-        self.delete_btn = QtGui.QPushButton("Delete")
+        self.delete_btn = QtWidgets.QPushButton("Delete")
         self.delete_btn.clicked.connect(self.delete)
 
-        button_layout = QtGui.QHBoxLayout()
+        button_layout = QtWidgets.QHBoxLayout()
         button_layout.addWidget(self.save_btn)
         button_layout.addWidget(self.delete_btn)
 
@@ -85,7 +85,7 @@ class EditEndpoint(QtGui.QVBoxLayout):
             self.use_proxy.setCheckState(QtCore.Qt.Unchecked)
 
         self.proxy_host_edit.setText(endpoint.proxy_host)
-        proxy_port_label = QtGui.QLabel('Port')
+        proxy_port_label = QtWidgets.QLabel('Port')
         self.proxy_port_edit.setText(endpoint.proxy_port)
 
     def save(self):

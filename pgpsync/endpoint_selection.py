@@ -1,15 +1,15 @@
 import re
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtWidgets, QtGui
 
 import common
 
-class EndpointList(QtGui.QListWidget):
+class EndpointList(QtWidgets.QListWidget):
     def __init__(self, gpg):
         super(EndpointList, self).__init__()
         self.gpg = gpg
 
     def add_endpoint_error(self, e, error):
-        item = QtGui.QListWidgetItem(error)
+        item = QtWidgets.QListWidgetItem(error)
         item.endpoint = e
         item.setForeground(QtGui.QBrush(QtGui.QColor(200, 0, 0)))
         self.addItem(item)
@@ -21,7 +21,7 @@ class EndpointList(QtGui.QListWidget):
 
         s = '{}\n{}\nLast updated: {}'.format(uid, keyid, last_updated_time)
 
-        item = QtGui.QListWidgetItem(s)
+        item = QtWidgets.QListWidgetItem(s)
         item.endpoint = e
         self.addItem(item)
 
@@ -35,7 +35,7 @@ class EndpointList(QtGui.QListWidget):
 
             self.add_endpoint(e)
 
-class EndpointSelection(QtGui.QVBoxLayout):
+class EndpointSelection(QtWidgets.QVBoxLayout):
     add_endpoint_signal = QtCore.pyqtSignal()
 
     def __init__(self, gpg):
@@ -44,7 +44,7 @@ class EndpointSelection(QtGui.QVBoxLayout):
 
         self.endpoint_list = EndpointList(gpg)
 
-        self.add_btn = QtGui.QPushButton("Add Endpoint")
+        self.add_btn = QtWidgets.QPushButton("Add Endpoint")
         self.add_btn.clicked.connect(self.add_endpoint)
 
         self.addWidget(self.endpoint_list)

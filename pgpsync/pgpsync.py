@@ -1,6 +1,6 @@
-import sys, platform, Queue, urlparse
-import requests, requesocks
-from PyQt4 import QtCore, QtGui
+import sys, platform, queue, pycurl
+from urllib.parse import urlparse
+from PyQt5 import QtCore, QtWidgets
 
 from gnupg import *
 from settings import Settings
@@ -11,13 +11,13 @@ from edit_endpoint import EditEndpoint
 from endpoint import Endpoint
 from status_bar import StatusBar, MessageQueue
 
-class Application(QtGui.QApplication):
+class Application(QtWidgets.QApplication):
     def __init__(self):
         if platform.system() == 'Linux':
             self.setAttribute(QtCore.Qt.AA_X11InitThreads, True)
-        QtGui.QApplication.__init__(self, sys.argv)
+        QtWidgets.QApplication.__init__(self, sys.argv)
 
-class PGPSync(QtGui.QMainWindow):
+class PGPSync(QtWidgets.QMainWindow):
     def __init__(self, app):
         super(PGPSync, self).__init__()
         self.app = app
@@ -42,7 +42,7 @@ class PGPSync(QtGui.QMainWindow):
         # Endpoint selection GUI
         self.endpoint_selection = EndpointSelection(self.gpg)
         self.endpoint_selection.refresh(self.settings.endpoints)
-        endpoint_selection_wrapper = QtGui.QWidget()
+        endpoint_selection_wrapper = QtWidgets.QWidget()
         endpoint_selection_wrapper.setMinimumWidth(300)
         endpoint_selection_wrapper.setLayout(self.endpoint_selection)
 
@@ -51,7 +51,7 @@ class PGPSync(QtGui.QMainWindow):
 
         # Edit endpoint GUI
         self.edit_endpoint = EditEndpoint()
-        self.edit_endpoint_wrapper = QtGui.QWidget()
+        self.edit_endpoint_wrapper = QtWidgets.QWidget()
         self.edit_endpoint_wrapper.setMinimumWidth(400)
         self.edit_endpoint_wrapper.setLayout(self.edit_endpoint)
         self.edit_endpoint_wrapper.hide() # starts out hidden
@@ -60,10 +60,10 @@ class PGPSync(QtGui.QMainWindow):
         self.edit_endpoint.delete_signal.connect(self.delete_endpoint)
 
         # Layout
-        layout = QtGui.QHBoxLayout()
+        layout = QtWidgets.QHBoxLayout()
         layout.addWidget(endpoint_selection_wrapper)
         layout.addWidget(self.edit_endpoint_wrapper)
-        central_widget = QtGui.QWidget()
+        central_widget = QtWidgets.QWidget()
         central_widget.setLayout(layout)
         self.setCentralWidget(central_widget)
         self.show()
@@ -75,7 +75,7 @@ class PGPSync(QtGui.QMainWindow):
         # Check for status bar messages from other threads
         self.status_q = MessageQueue()
         self.status_bar_timer = QtCore.QTimer()
-        QtCore.QObject.connect(self.status_bar_timer, QtCore.SIGNAL("timeout()"), self.status_bar_update)
+        self.status_bar_timer.timeout.connect(self.status_bar_update)
         self.status_bar_timer.start(500)
 
     def status_bar_update(self):
@@ -85,7 +85,7 @@ class PGPSync(QtGui.QMainWindow):
             try:
                 ev = self.status_q.get(False)
                 events.append(ev)
-            except Queue.Empty:
+            except queue.Empty:
                 done = True
 
         for event in events:
@@ -94,7 +94,7 @@ class PGPSync(QtGui.QMainWindow):
             elif event['type'] == 'clear':
                 self.status_bar.clearMessage()
 
-    def edit_endpoint_alert_error(self, msg, icon=QtGui.QMessageBox.Warning):
+    def edit_endpoint_alert_error(self, msg, icon=QtWidgets.QMessageBox.Warning):
         self.status_bar.hide_loading()
         common.alert(msg, icon)
 
@@ -116,7 +116,6 @@ class PGPSync(QtGui.QMainWindow):
 
     def add_endpoint(self):
         e = Endpoint()
-        print e.fingerprint
         self.settings.endpoints.append(e)
         self.endpoint_selection.refresh(self.settings.endpoints)
 
@@ -184,7 +183,7 @@ class PGPSync(QtGui.QMainWindow):
 
                 # Make sure URL is in the right format
                 success = False
-                o = urlparse.urlparse(self.url)
+                o = urlparse(self.url)
                 if (o.scheme != 'http' and o.scheme != 'https') or o.netloc == '':
                     self.alert_error.emit('Signed fingerprints URL is invalid.')
                 else:
@@ -193,46 +192,23 @@ class PGPSync(QtGui.QMainWindow):
                 if not success:
                     return self.finish_with_failure()
 
-                msg = None
-                if self.use_proxy:
-                    success = False
-
-                    # Test loading URL over proxy
-                    try:
-                        self.q.add_message('Loading {} using proxy'.format(self.url))
-                        proxy_url = 'socks5://{}:{}'.format(self.proxy_host, self.proxy_port)
-                        session = requesocks.session()
-                        session.proxies = {
-                            'http': proxy_url,
-                            'https': proxy_url
-                        }
-                        r = session.get(self.url)
-                        msg = r.text
-                    except requesocks.exceptions.ConnectionError:
-                        self.alert_error.emit('Invalid proxy server.')
-                    except:
-                        self.alert_error.emit('URL failed to download.')
-                    else:
-                        success = True
-
-                    if not success:
-                        return self.finish_with_failure()
-
+                # Test loading URL
+                success = False
+                try:
+                    c = pycurl.Curl()
+                    c.setopt(pycurl.URL, self.url)
+                    if self.use_proxy:
+                        c.setopt(pycurl.PROXY, self.proxy_host)
+                        c.setopt(pycurl.PROXYPORT, int(self.proxy_port))
+                        c.setopt(pycurl.PROXYTYPE, pycurl.PROXYTYPE_SOCKS5)
+                    msg = c.perform()
+                except pycurl.error as e:
+                    self.alert_error.emit('URL failed to download: {}'.format(e))
                 else:
-                    success = False
+                    success = True
 
-                    # Test loading URL not over proxy
-                    try:
-                        self.q.add_message('Loading {}'.format(self.url))
-                        r = requests.get(self.url)
-                        msg = r.text
-                    except:
-                        self.alert_error.emit('URL failed to download.')
-                    else:
-                        success = True
-
-                    if not success:
-                        return self.finish_with_failure()
+                if not success:
+                    return self.finish_with_failure()
 
                 # After downloading URL, test that it's signed by signing key
                 success = False
@@ -243,6 +219,9 @@ class PGPSync(QtGui.QMainWindow):
                     self.alert_error.emit('Signature does not verify.')
                 else:
                     success = True
+
+                if not success:
+                    return self.finish_with_failure()
 
                 # TODO: After verifying sig, test that it's a list of fingerprints
 
@@ -275,7 +254,7 @@ class PGPSync(QtGui.QMainWindow):
         try:
             i = self.settings.endpoints.index(item.endpoint)
         except ValueError:
-            print 'ERROR: Invalid endpoint'
+            print('ERROR: Invalid endpoint')
             return
 
         # Clicking on an already-selected endpoint unselects it

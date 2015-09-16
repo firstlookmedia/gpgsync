@@ -1,10 +1,10 @@
-import Queue
-from PyQt4 import QtCore, QtGui
+import queue
+from PyQt5 import QtCore, QtWidgets
 
 from loading_animation import LoadingAnimation
 import common
 
-class StatusBar(QtGui.QStatusBar):
+class StatusBar(QtWidgets.QStatusBar):
         def __init__(self):
             super(StatusBar, self).__init__()
             self.loading_animation = LoadingAnimation()
@@ -18,7 +18,7 @@ class StatusBar(QtGui.QStatusBar):
             self.loading_animation.hide()
 
 
-class MessageQueue(Queue.Queue):
+class MessageQueue(queue.Queue):
     def __init(self):
         super(MessageQueue, self).__init__()
 

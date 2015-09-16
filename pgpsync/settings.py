@@ -15,7 +15,7 @@ class Settings(object):
 
     def load(self):
         if os.path.isfile(self.settings_path):
-            self.settings = pickle.load(open(self.settings_path))
+            self.settings = pickle.load(open(self.settings_path, 'rb'))
             self.endpoints = self.settings['endpoints']
         else:
             # default settings
@@ -25,4 +25,4 @@ class Settings(object):
         self.settings = {
             'endpoints': self.endpoints
         }
-        pickle.dump(self.settings, open(self.settings_path, 'w'))
+        pickle.dump(self.settings, open(self.settings_path, 'wb'))
