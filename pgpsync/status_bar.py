@@ -1,8 +1,8 @@
 import queue
 from PyQt5 import QtCore, QtWidgets
 
-from loading_animation import LoadingAnimation
-import common
+from .loading_animation import LoadingAnimation
+from . import common
 
 class StatusBar(QtWidgets.QStatusBar):
         def __init__(self):

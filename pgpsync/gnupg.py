@@ -1,5 +1,5 @@
 import subprocess, os, platform, tempfile, shutil
-import common
+from . import common
 
 class InvalidFingerprint(Exception):
     pass

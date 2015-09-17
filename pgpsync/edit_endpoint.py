@@ -1,8 +1,8 @@
 from PyQt5 import QtCore, QtWidgets
 
-from endpoint import Endpoint
-from loading_animation import LoadingAnimation
-import common
+from .endpoint import Endpoint
+from .loading_animation import LoadingAnimation
+from . import common
 
 class EditEndpoint(QtWidgets.QVBoxLayout):
     save_signal = QtCore.pyqtSignal()

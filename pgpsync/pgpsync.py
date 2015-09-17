@@ -2,14 +2,15 @@ import sys, platform, queue, pycurl
 from urllib.parse import urlparse
 from PyQt5 import QtCore, QtWidgets
 
-from gnupg import *
-from settings import Settings
-import common
+from . import common
 
-from endpoint_selection import EndpointSelection
-from edit_endpoint import EditEndpoint
-from endpoint import Endpoint
-from status_bar import StatusBar, MessageQueue
+from .gnupg import *
+from .settings import Settings
+
+from .endpoint_selection import EndpointSelection
+from .edit_endpoint import EditEndpoint
+from .endpoint import Endpoint
+from .status_bar import StatusBar, MessageQueue
 
 class Application(QtWidgets.QApplication):
     def __init__(self):

@@ -1,6 +1,6 @@
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-import common
+from . import common
 
 class LoadingAnimation(QtWidgets.QLabel):
     def __init__(self, parent=None):

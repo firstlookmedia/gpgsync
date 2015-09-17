@@ -1,7 +1,7 @@
 import re
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-import common
+from . import common
 
 class EndpointList(QtWidgets.QListWidget):
     def __init__(self, gpg):

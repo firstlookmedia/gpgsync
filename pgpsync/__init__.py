@@ -1,1 +1,1 @@
-from pgpsync import *
+from .pgpsync import *
