@@ -195,6 +195,7 @@ class PGPSync(QtWidgets.QMainWindow):
                 # Test loading URL
                 success = False
                 try:
+                    self.q.add_message('Testing downloading URL {}'.format(self.url))
                     c = pycurl.Curl()
                     c.setopt(pycurl.URL, self.url)
                     if self.use_proxy:
