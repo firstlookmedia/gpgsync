@@ -25,6 +25,9 @@ class VerificationError(Exception):
 class BadSignature(Exception):
     pass
 
+class SignedWithWrongKey(Exception):
+    pass
+
 class GnuPG(object):
     def __init__(self, homedir=None, debug=False):
         self.homedir = homedir

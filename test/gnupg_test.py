@@ -97,13 +97,26 @@ def test_gpg_verify_invalid_sig():
     gpg.verify(msg, 'ABCF D99F A161 7E55 B8CD  E5AD E36F D670 7779 47EB')
 
 @with_setup(setup_func)
+@raises(RevokedKey)
 def test_gpg_verify_revoked():
-    pass
+    gpg = GnuPG(homedir=gpg_homedir)
+    import_key('revoked_pubkey.asc')
+    msg = open(get_gpg_file('signed_message-revoked.asc'), 'rb').read()
+    gpg.verify(msg, 'A2A6 C99C A078 0A71 4F3C  2A17 3E67 1C4F 8C1A 99ED')
 
 @with_setup(setup_func)
+@raises(ExpiredKey)
 def test_gpg_verify_expired():
-    pass
+        gpg = GnuPG(homedir=gpg_homedir)
+        import_key('expired_pubkey.asc')
+        msg = open(get_gpg_file('signed_message-expired.asc'), 'rb').read()
+        gpg.verify(msg, '5256 2F09 247B 3EB0 B977  D46D 19A8 50C0 02BE 9F35')
 
 @with_setup(setup_func)
+@raises(SignedWithWrongKey)
 def test_gpg_verify_wrong_key():
-    pass
+        gpg = GnuPG(homedir=gpg_homedir)
+        import_key('pgpsync_test_suite_pubkey.asc')
+        import_key('pgpsync_multiple_uids.asc')
+        msg = open(get_gpg_file('signed_message-valid.asc'), 'rb').read()
+        gpg.verify(msg, 'D86B 4D4B B5DF DD37 8B58  D4D3 F121 AC62 3039 6C33')
