@@ -1,7 +1,7 @@
 import os, shutil, subprocess
 from nose import with_setup
 from nose.tools import raises
-from pgpsync import GnuPG, InvalidFingerprint, InvalidKeyserver, NotFoundOnKeyserver, NotFoundInKeyring, RevokedKey, ExpiredKey, VerificationError
+from pgpsync import *
 
 test_key_fp = 'ABCFD99FA1617E55B8CDE5ADE36FD670777947EB'
 gpg_homedir = os.path.abspath('test/homedir')
@@ -82,7 +82,19 @@ def test_gpg_get_uid():
 @with_setup(setup_func)
 def test_gpg_verify():
     # test a message that works to verify
-    pass
+    gpg = GnuPG(homedir=gpg_homedir)
+    import_key('pgpsync_test_suite_pubkey.asc')
+    msg = open(get_gpg_file('signed_message-valid.asc'), 'rb').read()
+    gpg.verify(msg, 'ABCF D99F A161 7E55 B8CD  E5AD E36F D670 7779 47EB')
+
+@with_setup(setup_func)
+@raises(BadSignature)
+def test_gpg_verify_invalid_sig():
+    # test a message with an invalid sig
+    gpg = GnuPG(homedir=gpg_homedir)
+    import_key('pgpsync_test_suite_pubkey.asc')
+    msg = open(get_gpg_file('signed_message-invalid.asc'), 'rb').read()
+    gpg.verify(msg, 'ABCF D99F A161 7E55 B8CD  E5AD E36F D670 7779 47EB')
 
 @with_setup(setup_func)
 def test_gpg_verify_revoked():
@@ -90,10 +102,6 @@ def test_gpg_verify_revoked():
 
 @with_setup(setup_func)
 def test_gpg_verify_expired():
-    pass
-
-@with_setup(setup_func)
-def test_gpg_verify_invalid_sig():
     pass
 
 @with_setup(setup_func)

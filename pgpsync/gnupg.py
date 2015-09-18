@@ -22,6 +22,9 @@ class ExpiredKey(Exception):
 class VerificationError(Exception):
     pass
 
+class BadSignature(Exception):
+    pass
+
 class GnuPG(object):
     def __init__(self, homedir=None, debug=False):
         self.homedir = homedir
@@ -95,7 +98,10 @@ class GnuPG(object):
         fp = common.clean_fp(fp)
         out,err = self._gpg(['--verify'], msg)
 
-        if b'no valid OpenPGP data found' in err or b'the signature could not be verified' in err:
+        if b'BAD signature' in err:
+            raise BadSignature()
+
+        if b"Can't check signature: No public key" in err or b'no valid OpenPGP data found' in err or b'the signature could not be verified' in err:
             raise VerificationError()
 
     def _gpg(self, args, input=None):
