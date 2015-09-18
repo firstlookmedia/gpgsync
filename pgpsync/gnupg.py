@@ -99,16 +99,25 @@ class GnuPG(object):
             raise InvalidFingerprint(fp)
 
         fp = common.clean_fp(fp)
-        out,err = self._gpg(['--verify'], msg)
 
+        # Verify the signature
+        out,err = self._gpg(['--keyid-format', '0xlong', '--verify'], msg)
         if b'BAD signature' in err:
             raise BadSignature()
-
         if b"Can't check signature: No public key" in err or b'no valid OpenPGP data found' in err or b'the signature could not be verified' in err:
             raise VerificationError()
-
         if b'This key has been revoked by its owner!' in err:
             raise RevokedKey()
+        if b'Signature made' not in err and b'Good signature from' not in err:
+            raise VerificationError()
+
+        # Make sure the signing key is correct
+        lines = err.split(b'\n')
+        for i in range(len(lines)):
+            if lines[i].startswith(b'gpg: Signature made'):
+                if lines[i+1].split()[-1].decode('utf-8') != common.fp_to_keyid(fp):
+                    raise SignedWithWrongKey
+                break
 
     def _gpg(self, args, input=None):
         default_args = [self.gpg_path, '--batch', '--no-tty']
