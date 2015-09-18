@@ -1,4 +1,5 @@
 import sys, platform, queue, pycurl
+from io import BytesIO
 from urllib.parse import urlparse
 from PyQt5 import QtCore, QtWidgets
 
@@ -197,13 +198,17 @@ class PGPSync(QtWidgets.QMainWindow):
                 success = False
                 try:
                     self.q.add_message('Testing downloading URL {}'.format(self.url))
+                    buffer = BytesIO()
                     c = pycurl.Curl()
                     c.setopt(pycurl.URL, self.url)
+                    c.setopt(c.WRITEDATA, buffer)
                     if self.use_proxy:
                         c.setopt(pycurl.PROXY, self.proxy_host)
                         c.setopt(pycurl.PROXYPORT, int(self.proxy_port))
                         c.setopt(pycurl.PROXYTYPE, pycurl.PROXYTYPE_SOCKS5)
-                    msg = c.perform()
+                    c.perform()
+                    c.close()
+                    msg_bytes = buffer.getvalue()
                 except pycurl.error as e:
                     self.alert_error.emit('URL failed to download: {}'.format(e))
                 else:
@@ -216,7 +221,7 @@ class PGPSync(QtWidgets.QMainWindow):
                 success = False
                 try:
                     self.q.add_message('Verifying signature')
-                    self.gpg.verify(msg, self.fingerprint)
+                    self.gpg.verify(msg_bytes, self.fingerprint)
                 except VerificationError:
                     self.alert_error.emit('Signature does not verify.')
                 else:
