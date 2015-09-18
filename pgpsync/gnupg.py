@@ -86,7 +86,7 @@ class GnuPG(object):
         for line in out.split(b'\n'):
             if line.startswith(b'uid:'):
                 chunks = line.split(b':')
-                return chunks[9]
+                return str(chunks[9], 'UTF-8')
 
     def verify(self, msg, fp):
         if not common.valid_fp(fp):
