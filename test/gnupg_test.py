@@ -59,15 +59,15 @@ def test_gpg_test_key_not_found_in_keyring():
 @raises(RevokedKey)
 def test_gpg_test_key_revoked():
     gpg = GnuPG(homedir=gpg_homedir)
-    import_key('pgpsync_revoked_pubkey.asc')
-    gpg.test_key('3B4D CA7D CCE8 25F0 5E34  0C83 08C6 62C0 2BA4 39DE')
+    import_key('revoked_pubkey.asc')
+    gpg.test_key('A2A6 C99C A078 0A71 4F3C  2A17 3E67 1C4F 8C1A 99ED')
 
 @with_setup(setup_func)
 @raises(ExpiredKey)
 def test_gpg_test_key_expired():
     gpg = GnuPG(homedir=gpg_homedir)
-    import_key('pgpsync_expired_pubkey.asc')
-    gpg.test_key('D9C4 DB9D E638 B5CD F1C4  CE17 DB54 DE95 978A 4EB0')
+    import_key('expired_pubkey.asc')
+    gpg.test_key('5256 2F09 247B 3EB0 B977  D46D 19A8 50C0 02BE 9F35')
 
 @with_setup(setup_func)
 def test_gpg_get_uid():
