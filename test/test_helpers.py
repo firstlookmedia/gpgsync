@@ -1,9 +1,9 @@
 import sys
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtWidgets
 
 qt_app = None
 
 def setup_qt():
     global qt_app
     if not qt_app:
-        qt_app = QtGui.QApplication(sys.argv)
+        qt_app = QtWidgets.QApplication(sys.argv)

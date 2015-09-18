@@ -18,7 +18,7 @@ def setup_func():
         shutil.rmtree(gpg_homedir)
 
     # Create gpg homedir
-    os.mkdir(gpg_homedir, 0700)
+    os.mkdir(gpg_homedir, 0o700)
 
 
 def test_gpg_is_available():

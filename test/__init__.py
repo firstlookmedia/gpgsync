@@ -1,4 +1,4 @@
-import test_helpers
+from . import test_helpers
 
 def setup_package():
     test_helpers.setup_qt()
