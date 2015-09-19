@@ -1,26 +1,12 @@
 # -*- coding: utf-8 -*-
-import os, shutil, subprocess
 from nose import with_setup
 from nose.tools import raises
 from pgpsync import *
 
-test_key_fp = b'ABCFD99FA1617E55B8CDE5ADE36FD670777947EB'
-gpg_homedir = os.path.abspath('test/homedir')
-def get_gpg_file(filename):
-    return os.path.join(os.path.abspath('test/gpg_files'), filename)
-def import_key(filename):
-    subprocess.call(['gpg', '--homedir', gpg_homedir, '--import', get_gpg_file(filename)],
-        stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-
+from .test_helpers import *
 
 def setup_func():
-    # Delete the gpg homedir if it already exists
-    if os.path.exists(gpg_homedir):
-        shutil.rmtree(gpg_homedir)
-
-    # Create gpg homedir
-    os.mkdir(gpg_homedir, 0o700)
-
+    init_gpg_homedir()
 
 def test_gpg_is_available():
     gpg = GnuPG(homedir=gpg_homedir)
