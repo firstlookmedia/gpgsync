@@ -10,7 +10,7 @@ from .settings import Settings
 
 from .endpoint_selection import EndpointSelection
 from .edit_endpoint import EditEndpoint
-from .endpoint import Endpoint, ProxyError, InvalidFingerprints
+from .endpoint import Endpoint, URLDownloadError, InvalidFingerprints
 from .status_bar import StatusBar, MessageQueue
 
 class Application(QtWidgets.QApplication):
@@ -191,7 +191,7 @@ class PGPSync(QtWidgets.QMainWindow):
                 try:
                     self.q.add_message('Testing downloading URL {}'.format(self.url.decode()))
                     msg_bytes = e.fetch_url()
-                except ProxyError as e:
+                except URLDownloadError as e:
                     self.alert_error.emit('URL failed to download: {}'.format(e))
                 else:
                     success = True

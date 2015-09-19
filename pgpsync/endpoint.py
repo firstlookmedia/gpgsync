@@ -4,7 +4,7 @@ from io import BytesIO
 
 from . import common
 
-class ProxyError(Exception):
+class URLDownloadError(Exception):
     pass
 
 class InvalidFingerprints(Exception):
@@ -56,7 +56,7 @@ class Endpoint(object):
             c.close()
             msg_bytes = buffer.getvalue()
         except pycurl.error as e:
-            raise ProxyError(e)
+            raise URLDownloadError(e)
 
         return msg_bytes
 
