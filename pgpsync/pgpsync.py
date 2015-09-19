@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import sys, platform, queue
+import sys, platform, queue, time
 from urllib.parse import urlparse
 from PyQt5 import QtCore, QtWidgets
 
@@ -102,6 +102,7 @@ class Verifier(QtCore.QThread):
             success = True
 
         if not success:
+            self.finished.emit()
             return self.finish_with_failure()
 
         # Test that it's a list of fingerprints
@@ -124,26 +125,51 @@ class Verifier(QtCore.QThread):
         self.finished.emit()
 
 class Refresher(QtCore.QThread):
-    def __init__(self, gpg, q, endpoint):
+    def __init__(self, gpg, q, endpoint, force=False):
         super(Refresher, self).__init__()
         self.gpg = gpg
         self.q = q
         self.e = endpoint
+        self.force = force
+
+    def finish_with_failure(self, err):
+        self.q.add_message(type='clear')
+        self.finished.emit()
 
     def run(self):
-        self.q.add_message('Refreshing: '+self.gpg.get_uid(self.e.fingerprint))
+        # Refresh if it's forced, if it's never been checked before,
+        # or if it's been 24 hours since last check
+        one_day = 60*60*24
+        if self.force or not self.e.last_checked or time.time() - one_day >= self.e.last_checked:
+            # Fetch signing key from keyserver, make sure it's not expired or revoked
+            success = False
+            try:
+                self.q.add_message('Downloading {} from keyserver {}'.format(common.fp_to_keyid(self.e.fingerprint).decode(), self.e.keyserver.decode()))
+                self.e.fetch_public_key(self.gpg)
+            except InvalidFingerprint:
+                err = 'Invalid signing key fingerprint'
+            except InvalidKeyserver:
+                err = 'Invalid keyserver'
+            except NotFoundOnKeyserver:
+                err = 'Signing key is not found on keyserver'
+            except NotFoundInKeyring:
+                err = 'Signing key is not found in keyring'
+            except RevokedKey:
+                err = 'The signing key is revoked'
+            except ExpiredKey:
+                err = 'The signing key is expired'
+            else:
+                success = True
+            if not success:
+                return self.finish_with_failure(err)
 
-        # TODO: Fetch signing key from keyserver, make sure it's not expired or revoked
-        # TODO: Download URL
-        # TODO: Verifiy signature
-        # TODO: Get fingerprint list
+            # TODO: Download URL
+            # TODO: Verifiy signature
+            # TODO: Get fingerprint list
 
-        # TODO: For each fingerprint, check if it's revoked
-        # TODO: If not, refresh it from keyserver
+            # TODO: For each fingerprint, check if it's revoked
+            # TODO: If not, refresh it from keyserver
 
-        time.sleep(10)
-
-        self.q.add_message(type='clear')
         self.finished.emit()
 
 class Application(QtWidgets.QApplication):
@@ -335,24 +361,29 @@ class PGPSync(QtWidgets.QMainWindow):
             self.edit_endpoint_wrapper.show()
 
     def refresh_finished(self):
-        if len(self.refreshers) > 0:
-            self.refreshers.pop().start()
+        if len(self.waiting_refreshers) > 0:
+            r = self.waiting_refreshers.pop()
+            self.active_refreshers.append(r)
+            r.start()
         else:
             self.status_q.add_message('Syncing complete.', timeout=4000)
             self.toggle_input(True)
 
     def refresh_all_endpoints(self):
         # Make a refresher for each endpoint
-        self.refreshers = []
+        self.waiting_refreshers = []
+        self.active_refreshers = []
         for e in self.settings.endpoints:
             refresher = Refresher(self.gpg, self.status_q, e)
             refresher.finished.connect(self.refresh_finished)
-            self.refreshers.append(refresher)
+            self.waiting_refreshers.append(refresher)
 
         # Start the first refresher thread
-        if len(self.refreshers) > 0:
+        if len(self.waiting_refreshers) > 0:
             self.toggle_input(False)
-            self.refreshers.pop().start()
+            r = self.waiting_refreshers.pop()
+            self.active_refreshers.append(r)
+            r.start()
 
     def toggle_input(self, enabled=False):
         # Show/hide loading graphic
