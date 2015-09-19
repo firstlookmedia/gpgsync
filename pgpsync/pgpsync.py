@@ -10,7 +10,7 @@ from .settings import Settings
 
 from .endpoint_selection import EndpointSelection
 from .edit_endpoint import EditEndpoint
-from .endpoint import Endpoint, URLDownloadError, InvalidFingerprints
+from .endpoint import Endpoint, URLDownloadError, InvalidFingerprints, FingerprintsListNotSigned
 from .status_bar import StatusBar, MessageQueue
 
 class Application(QtWidgets.QApplication):
@@ -225,6 +225,8 @@ class PGPSync(QtWidgets.QMainWindow):
                     e.get_fingerprint_list(msg_bytes)
                 except InvalidFingerprints as e:
                     self.alert_error.emit('URL contains invalid fingerprints: {}'.format(e))
+                except FingerprintsListNotSigned:
+                    self.alert_error.emit('Fingerprints list is not signed.')
                 else:
                     success = True
 

@@ -10,6 +10,9 @@ class URLDownloadError(Exception):
 class InvalidFingerprints(Exception):
     pass
 
+class FingerprintsListNotSigned(Exception):
+    pass
+
 class Endpoint(object):
     def __init__(self):
         # each endpoint needs a unique id

@@ -32,9 +32,19 @@ def test_fetch_url_valid_url_valid_proxy():
     e.fetch_url()
 
 def test_get_fingerprint_list_valid():
-    # Test without whitespace, with whitespace, and with whitespace and comments
-    pass
+    # None of these should throw exceptions
+    e = Endpoint()
+    e.get_fingerprint_list(get_endpoint_file_content('fingerprints.asc'))
+    e.get_fingerprint_list(get_endpoint_file_content('fingerprints_comments.asc'))
+    e.get_fingerprint_list(get_endpoint_file_content('fingerprints_no_whitespace.asc'))
+    e.get_fingerprint_list(get_endpoint_file_content('fingerprints_weird_whitespace.asc'))
 
-def test_get_fingerprint_list_invalid():
-    # Test with lines that are not valid fingerprints
-    pass
+@raises(InvalidFingerprints)
+def test_get_fingerprint_list_invalid_fingerprints():
+    e = Endpoint()
+    e.get_fingerprint_list(get_endpoint_file_content('invalid_fingerprints.asc'))
+
+@raises(FingerprintsListNotSigned)
+def test_get_fingerprint_list_invalid_not_signed():
+    e = Endpoint()
+    e.get_fingerprint_list(get_endpoint_file_content('invalid_not_signed'))

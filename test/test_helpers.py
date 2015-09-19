@@ -9,7 +9,7 @@ def setup_qt():
     if not qt_app:
         qt_app = QtWidgets.QApplication(sys.argv)
 
-
+# GnuPG related test helpers
 test_key_fp = b'ABCFD99FA1617E55B8CDE5ADE36FD670777947EB'
 gpg_homedir = os.path.abspath('test/homedir')
 
@@ -27,3 +27,8 @@ def get_gpg_file(filename):
 def import_key(filename):
     subprocess.call(['gpg', '--homedir', gpg_homedir, '--import', get_gpg_file(filename)],
         stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+
+# Endpoint related test helpers
+def get_endpoint_file_content(filename):
+    filename = os.path.join(os.path.abspath('test/endpoint_files'), filename)
+    return open(filename, 'rb').read()
