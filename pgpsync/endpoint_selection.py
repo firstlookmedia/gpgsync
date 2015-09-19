@@ -56,3 +56,7 @@ class EndpointSelection(QtWidgets.QVBoxLayout):
 
     def refresh(self, endpoints):
         self.endpoint_list.refresh(endpoints)
+
+    def setEnabled(self, enabled):
+        self.endpoint_list.setEnabled(enabled)
+        self.add_btn.setEnabled(enabled)

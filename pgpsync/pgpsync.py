@@ -97,8 +97,11 @@ class PGPSync(QtWidgets.QMainWindow):
                 self.status_bar.clearMessage()
 
     def edit_endpoint_alert_error(self, msg, icon=QtWidgets.QMessageBox.Warning):
-        self.status_bar.hide_loading()
         common.alert(msg, icon)
+
+        self.status_bar.hide_loading()
+        self.endpoint_selection.setEnabled(True)
+        self.edit_endpoint_wrapper.setEnabled(True)
 
     def edit_endpoint_save(self, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port):
         # Save the settings
@@ -114,6 +117,9 @@ class PGPSync(QtWidgets.QMainWindow):
 
         # Refresh the display
         self.status_bar.hide_loading()
+        self.endpoint_selection.setEnabled(True)
+        self.edit_endpoint_wrapper.setEnabled(True)
+
         self.endpoint_selection.refresh(self.settings.endpoints)
 
     def add_endpoint(self):
@@ -245,8 +251,12 @@ class PGPSync(QtWidgets.QMainWindow):
         proxy_host  = self.edit_endpoint.proxy_host_edit.text().encode()
         proxy_port  = self.edit_endpoint.proxy_port_edit.text().encode()
 
-        # Run the verifier inside a new thread
+        # Show loading graphic, and disable all input until it's finished Verifying
         self.status_bar.show_loading()
+        self.endpoint_selection.setEnabled(False)
+        self.edit_endpoint_wrapper.setEnabled(False)
+
+        # Run the verifier inside a new thread
         self.verifier = Verifier(self.gpg, self.status_q, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
         self.verifier.alert_error.connect(self.edit_endpoint_alert_error)
         self.verifier.success.connect(self.edit_endpoint_save)
