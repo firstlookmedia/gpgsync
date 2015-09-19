@@ -5,6 +5,10 @@ from PyQt5 import QtCore, QtWidgets
 from . import common
 
 class SysTray(QtWidgets.QSystemTrayIcon):
+    show_signal = QtCore.pyqtSignal()
+    update_signal = QtCore.pyqtSignal()
+    quit_signal = QtCore.pyqtSignal()
+
     def __init__(self):
         super(SysTray, self).__init__(common.get_icon())
 
@@ -29,10 +33,10 @@ class SysTray(QtWidgets.QSystemTrayIcon):
             self.clicked_show()
 
     def clicked_show(self):
-        print('show')
+        self.show_signal.emit()
 
     def clicked_update(self):
-        print('update')
+        self.update_signal.emit()
 
     def clicked_quit(self):
-        print('quit')
+        self.quit_signal.emit()

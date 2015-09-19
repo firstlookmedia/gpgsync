@@ -30,6 +30,7 @@ class PGPSync(QtWidgets.QMainWindow):
 
         # Initialize the system tray icon
         self.systray = SysTray()
+        self.systray.quit_signal.connect(self.app.quit)
 
         # Initialize gpg
         self.gpg = GnuPG()
