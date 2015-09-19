@@ -70,7 +70,7 @@ class Endpoint(object):
     def get_fingerprint_list(self, msg_bytes):
         # OpenPGP message format: https://tools.ietf.org/html/rfc4880
 
-        if msg_bytes[-2] == b'\r\n':
+        if msg_bytes[-2:] == b'\r\n':
             sep = b'\r\n'
         else:
             sep = b'\n'
