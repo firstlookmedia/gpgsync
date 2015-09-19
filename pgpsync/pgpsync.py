@@ -46,7 +46,7 @@ class PGPSync(QtWidgets.QMainWindow):
         # Initialize the system tray icon
         self.systray = SysTray()
         self.systray.show_signal.connect(self.toggle_show_window)
-        self.systray.update_signal.connect(self.update_all_endpoints)
+        self.systray.refresh_signal.connect(self.refresh_all_endpoints)
         self.systray.quit_signal.connect(self.app.quit)
 
         # Endpoint selection GUI
@@ -87,16 +87,18 @@ class PGPSync(QtWidgets.QMainWindow):
         self.status_bar_timer.timeout.connect(self.status_bar_update)
         self.status_bar_timer.start(500) # 0.5 seconds
 
-        # Timer to update endpoints
-        self.update_timer = QtCore.QTimer()
-        self.update_timer.timeout.connect(self.update_all_endpoints)
-        self.update_timer.start(3600000) # 1 hour
+        # Timer to refresh endpoints
+        self.refresh_timer = QtCore.QTimer()
+        self.refresh_timer.timeout.connect(self.refresh_all_endpoints)
+        self.refresh_timer.start(3600000) # 1 hour
 
         # Decide if window should start out shown or hidden
         if len(self.settings.endpoints) == 0:
             self.show()
+            self.systray.set_window_show(True)
         else:
             self.hide()
+            self.systray.set_window_show(False)
 
     def closeEvent(self, e):
         self.toggle_show_window()
@@ -105,8 +107,10 @@ class PGPSync(QtWidgets.QMainWindow):
     def toggle_show_window(self):
         if self.isHidden():
             self.show()
+            self.systray.set_window_show(True)
         else:
             self.hide()
+            self.systray.set_window_show(False)
 
     def status_bar_update(self):
         events = []
@@ -315,8 +319,9 @@ class PGPSync(QtWidgets.QMainWindow):
             self.edit_endpoint.set_endpoint(item.endpoint)
             self.edit_endpoint_wrapper.show()
 
-    def update_all_endpoints(self):
-        print('Updating all endpoints')
+    def refresh_all_endpoints(self):
+        for e in self.settings.endpoints:
+            pass
 
 def main():
     app = Application()
