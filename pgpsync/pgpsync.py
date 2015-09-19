@@ -130,10 +130,7 @@ class PGPSync(QtWidgets.QMainWindow):
 
     def edit_endpoint_alert_error(self, msg, icon=QtWidgets.QMessageBox.Warning):
         common.alert(msg, icon)
-
-        self.status_bar.hide_loading()
-        self.endpoint_selection.setEnabled(True)
-        self.edit_endpoint_wrapper.setEnabled(True)
+        self.toggle_input(True)
 
     def edit_endpoint_save(self, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port):
         # Save the settings
@@ -148,10 +145,7 @@ class PGPSync(QtWidgets.QMainWindow):
         self.current_endpoint = None
 
         # Refresh the display
-        self.status_bar.hide_loading()
-        self.endpoint_selection.setEnabled(True)
-        self.edit_endpoint_wrapper.setEnabled(True)
-
+        self.toggle_input(True)
         self.endpoint_selection.refresh(self.settings.endpoints)
 
     def add_endpoint(self):
@@ -284,9 +278,7 @@ class PGPSync(QtWidgets.QMainWindow):
         proxy_port  = self.edit_endpoint.proxy_port_edit.text().encode()
 
         # Show loading graphic, and disable all input until it's finished Verifying
-        self.status_bar.show_loading()
-        self.endpoint_selection.setEnabled(False)
-        self.edit_endpoint_wrapper.setEnabled(False)
+        self.toggle_input(False)
 
         # Run the verifier inside a new thread
         self.verifier = Verifier(self.gpg, self.status_q, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
@@ -320,8 +312,29 @@ class PGPSync(QtWidgets.QMainWindow):
             self.edit_endpoint_wrapper.show()
 
     def refresh_all_endpoints(self):
+        # Loop through all endpoints
         for e in self.settings.endpoints:
-            pass
+            self.toggle_input(False)
+
+            # TODO: Fetch signing key from keyserver, make sure it's not expired or revoked
+            # TODO: Download URL
+            # TODO: Verifiy signature
+            # TODO: Get fingerprint list
+
+            # TODO: For each fingerprint, check if it's revoked
+            # TODO: If not, refresh it from keyserver
+
+    def toggle_input(self, enabled=False):
+        # Show/hide loading graphic
+        if enabled:
+            self.status_bar.hide_loading()
+        else:
+            self.status_bar.show_loading()
+
+        # Disable/enable all input
+        self.endpoint_selection.setEnabled(enabled)
+        self.edit_endpoint_wrapper.setEnabled(enabled)
+        self.systray.refresh_act.setEnabled(enabled)
 
 def main():
     app = Application()
