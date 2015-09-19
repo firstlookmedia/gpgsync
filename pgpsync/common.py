@@ -44,3 +44,10 @@ def get_icon():
     if not icon:
         icon = QtGui.QIcon(get_image_path('pgpsync.png'))
     return icon
+
+syncing_icon = None
+def get_syncing_icon():
+    global syncing_icon
+    if not syncing_icon:
+        syncing_icon = QtGui.QIcon(get_image_path('syncing.png'))
+    return syncing_icon

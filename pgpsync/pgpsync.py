@@ -463,8 +463,10 @@ class PGPSync(QtWidgets.QMainWindow):
         # Show/hide loading graphic
         if enabled:
             self.status_bar.hide_loading()
+            self.systray.setIcon(common.icon)
         else:
             self.status_bar.show_loading()
+            self.systray.setIcon(common.get_syncing_icon())
 
         # Disable/enable all input
         self.endpoint_selection.setEnabled(enabled)
