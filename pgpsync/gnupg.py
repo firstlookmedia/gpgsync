@@ -109,6 +109,8 @@ class GnuPG(object):
             raise VerificationError()
         if b'This key has been revoked by its owner!' in err:
             raise RevokedKey()
+        if b'Note: This key has expired!' in err:
+            raise ExpiredKey()
         if b'Signature made' not in err and b'Good signature from' not in err:
             raise VerificationError()
 
