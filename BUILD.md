@@ -21,3 +21,5 @@ From the `pgpsync` folder run:
 ```sh
 nosetests
 ```
+
+Note that one of the tests will fail if you don't have SOCKS5 proxy server listening on port 9050 (e.g. Tor installed).
