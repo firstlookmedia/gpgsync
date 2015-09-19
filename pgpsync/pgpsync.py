@@ -12,6 +12,7 @@ from .endpoint_selection import EndpointSelection
 from .edit_endpoint import EditEndpoint
 from .endpoint import Endpoint, URLDownloadError, InvalidFingerprints, FingerprintsListNotSigned
 from .status_bar import StatusBar, MessageQueue
+from .systray import SysTray
 
 class Application(QtWidgets.QApplication):
     def __init__(self):
@@ -26,6 +27,9 @@ class PGPSync(QtWidgets.QMainWindow):
         self.system = platform.system()
         self.setWindowTitle('PGP Sync')
         self.setWindowIcon(common.get_icon())
+
+        # Initialize the system tray icon
+        self.systray = SysTray()
 
         # Initialize gpg
         self.gpg = GnuPG()
