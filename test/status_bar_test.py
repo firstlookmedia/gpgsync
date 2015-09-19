@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from nose import with_setup
 from pgpsync import StatusBar, MessageQueue
 

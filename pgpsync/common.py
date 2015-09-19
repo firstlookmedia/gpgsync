@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os, sys, re, platform
 from PyQt5 import QtCore, QtWidgets
 
@@ -9,17 +10,17 @@ def alert(msg, icon=QtWidgets.QMessageBox.Warning):
     d.exec_()
 
 def valid_fp(fp):
-    return re.match(r'^[A-F\d]{40}$', clean_fp(fp))
+    return re.match(b'^[A-F\d]{40}$', clean_fp(fp))
 
 def clean_fp(fp):
-    return fp.strip().replace(' ','').upper()
+    return fp.strip().replace(b' ', b'').upper()
 
 def fp_to_keyid(fp):
-    return '0x{}'.format(clean_fp(fp)[-16:])
+    return '0x{}'.format(clean_fp(fp)[-16:].decode()).encode()
 
 def clean_keyserver(keyserver):
-    if '://' not in keyserver:
-        return 'hkp://{}'.format(keyserver)
+    if b'://' not in keyserver:
+        return b'hkp://' + keyserver
     return keyserver
 
 def get_image_path(filename):

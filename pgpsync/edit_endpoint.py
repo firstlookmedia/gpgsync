@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from PyQt5 import QtCore, QtWidgets
 
 from .endpoint import Endpoint
@@ -75,18 +76,18 @@ class EditEndpoint(QtWidgets.QVBoxLayout):
     def set_endpoint(self, endpoint):
         self.endpoint = endpoint
 
-        self.fingerprint_edit.setText(endpoint.fingerprint)
-        self.url_edit.setText(endpoint.url)
-        self.keyserver_edit.setText(endpoint.keyserver)
+        self.fingerprint_edit.setText(endpoint.fingerprint.decode())
+        self.url_edit.setText(endpoint.url.decode())
+        self.keyserver_edit.setText(endpoint.keyserver.decode())
 
         if endpoint.use_proxy:
             self.use_proxy.setCheckState(QtCore.Qt.Checked)
         else:
             self.use_proxy.setCheckState(QtCore.Qt.Unchecked)
 
-        self.proxy_host_edit.setText(endpoint.proxy_host)
+        self.proxy_host_edit.setText(endpoint.proxy_host.decode())
         proxy_port_label = QtWidgets.QLabel('Port')
-        self.proxy_port_edit.setText(endpoint.proxy_port)
+        self.proxy_port_edit.setText(endpoint.proxy_port.decode())
 
     def save(self):
         self.save_signal.emit()

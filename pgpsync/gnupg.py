@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import subprocess, os, platform, tempfile, shutil
 from . import common
 
@@ -115,7 +116,7 @@ class GnuPG(object):
         lines = err.split(b'\n')
         for i in range(len(lines)):
             if lines[i].startswith(b'gpg: Signature made'):
-                if lines[i+1].split()[-1].decode('utf-8') != common.fp_to_keyid(fp):
+                if lines[i+1].split()[-1] != common.fp_to_keyid(fp):
                     raise SignedWithWrongKey
                 break
 

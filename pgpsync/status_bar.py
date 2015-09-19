@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import queue
 from PyQt5 import QtCore, QtWidgets
 

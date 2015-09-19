@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from . import test_helpers
 
 def setup_package():

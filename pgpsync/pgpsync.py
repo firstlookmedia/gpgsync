@@ -1,5 +1,5 @@
-import sys, platform, queue, pycurl
-from io import BytesIO
+# -*- coding: utf-8 -*-
+import sys, platform, queue
 from urllib.parse import urlparse
 from PyQt5 import QtCore, QtWidgets
 
@@ -10,7 +10,7 @@ from .settings import Settings
 
 from .endpoint_selection import EndpointSelection
 from .edit_endpoint import EditEndpoint
-from .endpoint import Endpoint
+from .endpoint import Endpoint, ProxyError, InvalidFingerprints
 from .status_bar import StatusBar, MessageQueue
 
 class Application(QtWidgets.QApplication):
@@ -148,11 +148,15 @@ class PGPSync(QtWidgets.QMainWindow):
                 self.finished.emit()
 
             def run(self):
-                # Test fingerprint and keyserver
+                # Make an endpoint
+                e = Endpoint()
+                e.update(self.fingerprint, self.url, self.keyserver, self.use_proxy, self.proxy_host, self.proxy_port)
+
+                # Test fingerprint and keyserver, and that the key isn't revoked or expired
                 success = False
                 try:
-                    self.q.add_message('Downloading {} from keyserver {}'.format(common.fp_to_keyid(self.fingerprint), self.keyserver))
-                    self.gpg.recv_key(self.keyserver, self.fingerprint)
+                    self.q.add_message('Downloading {} from keyserver {}'.format(common.fp_to_keyid(self.fingerprint).decode(), self.keyserver.decode()))
+                    e.fetch_public_key(self.gpg)
                 except InvalidFingerprint:
                     self.alert_error.emit('Invalid signing key fingerprint.')
                 except InvalidKeyserver:
@@ -161,18 +165,6 @@ class PGPSync(QtWidgets.QMainWindow):
                     self.alert_error.emit('Signing key is not found on keyserver. Upload signing key and try again.')
                 except NotFoundInKeyring:
                     self.alert_error.emit('Signing key is not found in keyring. Something went wrong.')
-                else:
-                    success = True
-
-                if not success:
-                    return self.finish_with_failure()
-
-                # Fingerprint is valid, and we have retrived it from the keyserver
-                # Check if the key is revoked or expired
-                success = False
-                try:
-                    self.q.add_message('Testing for valid signing key {}'.format(common.fp_to_keyid(self.fingerprint)))
-                    self.gpg.test_key(self.fingerprint)
                 except RevokedKey:
                     self.alert_error.emit('The signing key is revoked.')
                 except ExpiredKey:
@@ -186,8 +178,8 @@ class PGPSync(QtWidgets.QMainWindow):
                 # Make sure URL is in the right format
                 success = False
                 o = urlparse(self.url)
-                if (o.scheme != 'http' and o.scheme != 'https') or o.netloc == '':
-                    self.alert_error.emit('Signed fingerprints URL is invalid.')
+                if (o.scheme != b'http' and o.scheme != b'https') or o.netloc == '':
+                    self.alert_error.emit('URL is invalid.')
                 else:
                     success = True
 
@@ -197,19 +189,9 @@ class PGPSync(QtWidgets.QMainWindow):
                 # Test loading URL
                 success = False
                 try:
-                    self.q.add_message('Testing downloading URL {}'.format(self.url))
-                    buffer = BytesIO()
-                    c = pycurl.Curl()
-                    c.setopt(pycurl.URL, self.url)
-                    c.setopt(c.WRITEDATA, buffer)
-                    if self.use_proxy:
-                        c.setopt(pycurl.PROXY, self.proxy_host)
-                        c.setopt(pycurl.PROXYPORT, int(self.proxy_port))
-                        c.setopt(pycurl.PROXYTYPE, pycurl.PROXYTYPE_SOCKS5)
-                    c.perform()
-                    c.close()
-                    msg_bytes = buffer.getvalue()
-                except pycurl.error as e:
+                    self.q.add_message('Testing downloading URL {}'.format(self.url.decode()))
+                    msg_bytes = e.fetch_url()
+                except ProxyError as e:
                     self.alert_error.emit('URL failed to download: {}'.format(e))
                 else:
                     success = True
@@ -221,28 +203,45 @@ class PGPSync(QtWidgets.QMainWindow):
                 success = False
                 try:
                     self.q.add_message('Verifying signature')
-                    self.gpg.verify(msg_bytes, self.fingerprint)
+                    e.verify_fingerprints_sig(self.gpg, msg_bytes)
                 except VerificationError:
                     self.alert_error.emit('Signature does not verify.')
+                except BadSignature:
+                    self.alert_error.emit('Bad signature.')
+                except RevokedKey:
+                    self.alert_error.emit('The signing key is revoked.')
+                except SignedWithWrongKey:
+                    self.alert_error.emit('Valid signature, but signed with wrong signing key.')
                 else:
                     success = True
 
                 if not success:
                     return self.finish_with_failure()
 
-                # TODO: After verifying sig, test that it's a list of fingerprints
+                # Test that it's a list of fingerprints
+                success = False
+                try:
+                    self.q.add_message('Validating fingerprint list')
+                    e.get_fingerprint_list(msg_bytes)
+                except InvalidFingerprints as e:
+                    self.alert_error.emit('URL contains invalid fingerprints: {}'.format(e))
+                else:
+                    success = True
+
+                if not success:
+                    return self.finish_with_failure()
 
                 self.q.add_message('Endpoint saved', timeout=4000)
                 self.success.emit(fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
                 self.finished.emit()
 
         # Get values for endpoint
-        fingerprint = common.clean_fp(str(self.edit_endpoint.fingerprint_edit.text()))
-        url         = str(self.edit_endpoint.url_edit.text())
-        keyserver   = str(self.edit_endpoint.keyserver_edit.text())
+        fingerprint = common.clean_fp(self.edit_endpoint.fingerprint_edit.text().encode())
+        url         = self.edit_endpoint.url_edit.text().encode()
+        keyserver   = self.edit_endpoint.keyserver_edit.text().encode()
         use_proxy   = self.edit_endpoint.use_proxy.checkState() == QtCore.Qt.Checked
-        proxy_host  = str(self.edit_endpoint.proxy_host_edit.text())
-        proxy_port  = str(self.edit_endpoint.proxy_port_edit.text())
+        proxy_host  = self.edit_endpoint.proxy_host_edit.text().encode()
+        proxy_port  = self.edit_endpoint.proxy_port_edit.text().encode()
 
         # Run the verifier inside a new thread
         self.status_bar.show_loading()

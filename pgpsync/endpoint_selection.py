@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import re
 from PyQt5 import QtCore, QtWidgets, QtGui
 
