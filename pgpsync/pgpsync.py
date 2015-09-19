@@ -130,7 +130,7 @@ class PGPSync(QtWidgets.QMainWindow):
     def save_endpoint(self):
         class Verifier(QtCore.QThread):
             alert_error = QtCore.pyqtSignal(str)
-            success = QtCore.pyqtSignal(str, str, str, bool, str, str)
+            success = QtCore.pyqtSignal(bytes, bytes, bytes, bool, bytes, bytes)
 
             def __init__(self, gpg, q, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port):
                 super(Verifier, self).__init__()
