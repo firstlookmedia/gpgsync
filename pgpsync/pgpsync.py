@@ -28,10 +28,6 @@ class PGPSync(QtWidgets.QMainWindow):
         self.setWindowTitle('PGP Sync')
         self.setWindowIcon(common.get_icon())
 
-        # Initialize the system tray icon
-        self.systray = SysTray()
-        self.systray.quit_signal.connect(self.app.quit)
-
         # Initialize gpg
         self.gpg = GnuPG()
         if not self.gpg.is_gpg_available():
@@ -46,6 +42,16 @@ class PGPSync(QtWidgets.QMainWindow):
         # Load settings
         self.settings = Settings()
         self.current_endpoint = None
+
+        # Initialize the system tray icon
+        self.systray = SysTray()
+        self.systray.quit_signal.connect(self.app.quit)
+        self.systray.show_signal.connect(self.toggle_show_window)
+
+        if len(self.settings.endpoints) == 0:
+            self.hide()
+        else:
+            self.show()
 
         # Endpoint selection GUI
         self.endpoint_selection = EndpointSelection(self.gpg)
@@ -85,6 +91,16 @@ class PGPSync(QtWidgets.QMainWindow):
         self.status_bar_timer = QtCore.QTimer()
         self.status_bar_timer.timeout.connect(self.status_bar_update)
         self.status_bar_timer.start(500)
+
+    def closeEvent(self, e):
+        self.toggle_show_window()
+        e.ignore()
+
+    def toggle_show_window(self):
+        if self.isHidden():
+            self.show()
+        else:
+            self.hide()
 
     def status_bar_update(self):
         events = []
