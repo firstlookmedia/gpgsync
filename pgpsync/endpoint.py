@@ -88,8 +88,15 @@ class Endpoint(object):
         fingerprints = []
         invalid_fingerprints = []
         for line in lines:
+            # If there are comments in the line, remove the comments
+            if b'#' in line:
+                line = line.split(b'#')[0]
+
+            # Skip blank lines
             if line.strip() == b'':
                 continue
+
+            # Test for valid fingerprints
             if common.valid_fp(line):
                 fingerprints.append(line)
             else:
