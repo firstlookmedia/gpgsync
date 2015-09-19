@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import os, sys, re, platform
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets, QtGui
 
 def alert(msg, icon=QtWidgets.QMessageBox.Warning):
     d = QtWidgets.QMessageBox()
@@ -37,3 +37,10 @@ def get_image_path(filename):
 
     image_path = os.path.join(prefix, filename)
     return image_path
+
+icon = None
+def get_icon():
+    global icon
+    if not icon:
+        icon = QtGui.QIcon(get_image_path('pgpsync.png'))
+    return icon

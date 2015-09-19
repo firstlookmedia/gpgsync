@@ -25,6 +25,7 @@ class PGPSync(QtWidgets.QMainWindow):
         self.app = app
         self.system = platform.system()
         self.setWindowTitle('PGP Sync')
+        self.setWindowIcon(common.get_icon())
 
         # Initialize gpg
         self.gpg = GnuPG()
