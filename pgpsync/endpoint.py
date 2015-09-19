@@ -70,8 +70,17 @@ class Endpoint(object):
     def get_fingerprint_list(self, msg_bytes):
         # OpenPGP message format: https://tools.ietf.org/html/rfc4880
 
-        cleartext_header = b'-----BEGIN PGP SIGNED MESSAGE-----\r\n'
-        sig_header = b'-----BEGIN PGP SIGNATURE-----\r\n'
+        if msg_bytes[-2] == b'\r\n':
+            sep = b'\r\n'
+        else:
+            sep = b'\n'
+
+        cleartext_header = b'-----BEGIN PGP SIGNED MESSAGE-----' + sep
+        sig_header = b'-----BEGIN PGP SIGNATURE-----' + sep
+        sig_footer = b'-----END PGP SIGNATURE-----' + sep
+
+        if cleartext_header not in msg_bytes or sig_header not in msg_bytes or sig_footer not in msg_bytes:
+            raise FingerprintsListNotSigned
 
         # Get the content, plus armor headers and blank line
         start = msg_bytes.find(cleartext_header) + len(cleartext_header)
@@ -79,13 +88,14 @@ class Endpoint(object):
         content = msg_bytes[start:end]
 
         # Split the content into lines, and cut off the armor headers
-        lines = content.split(b'\r\n')
+        lines = content.split(sep)
         blank_i = None
         for i in range(len(lines)):
             if lines[i] == b'':
                 blank_i = i
                 break
         lines = lines[blank_i+1:]
+        print(lines)
 
         # Convert the content into a list of fingerprints
         fingerprints = []
