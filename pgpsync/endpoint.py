@@ -15,12 +15,13 @@ class FingerprintsListNotSigned(Exception):
 
 class Endpoint(object):
     def __init__(self):
-        # each endpoint needs a unique id
-        self.id = uuid.uuid4()
-
-        # set defaults
-        self.update(fingerprint=b'', url=b'https://', keyserver=b'hkp://keys.gnupg.net',
-            use_proxy=False, proxy_host=b'127.0.0.1', proxy_port=b'9050')
+        self.fingerprint = b''
+        self.url = b'https://'
+        self.keyserver = b'hkp://keys.gnupg.net'
+        self.use_proxy = False
+        self.proxy_host = b'127.0.0.1'
+        self.proxy_port = b'9050'
+        self.last_checked = None
 
     def update(self, fingerprint=None, url=None, keyserver=None, use_proxy=None, proxy_host=None, proxy_port=None, last_checked=None):
         if fingerprint != None:
@@ -118,10 +119,3 @@ class Endpoint(object):
             raise InvalidFingerprints(invalid_fingerprints)
 
         return fingerprints
-
-    def refresh(self, force=False):
-        # Refresh if it's forced, if it's never been checked before,
-        # or if it's been 24 hours since last check
-        one_day = 60*60*24
-        if force or not self.last_checked or time.time() - one_day >= self.last_checked:
-            pass
