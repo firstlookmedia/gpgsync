@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import pycurl, uuid
+import pycurl, uuid, time
 from io import BytesIO
 
 from . import common
@@ -118,3 +118,10 @@ class Endpoint(object):
             raise InvalidFingerprints(invalid_fingerprints)
 
         return fingerprints
+
+    def refresh(self, force=False):
+        # Refresh if it's forced, if it's never been checked before,
+        # or if it's been 24 hours since last check
+        one_day = 60*60*24
+        if force or not self.last_checked or time.time() - one_day >= self.last_checked:
+            pass
