@@ -48,11 +48,6 @@ class PGPSync(QtWidgets.QMainWindow):
         self.systray.quit_signal.connect(self.app.quit)
         self.systray.show_signal.connect(self.toggle_show_window)
 
-        if len(self.settings.endpoints) == 0:
-            self.hide()
-        else:
-            self.show()
-
         # Endpoint selection GUI
         self.endpoint_selection = EndpointSelection(self.gpg)
         self.endpoint_selection.refresh(self.settings.endpoints)
@@ -80,7 +75,6 @@ class PGPSync(QtWidgets.QMainWindow):
         central_widget = QtWidgets.QWidget()
         central_widget.setLayout(layout)
         self.setCentralWidget(central_widget)
-        self.show()
 
         # Status bar
         self.status_bar = StatusBar()
@@ -91,6 +85,12 @@ class PGPSync(QtWidgets.QMainWindow):
         self.status_bar_timer = QtCore.QTimer()
         self.status_bar_timer.timeout.connect(self.status_bar_update)
         self.status_bar_timer.start(500)
+
+        # Decide if window should start out shown or hidden
+        if len(self.settings.endpoints) == 0:
+            self.show()
+        else:
+            self.hide()
 
     def closeEvent(self, e):
         self.toggle_show_window()
