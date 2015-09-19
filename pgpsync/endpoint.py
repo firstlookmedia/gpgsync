@@ -95,7 +95,6 @@ class Endpoint(object):
                 blank_i = i
                 break
         lines = lines[blank_i+1:]
-        print(lines)
 
         # Convert the content into a list of fingerprints
         fingerprints = []
