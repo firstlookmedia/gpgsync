@@ -22,8 +22,10 @@ class Endpoint(object):
         self.proxy_host = b'127.0.0.1'
         self.proxy_port = b'9050'
         self.last_checked = None
+        self.error = None
+        self.warning = None
 
-    def update(self, fingerprint=None, url=None, keyserver=None, use_proxy=None, proxy_host=None, proxy_port=None, last_checked=None):
+    def update(self, fingerprint=None, url=None, keyserver=None, use_proxy=None, proxy_host=None, proxy_port=None, last_checked=None, error=None, warning=None):
         if fingerprint != None:
             self.fingerprint = fingerprint
         if url != None:
@@ -38,6 +40,10 @@ class Endpoint(object):
             self.proxy_port = proxy_port
         if last_checked != None:
             self.last_checked = False
+        if error != None:
+            self.error = False
+        if warning != None:
+            self.warning = False
 
     def fetch_public_key(self, gpg):
         # Retreive the signing key from the keyserver
