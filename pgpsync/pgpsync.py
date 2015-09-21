@@ -124,7 +124,8 @@ class Verifier(QtCore.QThread):
         self.finished.emit()
 
 class Refresher(QtCore.QThread):
-    success = QtCore.pyqtSignal(list, list)
+    success = QtCore.pyqtSignal(Endpoint, list, list)
+    error = QtCore.pyqtSignal(Endpoint, str)
 
     def __init__(self, gpg, q, endpoint, force=False):
         super(Refresher, self).__init__()
@@ -135,6 +136,7 @@ class Refresher(QtCore.QThread):
 
     def finish_with_failure(self, err):
         self.q.add_message(type='clear')
+        self.error.emit(self.e, err)
         self.finished.emit()
 
     def run(self):
@@ -242,7 +244,7 @@ class Refresher(QtCore.QThread):
                     notfound_fingerprints.append(fingerprint)
 
             # All done
-            self.success.emit(invalid_fingerprints, notfound_fingerprints)
+            self.success.emit(self.e, invalid_fingerprints, notfound_fingerprints)
 
         self.finished.emit()
 
@@ -434,7 +436,7 @@ class PGPSync(QtWidgets.QMainWindow):
             self.edit_endpoint.set_endpoint(item.endpoint)
             self.edit_endpoint_wrapper.show()
 
-    def refresh_finished(self):
+    def refresher_finished(self):
         if len(self.waiting_refreshers) > 0:
             r = self.waiting_refreshers.pop()
             self.active_refreshers.append(r)
@@ -443,13 +445,21 @@ class PGPSync(QtWidgets.QMainWindow):
             self.status_q.add_message('Syncing complete.', timeout=4000)
             self.toggle_input(True)
 
+    def refresher_success(self, e, invalid_fingerprints, notfound_fingerprints):
+        print('success')
+
+    def refresher_error(self, e, err):
+        print('error')
+
     def refresh_all_endpoints(self):
         # Make a refresher for each endpoint
         self.waiting_refreshers = []
         self.active_refreshers = []
         for e in self.settings.endpoints:
             refresher = Refresher(self.gpg, self.status_q, e)
-            refresher.finished.connect(self.refresh_finished)
+            refresher.finished.connect(self.refresher_finished)
+            refresher.success.connect(self.refresher_success)
+            refresher.error.connect(self.refresher_error)
             self.waiting_refreshers.append(refresher)
 
         # Start the first refresher thread

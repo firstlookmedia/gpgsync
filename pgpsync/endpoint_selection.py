@@ -11,7 +11,7 @@ class EndpointWidget(QtWidgets.QWidget):
         # If the endpoint isn't configured yet
         if not common.valid_fp(e.fingerprint):
             not_configured_label = QtWidgets.QLabel('Not configured')
-            not_configured_label.setStyleSheet("QLabel { color: red }")
+            not_configured_label.setStyleSheet("QLabel { color: #CC0000; }")
 
             layout = QtWidgets.QVBoxLayout()
             layout.addWidget(not_configured_label)
@@ -33,11 +33,23 @@ class EndpointWidget(QtWidgets.QWidget):
         last_updated_label = QtWidgets.QLabel('Last updated: {}'.format(last_updated))
         last_updated_label.setStyleSheet("QLabel { color: #666666; }")
 
+        # Warning and error
+        if e.warning:
+            warning_label = QtWidgets.QLabel('Warning: {}'.format(e.warning))
+            keyid_label.setStyleSheet("QLabel { color: #C36900; }")
+        if e.error:
+            error_label = QtWidgets.QLabel('Error: {}'.format(e.error))
+            keyid_label.setStyleSheet("QLabel { color: #CC0000; }")
+
         # Widget layout
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(uid_label)
         layout.addWidget(keyid_label)
         layout.addWidget(last_updated_label)
+        if e.warning:
+            layout.addWidget(warning_label)
+        if e.error:
+            layout.addWidget(error_label)
         self.setLayout(layout)
 
 class EndpointList(QtWidgets.QListWidget):
