@@ -25,26 +25,6 @@ class Endpoint(object):
         self.error = None
         self.warning = None
 
-    def update(self, fingerprint=None, url=None, keyserver=None, use_proxy=None, proxy_host=None, proxy_port=None, last_checked=None, error=None, warning=None):
-        if fingerprint != None:
-            self.fingerprint = fingerprint
-        if url != None:
-            self.url = url
-        if keyserver != None:
-            self.keyserver = keyserver
-        if use_proxy != None:
-            self.use_proxy = bool(use_proxy)
-        if proxy_host != None:
-            self.proxy_host = proxy_host
-        if proxy_port != None:
-            self.proxy_port = proxy_port
-        if last_checked != None:
-            self.last_checked = False
-        if error != None:
-            self.error = False
-        if warning != None:
-            self.warning = False
-
     def fetch_public_key(self, gpg):
         # Retreive the signing key from the keyserver
         gpg.recv_key(self.keyserver, self.fingerprint)
