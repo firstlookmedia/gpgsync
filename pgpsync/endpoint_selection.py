@@ -4,36 +4,58 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 
 from . import common
 
+class EndpointWidget(QtWidgets.QWidget):
+    def __init__(self, e, gpg):
+        super(EndpointWidget, self).__init__()
+
+        # If the endpoint isn't configured yet
+        if not common.valid_fp(e.fingerprint):
+            not_configured_label = QtWidgets.QLabel('Not configured')
+            not_configured_label.setStyleSheet("QLabel { color: red }")
+
+            layout = QtWidgets.QVBoxLayout()
+            layout.addWidget(not_configured_label)
+            self.setLayout(layout)
+            return
+
+        # User id of signing key
+        uid = gpg.get_uid(e.fingerprint)
+        uid_label = QtWidgets.QLabel(uid)
+        uid_label.setStyleSheet("QLabel { font-weight: bold; }")
+
+        # Keyid of singing key
+        keyid = common.fp_to_keyid(e.fingerprint).decode()
+        keyid_label = QtWidgets.QLabel(keyid)
+        keyid_label.setStyleSheet("QLabel { font-style: italic; color: #666666; }")
+
+        # Last updated
+        last_updated = 'never' # TODO: Fix this
+        last_updated_label = QtWidgets.QLabel('Last updated: {}'.format(last_updated))
+        last_updated_label.setStyleSheet("QLabel { color: #666666; }")
+
+        # Widget layout
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(uid_label)
+        layout.addWidget(keyid_label)
+        layout.addWidget(last_updated_label)
+        self.setLayout(layout)
+
 class EndpointList(QtWidgets.QListWidget):
     def __init__(self, gpg):
         super(EndpointList, self).__init__()
         self.gpg = gpg
 
-    def add_endpoint_error(self, e, error):
-        item = QtWidgets.QListWidgetItem(error)
-        item.endpoint = e
-        item.setForeground(QtGui.QBrush(QtGui.QColor(200, 0, 0)))
-        self.addItem(item)
-
     def add_endpoint(self, e):
-        uid = self.gpg.get_uid(e.fingerprint)
-        keyid = common.fp_to_keyid(e.fingerprint).decode()
-        last_updated_time = 'never' # TODO: Fix this
-
-        s = '{}\n{}\nLast updated: {}'.format(uid, keyid, last_updated_time)
-
-        item = QtWidgets.QListWidgetItem(s)
+        item = QtWidgets.QListWidgetItem()
         item.endpoint = e
+        item.setSizeHint(QtCore.QSize(0, 80))
         self.addItem(item)
+        self.setItemWidget(item, EndpointWidget(e, self.gpg))
 
     def refresh(self, endpoints):
         self.clear()
 
         for e in endpoints:
-            if not common.valid_fp(e.fingerprint):
-                self.add_endpoint_error(e, 'Not configured')
-                continue
-
             self.add_endpoint(e)
 
 class EndpointSelection(QtWidgets.QVBoxLayout):
