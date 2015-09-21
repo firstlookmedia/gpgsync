@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import re
+import re, time, datetime
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 from . import common
@@ -29,9 +29,25 @@ class EndpointWidget(QtWidgets.QWidget):
         keyid_label.setStyleSheet("QLabel { font-style: italic; color: #666666; }")
 
         # Last updated
-        last_updated = 'never' # TODO: Fix this
-        last_updated_label = QtWidgets.QLabel('Last updated: {}'.format(last_updated))
-        last_updated_label.setStyleSheet("QLabel { color: #666666; }")
+        print(e.last_checked)
+        if e.last_checked:
+            diff = datetime.datetime.now() - e.last_checked
+            s = diff.seconds
+            hours = s // 3600
+            s = s - (hours * 3600)
+            minutes = s // 60
+            seconds = s - (minutes * 60)
+
+            if hours > 0:
+                last_checked = '{} hours, {} minutes, {} seconds ago'.format(hours, minutes, seconds)
+            elif minutes > 0:
+                last_checked = '{} minutes, {} seconds ago'.format(minutes, seconds)
+            else:
+                last_checked = '{} seconds ago'.format(seconds)
+        else:
+            last_checked = 'never'
+        last_checked_label = QtWidgets.QLabel('Last updated: {}'.format(last_checked))
+        last_checked_label.setStyleSheet("QLabel { color: #666666; }")
 
         # Warning and error
         if e.warning:
@@ -45,7 +61,7 @@ class EndpointWidget(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(uid_label)
         layout.addWidget(keyid_label)
-        layout.addWidget(last_updated_label)
+        layout.addWidget(last_checked_label)
         if e.warning:
             layout.addWidget(warning_label)
         if e.error:
