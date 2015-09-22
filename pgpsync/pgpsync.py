@@ -268,7 +268,7 @@ class PGPSync(QtWidgets.QMainWindow):
         self.setWindowIcon(common.get_icon())
 
         # Initialize gpg
-        self.gpg = GnuPG()
+        self.gpg = GnuPG(debug=True)
         if not self.gpg.is_gpg_available():
             if self.system == 'Linux':
                 common.alert('GnuPG 2.x doesn\'t seem to be installed. Install your operating system\'s gnupg2 package.')

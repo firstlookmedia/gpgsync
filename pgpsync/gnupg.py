@@ -45,6 +45,9 @@ class GnuPG(object):
             self.creationflags = win32process.CREATE_NO_WINDOW
             self.gpg_path = '{0}\GNU\GnuPG\gpg2.exe'.format(os.environ['ProgramFiles(x86)'])
 
+        # Remember uids that have already been queried
+        self.uids = dict()
+
     def is_gpg_available(self):
         if self.system == 'Windows':
             return os.path.isfile(self.gpg_path)
@@ -89,11 +92,17 @@ class GnuPG(object):
             raise InvalidFingerprint(fp)
 
         fp = common.clean_fp(fp)
+
+        if fp in self.uids:
+            return self.uids[fp]
+
         out,err = self._gpg(['--with-colons', '--list-keys', fp])
         for line in out.split(b'\n'):
             if line.startswith(b'uid:'):
                 chunks = line.split(b':')
-                return str(chunks[9], 'UTF-8')
+                uid = str(chunks[9], 'UTF-8')
+                self.uids[fp] = uid
+                return uid
 
     def verify(self, msg, fp):
         if not common.valid_fp(fp):
@@ -137,6 +146,7 @@ class GnuPG(object):
             err = p.stderr.read()
 
         if self.debug:
+            print('gpg args', default_args + args)
             if out != '':
                 print('stdout', out)
             if err != '':
