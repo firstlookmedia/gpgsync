@@ -321,10 +321,11 @@ class PGPSync(QtWidgets.QMainWindow):
         self.setStatusBar(self.status_bar)
 
         # Check for status bar messages from other threads
+        # Also, reload endpoint display
         self.status_q = MessageQueue()
-        self.status_bar_timer = QtCore.QTimer()
-        self.status_bar_timer.timeout.connect(self.status_bar_update)
-        self.status_bar_timer.start(500) # 0.5 seconds
+        self.update_ui_timer = QtCore.QTimer()
+        self.update_ui_timer.timeout.connect(self.update_ui)
+        self.update_ui_timer.start(500) # 0.5 seconds
 
         # Timer to refresh endpoints
         self.refresh_timer = QtCore.QTimer()
@@ -351,7 +352,8 @@ class PGPSync(QtWidgets.QMainWindow):
             self.hide()
             self.systray.set_window_show(False)
 
-    def status_bar_update(self):
+    def update_ui(self):
+        # Status bar
         events = []
         done = False
         while not done:
@@ -366,6 +368,9 @@ class PGPSync(QtWidgets.QMainWindow):
                 self.status_bar.showMessage(event['msg'], event['timeout'])
             elif event['type'] == 'clear':
                 self.status_bar.clearMessage()
+
+        # Endpoint display
+        self.endpoint_selection.reload_endpoints()
 
     def edit_endpoint_alert_error(self, msg, icon=QtWidgets.QMessageBox.Warning):
         common.alert(msg, icon)

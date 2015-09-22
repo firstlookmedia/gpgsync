@@ -131,6 +131,10 @@ class EndpointList(QtWidgets.QListWidget):
             if item.endpoint == endpoint:
                 self.itemWidget(item).update()
 
+    def reload_endpoints(self):
+        for item in self.iter_all_items():
+            self.itemWidget(item).update()
+
     def delete_endpoint(self, endpoint):
         for item in self.iter_all_items():
             if item.endpoint == endpoint:
@@ -163,6 +167,9 @@ class EndpointSelection(QtWidgets.QVBoxLayout):
 
     def reload_endpoint(self, e):
         self.endpoint_list.reload_endpoint(e)
+
+    def reload_endpoints(self):
+        self.endpoint_list.reload_endpoints()
 
     def delete_endpoint(self, e):
         self.endpoint_list.delete_endpoint(e)
