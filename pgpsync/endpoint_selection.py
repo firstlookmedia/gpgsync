@@ -79,7 +79,7 @@ class EndpointWidget(QtWidgets.QWidget):
             if hours > 0:
                 last_checked = '{} hours ago'.format(hours)
             elif minutes > 0:
-                last_checked = '{} minutes ago'.format(seconds)
+                last_checked = '{} minutes ago'.format(minutes)
             else:
                 last_checked = '{} seconds ago'.format(seconds)
         else:
