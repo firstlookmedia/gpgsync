@@ -8,6 +8,9 @@ class InvalidFingerprint(Exception):
 class InvalidKeyserver(Exception):
     pass
 
+class KeyserverError(Exception):
+    pass
+
 class NotFoundOnKeyserver(Exception):
     pass
 
@@ -65,6 +68,9 @@ class GnuPG(object):
 
         if b"No keyserver available" in err:
             raise InvalidKeyserver(keyserver)
+
+        if b"keyserver receive failed" in err:
+            raise KeyserverError(keyserver)
 
         if b"not found on keyserver" in err or b"keyserver receive failed: No data" in err:
             raise NotFoundOnKeyserver(fp)

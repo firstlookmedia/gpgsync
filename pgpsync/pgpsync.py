@@ -52,6 +52,8 @@ class Verifier(QtCore.QThread):
             self.alert_error.emit('Invalid signing key fingerprint.')
         except InvalidKeyserver:
             self.alert_error.emit('Invalid keyserver.')
+        except KeyserverError:
+            self.alert_error.emit('Error wih keyserver {}.'.format(self.keyserver.decode()))
         except NotFoundOnKeyserver:
             self.alert_error.emit('Signing key is not found on keyserver. Upload signing key and try again.')
         except NotFoundInKeyring:
