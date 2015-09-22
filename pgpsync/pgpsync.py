@@ -353,6 +353,9 @@ class PGPSync(QtWidgets.QMainWindow):
             self.systray.set_window_show(False)
 
     def update_ui(self):
+        if self.isHidden():
+            return
+
         # Status bar
         events = []
         done = False
