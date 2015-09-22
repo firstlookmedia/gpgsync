@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import sys, platform, queue, time
+import sys, platform, queue, datetime
 from urllib.parse import urlparse
 from PyQt5 import QtCore, QtWidgets
 
@@ -36,7 +36,12 @@ class Verifier(QtCore.QThread):
     def run(self):
         # Make an endpoint
         e = Endpoint()
-        e.update(self.fingerprint, self.url, self.keyserver, self.use_proxy, self.proxy_host, self.proxy_port)
+        e.fingerprint = self.fingerprint
+        e.url = self.url
+        e.keyserver = self.keyserver
+        e.use_proxy = self.use_proxy
+        e.proxy_host = self.proxy_host
+        e.proxy_port = self.proxy_port
 
         # Test fingerprint and keyserver, and that the key isn't revoked or expired
         success = False
@@ -110,7 +115,7 @@ class Verifier(QtCore.QThread):
             self.q.add_message('Validating fingerprint list')
             e.get_fingerprint_list(msg_bytes)
         except InvalidFingerprints as e:
-            self.alert_error.emit('URL contains invalid fingerprints: {}'.format(e))
+            self.alert_error.emit('Invalid fingerprints: {}'.format(e))
         except FingerprintsListNotSigned:
             self.alert_error.emit('Fingerprints list is not signed.')
         else:
@@ -143,7 +148,7 @@ class Refresher(QtCore.QThread):
         # Refresh if it's forced, if it's never been checked before,
         # or if it's been 24 hours since last check
         one_day = 60*60*24
-        if self.force or not self.e.last_checked or time.time() - one_day >= self.e.last_checked:
+        if self.force or not self.e.last_checked or (datetime.datetime.now() - self.e.last_checked).seconds >= one_day:
             # Fetch signing key from keyserver, make sure it's not expired or revoked
             success = False
             try:
@@ -205,7 +210,7 @@ class Refresher(QtCore.QThread):
                 self.q.add_message('Validating fingerprints')
                 fingerprints = self.e.get_fingerprint_list(msg_bytes)
             except InvalidFingerprints as e:
-                err = 'URL contains invalid fingerprints: {}'.format(e)
+                err = 'Invalid fingerprints: {}'.format(e)
             except FingerprintsListNotSigned:
                 err = 'Fingerprints list is not signed'
             else:
@@ -368,9 +373,12 @@ class PGPSync(QtWidgets.QMainWindow):
 
     def edit_endpoint_save(self, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port):
         # Save the settings
-        self.settings.endpoints[self.current_endpoint].update(fingerprint=fingerprint,
-            url=url, keyserver=keyserver, use_proxy=use_proxy,
-            proxy_host=proxy_host, proxy_port=proxy_port)
+        self.settings.endpoints[self.current_endpoint].fingerprint = fingerprint
+        self.settings.endpoints[self.current_endpoint].url = url
+        self.settings.endpoints[self.current_endpoint].keyserver = keyserver
+        self.settings.endpoints[self.current_endpoint].use_proxy = use_proxy
+        self.settings.endpoints[self.current_endpoint].proxy_host = proxy_host
+        self.settings.endpoints[self.current_endpoint].proxy_port = proxy_port
         self.settings.save()
 
         # Unselect endpoint
@@ -446,17 +454,37 @@ class PGPSync(QtWidgets.QMainWindow):
             self.toggle_input(True)
 
     def refresher_success(self, e, invalid_fingerprints, notfound_fingerprints):
-        print('success')
+        if len(invalid_fingerprints) == 0 and len(notfound_fingerprints) == 0:
+            warning = False
+        else:
+            warnings = []
+            if len(invalid_fingerprints) > 0:
+                warning.append('Invalid fingerprints {}'.format(invalid_fingerprints))
+            if len(notfound_fingerprints) > 0:
+                warnings.append('Not found fingerprints {}'.format(notfound_fingerprints))
+            warning = ', '.join(warnings)
+
+        e.last_checked = datetime.datetime.now()
+        e.warning = warning
+        e.error = None
+
+        self.endpoint_selection.refresh(self.settings.endpoints)
+        self.settings.save()
 
     def refresher_error(self, e, err):
-        print('error')
+        e.last_checked = datetime.datetime.now()
+        e.warning = None
+        e.error = err
 
-    def refresh_all_endpoints(self):
+        self.endpoint_selection.refresh(self.settings.endpoints)
+        self.settings.save()
+
+    def refresh_all_endpoints(self, force=False):
         # Make a refresher for each endpoint
         self.waiting_refreshers = []
         self.active_refreshers = []
         for e in self.settings.endpoints:
-            refresher = Refresher(self.gpg, self.status_q, e)
+            refresher = Refresher(self.gpg, self.status_q, e, force)
             refresher.finished.connect(self.refresher_finished)
             refresher.success.connect(self.refresher_success)
             refresher.error.connect(self.refresher_error)
