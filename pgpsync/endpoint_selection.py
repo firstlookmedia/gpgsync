@@ -29,7 +29,6 @@ class EndpointWidget(QtWidgets.QWidget):
         keyid_label.setStyleSheet("QLabel { font-style: italic; color: #666666; }")
 
         # Last updated
-        print(e.last_checked)
         if e.last_checked:
             diff = datetime.datetime.now() - e.last_checked
             s = diff.seconds
@@ -39,9 +38,9 @@ class EndpointWidget(QtWidgets.QWidget):
             seconds = s - (minutes * 60)
 
             if hours > 0:
-                last_checked = '{} hours, {} minutes, {} seconds ago'.format(hours, minutes, seconds)
+                last_checked = '{} hours ago'.format(hours)
             elif minutes > 0:
-                last_checked = '{} minutes, {} seconds ago'.format(minutes, seconds)
+                last_checked = '{} minutes ago'.format(seconds)
             else:
                 last_checked = '{} seconds ago'.format(seconds)
         else:
@@ -52,10 +51,10 @@ class EndpointWidget(QtWidgets.QWidget):
         # Warning and error
         if e.warning:
             warning_label = QtWidgets.QLabel('Warning: {}'.format(e.warning))
-            keyid_label.setStyleSheet("QLabel { color: #C36900; }")
+            warning_label.setStyleSheet("QLabel { color: #C36900; }")
         if e.error:
             error_label = QtWidgets.QLabel('Error: {}'.format(e.error))
-            keyid_label.setStyleSheet("QLabel { color: #CC0000; }")
+            error_label.setStyleSheet("QLabel { color: #CC0000; }")
 
         # Widget layout
         layout = QtWidgets.QVBoxLayout()
@@ -76,7 +75,12 @@ class EndpointList(QtWidgets.QListWidget):
     def add_endpoint(self, e):
         item = QtWidgets.QListWidgetItem()
         item.endpoint = e
-        item.setSizeHint(QtCore.QSize(0, 80))
+        if e.warning and e.error:
+            item.setSizeHint(QtCore.QSize(0, 120))
+        elif e.warning and not e.error or e.error and not e.warning:
+            item.setSizeHint(QtCore.QSize(0, 100))
+        else:
+            item.setSizeHint(QtCore.QSize(0, 80))
         self.addItem(item)
         self.setItemWidget(item, EndpointWidget(e, self.gpg))
 
