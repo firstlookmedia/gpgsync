@@ -290,7 +290,7 @@ class PGPSync(QtWidgets.QMainWindow):
 
         # Endpoint selection GUI
         self.endpoint_selection = EndpointSelection(self.gpg)
-        self.endpoint_selection.refresh(self.settings.endpoints)
+        self.endpoint_selection.load_endpoints(self.settings.endpoints)
         endpoint_selection_wrapper = QtWidgets.QWidget()
         endpoint_selection_wrapper.setMinimumWidth(300)
         endpoint_selection_wrapper.setLayout(self.endpoint_selection)
@@ -388,12 +388,12 @@ class PGPSync(QtWidgets.QMainWindow):
 
         # Refresh the display
         self.toggle_input(True)
-        self.endpoint_selection.refresh(self.settings.endpoints)
+        self.endpoint_selection.load_endpoints(self.settings.endpoints)
 
     def add_endpoint(self):
         e = Endpoint()
         self.settings.endpoints.append(e)
-        self.endpoint_selection.refresh(self.settings.endpoints)
+        self.endpoint_selection.load_endpoints(self.settings.endpoints)
 
         # Click on the newest endpoint
         count = self.endpoint_selection.endpoint_list.count()
@@ -422,7 +422,7 @@ class PGPSync(QtWidgets.QMainWindow):
     def delete_endpoint(self):
         self.edit_endpoint_wrapper.hide()
         self.settings.endpoints.remove(self.settings.endpoints[self.current_endpoint])
-        self.endpoint_selection.refresh(self.settings.endpoints)
+        self.endpoint_selection.load_endpoints(self.settings.endpoints)
         self.current_endpoint = None
 
     def endpoint_clicked(self, item):
@@ -468,7 +468,7 @@ class PGPSync(QtWidgets.QMainWindow):
         e.warning = warning
         e.error = None
 
-        self.endpoint_selection.refresh(self.settings.endpoints)
+        self.endpoint_selection.load_endpoints(self.settings.endpoints)
         self.settings.save()
 
     def refresher_error(self, e, err):
@@ -476,7 +476,7 @@ class PGPSync(QtWidgets.QMainWindow):
         e.warning = None
         e.error = err
 
-        self.endpoint_selection.refresh(self.settings.endpoints)
+        self.endpoint_selection.load_endpoints(self.settings.endpoints)
         self.settings.save()
 
     def refresh_all_endpoints(self, force=False):
