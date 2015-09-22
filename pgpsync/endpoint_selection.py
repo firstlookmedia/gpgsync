@@ -12,14 +12,8 @@ class EndpointWidget(QtWidgets.QWidget):
         self.gpg = gpg
 
         # If the endpoint isn't configured yet
-        if not common.valid_fp(self.e.fingerprint):
-            not_configured_label = QtWidgets.QLabel('Not configured')
-            not_configured_label.setStyleSheet("QLabel { color: #CC0000; }")
-
-            layout = QtWidgets.QVBoxLayout()
-            layout.addWidget(not_configured_label)
-            self.setLayout(layout)
-            return
+        self.not_configured_label = QtWidgets.QLabel('Not configured')
+        self.not_configured_label.setStyleSheet("QLabel { color: #CC0000; }")
 
         # User id and keyid of signing key
         self.uid_label = QtWidgets.QLabel()
@@ -39,6 +33,7 @@ class EndpointWidget(QtWidgets.QWidget):
 
         # Widget layout
         layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(self.not_configured_label)
         layout.addWidget(self.uid_label)
         layout.addWidget(self.keyid_label)
         layout.addWidget(self.last_checked_label)
@@ -49,6 +44,23 @@ class EndpointWidget(QtWidgets.QWidget):
         self.update()
 
     def update(self):
+        # If the endpoint isn't configured yet
+        if not common.valid_fp(self.e.fingerprint):
+            self.not_configured_label.show()
+            self.uid_label.hide()
+            self.keyid_label.hide()
+            self.last_checked_label.hide()
+            self.warning_label.hide()
+            self.error_label.hide()
+            self.item.setSizeHint(QtCore.QSize(0, 80))
+            return
+
+        # The endpoint is configured
+        self.not_configured_label.hide()
+        self.uid_label.show()
+        self.keyid_label.show()
+        self.last_checked_label.show()
+
         # User id and keyid of signing key
         uid = self.gpg.get_uid(self.e.fingerprint)
         self.uid_label.setText(uid)
@@ -117,10 +129,13 @@ class EndpointList(QtWidgets.QListWidget):
     def reload_endpoint(self, endpoint):
         for item in self.iter_all_items():
             if item.endpoint == endpoint:
-                item.itemWidget().update()
+                self.itemWidget(item).update()
 
-    def remove_endpoint(seld, endpoint):
-        pass
+    def delete_endpoint(self, endpoint):
+        for item in self.iter_all_items():
+            if item.endpoint == endpoint:
+                self.removeItemWidget(item)
+                self.takeItem(self.row(item))
 
 class EndpointSelection(QtWidgets.QVBoxLayout):
     add_endpoint_signal = QtCore.pyqtSignal()
@@ -132,16 +147,25 @@ class EndpointSelection(QtWidgets.QVBoxLayout):
         self.endpoint_list = EndpointList(gpg)
 
         self.add_btn = QtWidgets.QPushButton("Add Endpoint")
-        self.add_btn.clicked.connect(self.add_endpoint)
+        self.add_btn.clicked.connect(self.add_new_endpoint)
 
         self.addWidget(self.endpoint_list)
         self.addWidget(self.add_btn)
 
-    def add_endpoint(self):
+    def add_new_endpoint(self):
         self.add_endpoint_signal.emit()
 
-    def load_endpoints(self, endpoints):
-        self.endpoint_list.load_endpoints(endpoints)
+    def add_endpoint(self, e):
+        self.endpoint_list.add_endpoint(e)
+
+    def load_endpoints(self, e):
+        self.endpoint_list.load_endpoints(e)
+
+    def reload_endpoint(self, e):
+        self.endpoint_list.reload_endpoint(e)
+
+    def delete_endpoint(self, e):
+        self.endpoint_list.delete_endpoint(e)
 
     def setEnabled(self, enabled):
         self.endpoint_list.setEnabled(enabled)

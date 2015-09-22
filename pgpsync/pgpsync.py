@@ -381,19 +381,19 @@ class PGPSync(QtWidgets.QMainWindow):
         self.settings.endpoints[self.current_endpoint].proxy_port = proxy_port
         self.settings.save()
 
+        # Refresh the display
+        self.toggle_input(True)
+        self.endpoint_selection.reload_endpoint(self.settings.endpoints[self.current_endpoint])
+
         # Unselect endpoint
         self.endpoint_selection.endpoint_list.setCurrentItem(None)
         self.edit_endpoint_wrapper.hide()
         self.current_endpoint = None
 
-        # Refresh the display
-        self.toggle_input(True)
-        self.endpoint_selection.load_endpoints(self.settings.endpoints)
-
     def add_endpoint(self):
         e = Endpoint()
         self.settings.endpoints.append(e)
-        self.endpoint_selection.load_endpoints(self.settings.endpoints)
+        self.endpoint_selection.add_endpoint(e)
 
         # Click on the newest endpoint
         count = self.endpoint_selection.endpoint_list.count()
@@ -421,8 +421,8 @@ class PGPSync(QtWidgets.QMainWindow):
 
     def delete_endpoint(self):
         self.edit_endpoint_wrapper.hide()
+        self.endpoint_selection.delete_endpoint(self.settings.endpoints[self.current_endpoint])
         self.settings.endpoints.remove(self.settings.endpoints[self.current_endpoint])
-        self.endpoint_selection.load_endpoints(self.settings.endpoints)
         self.current_endpoint = None
 
     def endpoint_clicked(self, item):
@@ -468,7 +468,7 @@ class PGPSync(QtWidgets.QMainWindow):
         e.warning = warning
         e.error = None
 
-        self.endpoint_selection.load_endpoints(self.settings.endpoints)
+        self.endpoint_selection.reload_endpoint(e)
         self.settings.save()
 
     def refresher_error(self, e, err):
@@ -476,7 +476,7 @@ class PGPSync(QtWidgets.QMainWindow):
         e.warning = None
         e.error = err
 
-        self.endpoint_selection.load_endpoints(self.settings.endpoints)
+        self.endpoint_selection.reload_endpoint(e)
         self.settings.save()
 
     def refresh_all_endpoints(self, force=False):
