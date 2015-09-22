@@ -8,7 +8,11 @@ class URLDownloadError(Exception):
     pass
 
 class InvalidFingerprints(Exception):
-    pass
+    def __init__(self, fingerprints):
+        self.fingerprints = fingerprints
+
+    def __str__(self):
+        return str([s.decode() for s in self.fingerprints])
 
 class FingerprintsListNotSigned(Exception):
     pass
