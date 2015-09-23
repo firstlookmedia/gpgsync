@@ -6,7 +6,7 @@ from . import common
 
 class SysTray(QtWidgets.QSystemTrayIcon):
     show_signal = QtCore.pyqtSignal()
-    refresh_signal = QtCore.pyqtSignal(bool)
+    sync_now_signal = QtCore.pyqtSignal(bool)
     quit_signal = QtCore.pyqtSignal()
 
     def __init__(self):
@@ -44,7 +44,7 @@ class SysTray(QtWidgets.QSystemTrayIcon):
         self.show_signal.emit()
 
     def clicked_refresh(self):
-        self.refresh_signal.emit(True)
+        self.sync_now_signal.emit(True)
 
     def clicked_quit(self):
         self.quit_signal.emit()

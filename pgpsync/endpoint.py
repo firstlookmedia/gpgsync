@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import pycurl, uuid, time
+import pycurl, uuid, datetime
 from io import BytesIO
 from PyQt5 import QtCore, QtWidgets
 

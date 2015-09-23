@@ -11,6 +11,7 @@ from .settings import Settings
 from .endpoint_selection import EndpointSelection
 from .edit_endpoint import EditEndpoint
 from .endpoint import Endpoint, Verifier, Refresher, URLDownloadError, InvalidFingerprints, FingerprintsListNotSigned
+from .buttons import Buttons
 from .status_bar import StatusBar, MessageQueue
 from .systray import SysTray
 
@@ -46,7 +47,7 @@ class PGPSync(QtWidgets.QMainWindow):
         # Initialize the system tray icon
         self.systray = SysTray()
         self.systray.show_signal.connect(self.toggle_show_window)
-        self.systray.refresh_signal.connect(self.refresh_all_endpoints)
+        self.systray.sync_now_signal.connect(self.sync_all_endpoints)
         self.systray.quit_signal.connect(self.app.quit)
 
         # Endpoint selection GUI
@@ -69,10 +70,19 @@ class PGPSync(QtWidgets.QMainWindow):
         self.edit_endpoint.save_signal.connect(self.save_endpoint)
         self.edit_endpoint.delete_signal.connect(self.delete_endpoint)
 
+        # Buttons
+        self.buttons = Buttons()
+        self.buttons.sync_now_signal.connect(self.sync_all_endpoints)
+        self.buttons.quit_signal.connect(self.app.quit)
+        self.next_sync_check_msg = None
+
         # Layout
-        layout = QtWidgets.QHBoxLayout()
-        layout.addWidget(endpoint_selection_wrapper)
-        layout.addWidget(self.edit_endpoint_wrapper)
+        hlayout = QtWidgets.QHBoxLayout()
+        hlayout.addWidget(endpoint_selection_wrapper)
+        hlayout.addWidget(self.edit_endpoint_wrapper)
+        layout = QtWidgets.QVBoxLayout()
+        layout.addLayout(hlayout)
+        layout.addLayout(self.buttons)
         central_widget = QtWidgets.QWidget()
         central_widget.setLayout(layout)
         self.setCentralWidget(central_widget)
@@ -90,7 +100,7 @@ class PGPSync(QtWidgets.QMainWindow):
 
         # Timer to refresh endpoints
         self.refresh_timer = QtCore.QTimer()
-        self.refresh_timer.timeout.connect(self.refresh_all_endpoints)
+        self.refresh_timer.timeout.connect(self.sync_all_endpoints)
         self.refresh_timer.start(3600000) # 1 hour
 
         # Decide if window should start out shown or hidden
@@ -135,6 +145,12 @@ class PGPSync(QtWidgets.QMainWindow):
 
         # Endpoint display
         self.endpoint_selection.reload_endpoints()
+
+        # Next sync
+        if(self.next_sync_check_msg):
+            self.buttons.update_next_sync(None, self.next_sync_check_msg)
+        else:
+            self.buttons.update_next_sync(self.refresh_timer.remainingTime())
 
     def edit_endpoint_alert_error(self, msg, icon=QtWidgets.QMessageBox.Warning):
         common.alert(msg, icon)
@@ -248,7 +264,7 @@ class PGPSync(QtWidgets.QMainWindow):
         self.endpoint_selection.reload_endpoint(e)
         self.settings.save()
 
-    def refresh_all_endpoints(self, force=False):
+    def sync_all_endpoints(self, force=False):
         # Make a refresher for each endpoint
         self.waiting_refreshers = []
         self.active_refreshers = []
@@ -261,12 +277,12 @@ class PGPSync(QtWidgets.QMainWindow):
 
         # Start the first refresher thread
         if len(self.waiting_refreshers) > 0:
-            self.toggle_input(False)
             r = self.waiting_refreshers.pop()
             self.active_refreshers.append(r)
             r.start()
+            self.toggle_input(False, "Syncing: {} {}".format(self.gpg.get_uid(r.e.fingerprint), common.fp_to_keyid(r.e.fingerprint).decode()))
 
-    def toggle_input(self, enabled=False):
+    def toggle_input(self, enabled=False, next_sync_check_msg=None):
         # Show/hide loading graphic
         if enabled:
             self.status_bar.hide_loading()
@@ -278,7 +294,14 @@ class PGPSync(QtWidgets.QMainWindow):
         # Disable/enable all input
         self.endpoint_selection.setEnabled(enabled)
         self.edit_endpoint_wrapper.setEnabled(enabled)
+        self.buttons.sync_now_btn.setEnabled(enabled)
         self.systray.refresh_act.setEnabled(enabled)
+
+        # Next sync check message
+        if enabled:
+            self.next_sync_check_msg = None
+        else:
+            self.next_sync_check_msg = next_sync_check_msg
 
 def main():
     app = Application()
