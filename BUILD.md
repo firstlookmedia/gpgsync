@@ -1,17 +1,15 @@
 # Build instructions
 
-At the moment, this is only for Arch Linux. More platforms coming soon.
-
-## Install dependencies
+Install dependencies in Debian:
 
 ```sh
-sudo pacman -S python-pip python-pyqt5 python-pycurl
+sudo apt-get install python3-pyqt5 python3-pycurl python3-nose
 ```
 
-If you'd like to run the tests:
+Install dependencies in Arch:
 
 ```sh
-sudo pacman -S python-nose
+sudo pacman -S python-pyqt5 python-pycurl python-nose
 ```
 
 ## Run the tests
