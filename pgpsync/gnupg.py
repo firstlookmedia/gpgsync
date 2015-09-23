@@ -83,11 +83,11 @@ class GnuPG(object):
         if b"No keyserver available" in err:
             raise InvalidKeyserver(keyserver)
 
-        if b"keyserver receive failed" in err:
-            raise KeyserverError(keyserver)
-
         if b"not found on keyserver" in err or b"keyserver receive failed: No data" in err:
             raise NotFoundOnKeyserver(fp)
+
+        if b"keyserver receive failed" in err:
+            raise KeyserverError(keyserver)
 
     def test_key(self, fp):
         if not common.valid_fp(fp):

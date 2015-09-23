@@ -15,20 +15,20 @@ def test_gpg_is_available():
 @with_setup(setup_func)
 def test_gpg_recv_key():
     gpg = GnuPG(homedir=gpg_homedir)
-    gpg.recv_key(b'hkp://keys.gnupg.net', test_key_fp)
+    gpg.recv_key(b'hkp://keys.gnupg.net', test_key_fp, False, None, None)
     assert gpg.get_uid(test_key_fp) == 'PGP Sync Test Suite Key'
 
 @with_setup(setup_func)
 @raises(InvalidKeyserver)
 def test_gpg_recv_key_invalid_keyserver():
     gpg = GnuPG(homedir=gpg_homedir)
-    gpg.recv_key(b'hkp://fakekeyserver', test_key_fp)
+    gpg.recv_key(b'hkp://fakekeyserver', test_key_fp, False, None, None)
 
 @with_setup(setup_func)
 @raises(NotFoundOnKeyserver)
 def test_gpg_recv_key_not_found_on_keyserver():
     gpg = GnuPG(homedir=gpg_homedir)
-    gpg.recv_key(b'hkp://keys.gnupg.net', b'0000000000000000000000000000000000000000')
+    gpg.recv_key(b'hkp://keys.gnupg.net', b'0000000000000000000000000000000000000000', False, None, None)
 
 @with_setup(setup_func)
 @raises(InvalidFingerprint)
