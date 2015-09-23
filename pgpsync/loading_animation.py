@@ -12,7 +12,7 @@ class LoadingAnimation(QtWidgets.QLabel):
         self.setFixedWidth(16)
         self.setFixedHeight(16)
 
-        self.movie = QtGui.QMovie(common.get_image_path('loading.gif'), QtCore.QByteArray(), self)
+        self.movie = QtGui.QMovie(common.get_resource_path('loading.gif'), QtCore.QByteArray(), self)
         self.movie.setSpeed(100)
         self.movie.start()
         self.setMovie(self.movie)

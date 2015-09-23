@@ -23,7 +23,7 @@ def clean_keyserver(keyserver):
         return b'hkp://' + keyserver
     return keyserver
 
-def get_image_path(filename):
+def get_resource_path(filename):
     """
     if platform.system() == 'Linux':
         prefix = os.path.join(sys.prefix, 'share/pgpsync')
@@ -35,19 +35,19 @@ def get_image_path(filename):
     # Commenting out the path logic until there's proper packaging
     prefix = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), 'share')
 
-    image_path = os.path.join(prefix, filename)
-    return image_path
+    resource_path = os.path.join(prefix, filename)
+    return resource_path
 
 icon = None
 def get_icon():
     global icon
     if not icon:
-        icon = QtGui.QIcon(get_image_path('pgpsync.png'))
+        icon = QtGui.QIcon(get_resource_path('pgpsync.png'))
     return icon
 
 syncing_icon = None
 def get_syncing_icon():
     global syncing_icon
     if not syncing_icon:
-        syncing_icon = QtGui.QIcon(get_image_path('syncing.png'))
+        syncing_icon = QtGui.QIcon(get_resource_path('syncing.png'))
     return syncing_icon
