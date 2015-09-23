@@ -24,16 +24,13 @@ def clean_keyserver(keyserver):
     return keyserver
 
 def get_resource_path(filename):
-    """
     if platform.system() == 'Linux':
         prefix = os.path.join(sys.prefix, 'share/pgpsync')
-    elif platform.system() == 'Windows':
-        prefix = os.path.dirname(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))))
-    else:
-        prefix = os.path.dirname(__file__)
-    """
-    # Commenting out the path logic until there's proper packaging
-    prefix = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), 'share')
+
+    #elif platform.system() == 'Windows':
+    #    prefix = os.path.dirname(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))))
+    #else:
+    #    prefix = os.path.dirname(__file__)
 
     resource_path = os.path.join(prefix, filename)
     return resource_path
