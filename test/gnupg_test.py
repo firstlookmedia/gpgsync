@@ -2,6 +2,7 @@
 from nose import with_setup
 from nose.tools import raises
 from pgpsync import *
+from pgpsync.gnupg import *
 
 from .test_helpers import *
 
