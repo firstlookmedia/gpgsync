@@ -21,7 +21,7 @@ class Endpoint(object):
     def __init__(self):
         self.fingerprint = b''
         self.url = b'https://'
-        self.keyserver = b'hkp://keys.gnupg.net'
+        self.keyserver = b'hkps://hkps.pool.sks-keyservers.net'
         self.use_proxy = False
         self.proxy_host = b'127.0.0.1'
         self.proxy_port = b'9050'
