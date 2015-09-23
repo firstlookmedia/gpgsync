@@ -244,7 +244,7 @@ class Refresher(QtCore.QThread):
             for fingerprint in fingerprints_to_fetch:
                 try:
                     self.q.add_message('Fetching public key {}'.format(common.fp_to_keyid(fingerprint).decode()))
-                    self.gpg.recv_key(self.e.keyserver, fingerprint)
+                    self.gpg.recv_key(self.e.keyserver, fingerprint, self.e.use_proxy, self.e.proxy_host, self.e.proxy_port)
                 except InvalidKeyserver:
                     return self.finish_with_failure('Invalid keyserver')
                 except NotFoundOnKeyserver:

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import subprocess, os, platform, tempfile, shutil
+from urllib.parse import urlparse
 from . import common
 
 class InvalidFingerprint(Exception):
@@ -57,14 +58,27 @@ class GnuPG(object):
         else:
             return os.path.isfile(self.gpg_path) and os.access(self.gpg_path, os.X_OK)
 
-    def recv_key(self, keyserver, fp):
+    def recv_key(self, keyserver, fp, use_proxy, proxy_host, proxy_port):
         if not common.valid_fp(fp):
             raise InvalidFingerprint(fp)
 
         fp = common.clean_fp(fp)
-        keyserver = common.clean_keyserver(keyserver)
+        keyserver = common.clean_keyserver(keyserver).decode()
 
-        out,err = self._gpg(['--keyserver', keyserver, '--recv-keys', fp])
+        keyserver_options = []
+        if use_proxy:
+            keyserver_options.append('http-proxy=socks5://{}:{}'.format(proxy_host.decode(), proxy_port.decode()))
+        if keyserver == 'hkps://hkps.pool.sks-keyservers.net':
+            keyserver_options.append('ca-cert-file={}'.format(common.get_resource_path('sks-keyservers.netCA.pem')))
+
+        args = ['--keyserver', keyserver]
+        if len(keyserver_options) > 0:
+            args.append('--keyserver-options')
+            args.append(','.join(keyserver_options))
+        args.append('--recv-keys')
+        args.append(fp)
+
+        out,err = self._gpg(args)
 
         if b"No keyserver available" in err:
             raise InvalidKeyserver(keyserver)

@@ -31,7 +31,7 @@ class Endpoint(object):
 
     def fetch_public_key(self, gpg):
         # Retreive the signing key from the keyserver
-        gpg.recv_key(self.keyserver, self.fingerprint)
+        gpg.recv_key(self.keyserver, self.fingerprint, self.use_proxy, self.proxy_host, self.proxy_port)
 
         # Test the key for issues
         gpg.test_key(self.fingerprint)
