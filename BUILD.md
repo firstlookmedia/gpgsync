@@ -1,12 +1,23 @@
 # Build instructions
 
-Install dependencies in Debian:
+## Linux distributions
+
+*Debian/Ubuntu/Mint*
+
+Install dependencies:
 
 ```sh
-sudo apt-get install python3-pyqt5 python3-pycurl python3-nose
+sudo apt-get install python3-pyqt5 python3-pycurl python3-nose python3-stdeb
 ```
 
-Install dependencies in Arch:
+Make and install a .deb:
+
+```sh
+./install/build_deb.sh
+sudo dpkg -i deb_dist/pgpsync_*.deb
+```
+
+*Arch*
 
 ```sh
 sudo pacman -S python-pyqt5 python-pycurl python-nose

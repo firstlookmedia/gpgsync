@@ -12,6 +12,7 @@ env/
 build/
 develop-eggs/
 dist/
+deb_dist/
 downloads/
 eggs/
 .eggs/
@@ -57,11 +58,9 @@ docs/_build/
 # PyBuilder
 target/
 
-# gpg homedir, for tests
+# Other files
 test/homedir
-
-# vim files
 *.swp
-
-# OSX files
 *.DS_Store
+MANIFEST
+pgpsync-*.tar.gz

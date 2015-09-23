@@ -1,0 +1,4 @@
+include *.md
+include version
+include install/pgpsync.desktop
+include share/*

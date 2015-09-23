@@ -1,0 +1,9 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=PGP Sync
+Comment=Keep up with your organization's PGP public keys
+Exec=/usr/bin/pgpsync
+Terminal=false
+Type=Application
+Icon=/usr/share/pixmaps/pgpsync.png
+Categories=Network;
