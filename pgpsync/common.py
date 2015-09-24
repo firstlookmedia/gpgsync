@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os, sys, re, platform
+import os, sys, re, platform, inspect
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 def alert(msg, icon=QtWidgets.QMessageBox.Warning):
@@ -26,11 +26,8 @@ def clean_keyserver(keyserver):
 def get_resource_path(filename):
     if platform.system() == 'Linux':
         prefix = os.path.join(sys.prefix, 'share/pgpsync')
-
-    #elif platform.system() == 'Windows':
-    #    prefix = os.path.dirname(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))))
-    #else:
-    #    prefix = os.path.dirname(__file__)
+    elif platform.system() == 'Darwin':
+        prefix = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))), 'share')
 
     resource_path = os.path.join(prefix, filename)
     return resource_path

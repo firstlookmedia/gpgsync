@@ -49,7 +49,7 @@ sudo make clean
 
 Now install pip, if you don't already have it: `sudo easy_install pip`
 
-And install py2app using pip3: `sudo pip3 install py2app`
+And install py2app using pip3: `sudo pip3 install py2app pycurl`
 
 ## Linux distributions
 

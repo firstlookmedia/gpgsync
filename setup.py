@@ -2,7 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import os, sys, platform
-from distutils.core import setup
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
 
 system = platform.system()
 version = open('version').read().strip()
@@ -31,10 +34,30 @@ if system == 'Linux':
         license="GPL v3",
         keywords='pgpsync, pgp, gpg, gnupg',
         packages=['pgpsync'],
-        scripts=['install/linux_scripts/pgpsync'],
+        scripts=['install/pgpsync'],
         data_files=[
             (os.path.join(sys.prefix, 'share/applications'), ['install/pgpsync.desktop']),
             (os.path.join(sys.prefix, 'share/pixmaps'), ['share/pgpsync.png']),
             (os.path.join(sys.prefix, 'share/pgpsync/'), share_files)
         ]
+    )
+elif system == 'Darwin':
+    setup(
+        name='PGP Sync',
+        version=version,
+        description=description,
+        long_description=long_description,
+        app=['install/pgpsync'],
+        data_files=[
+            ('share', share_files)
+        ],
+        options={
+            'py2app': {
+                'argv_emulation': True,
+                'iconfile': 'install/pgpsync.icns',
+                'includes': ['sip', 'PyQt5', 'PyQt5.QtCore', 'PyQt5.QtGui', 'PyQt5.QtWidgets', 'pycurl'],
+                'excludes': []
+            }
+        },
+        setup_requires=['py2app'],
     )
