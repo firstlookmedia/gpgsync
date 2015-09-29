@@ -56,7 +56,10 @@ elif system == 'Darwin':
                 'argv_emulation': True,
                 'iconfile': 'install/pgpsync.icns',
                 'includes': ['sip', 'PyQt5', 'PyQt5.QtCore', 'PyQt5.QtGui', 'PyQt5.QtWidgets', 'pycurl'],
-                'excludes': []
+                'excludes': [],
+                'plist': {
+                    'CFBundleIdentifier': 'org.firstlook.pgpsync'
+                }
             }
         },
         setup_requires=['py2app'],
