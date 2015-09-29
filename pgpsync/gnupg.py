@@ -69,7 +69,11 @@ class GnuPG(object):
         if use_proxy:
             keyserver_options.append('http-proxy=socks5://{}:{}'.format(proxy_host.decode(), proxy_port.decode()))
         if keyserver == 'hkps://hkps.pool.sks-keyservers.net':
-            keyserver_options.append('ca-cert-file={}'.format(common.get_resource_path('sks-keyservers.netCA.pem')))
+            # Hack, because gpg has a bug where if your keyserver-options ca-cert-file has a space
+            # in the filename (and it always does, because it's in "PGP Sync.app/") it fails. But we
+            # just not include the ca-cert-file for OSX, because GPGTools bundles it.
+            if self.system != 'Darwin':
+                keyserver_options.append('ca-cert-file={}'.format(common.get_resource_path('sks-keyservers.netCA.pem')))
 
         args = ['--keyserver', keyserver]
         if len(keyserver_options) > 0:
