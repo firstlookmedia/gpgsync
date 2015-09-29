@@ -51,6 +51,22 @@ Now install pip, if you don't already have it: `sudo easy_install pip`
 
 And install py2app using pip3: `sudo pip3 install py2app pycurl`
 
+To build the app:
+
+```sh
+install/build_osx.sh
+```
+
+Now you should have `dist/PGP Sync.app`.
+
+To codesign and build a .pkg for distribution:
+
+```sh
+install/build_osx.sh --sign
+```
+
+Now you should have `dist/PGP Sync.pkg`. NOTE: This isn't implemented yet.
+
 ## Linux distributions
 
 *Debian / Ubuntu / Mint*
