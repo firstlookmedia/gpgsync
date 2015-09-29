@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import queue
+import queue, platform
 from PyQt5 import QtCore, QtWidgets
 
 from . import common
@@ -31,6 +31,11 @@ class SysTray(QtWidgets.QSystemTrayIcon):
         self.show()
 
     def clicked_activated(self, reason):
+        # Clicking the systray icon does nothing in OSX
+        if platform.system() == 'Darwin':
+            return
+
+        # Clicking the systray icon shows/hides the window
         if reason == self.Trigger:
             self.clicked_show()
 

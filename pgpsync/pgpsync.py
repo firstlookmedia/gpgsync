@@ -71,7 +71,7 @@ class PGPSync(QtWidgets.QMainWindow):
         self.edit_endpoint.delete_signal.connect(self.delete_endpoint)
 
         # Buttons
-        self.buttons = Buttons()
+        self.buttons = Buttons(self.settings)
         self.buttons.sync_now_signal.connect(self.sync_all_endpoints)
         self.buttons.quit_signal.connect(self.app.quit)
         self.next_sync_check_msg = None

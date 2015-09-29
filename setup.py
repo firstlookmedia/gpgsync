@@ -49,7 +49,7 @@ elif system == 'Darwin':
         long_description=long_description,
         app=['install/pgpsync'],
         data_files=[
-            ('share', share_files)
+            ('share', share_files + ['share/org.firstlook.pgpsync.plist'])
         ],
         options={
             'py2app': {
@@ -58,7 +58,8 @@ elif system == 'Darwin':
                 'includes': ['sip', 'PyQt5', 'PyQt5.QtCore', 'PyQt5.QtGui', 'PyQt5.QtWidgets', 'pycurl'],
                 'excludes': [],
                 'plist': {
-                    'CFBundleIdentifier': 'org.firstlook.pgpsync'
+                    'CFBundleIdentifier': 'org.firstlook.pgpsync',
+                    'LSUIElement': True
                 }
             }
         },
