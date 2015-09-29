@@ -141,6 +141,19 @@ class Verifier(QtCore.QThread):
         e.proxy_host = self.proxy_host
         e.proxy_port = self.proxy_port
 
+        # Test loading URL
+        success = False
+        try:
+            self.q.add_message('Testing downloading URL {}'.format(self.url.decode()))
+            msg_bytes = e.fetch_url()
+        except URLDownloadError as e:
+            self.alert_error.emit('URL failed to download: {}'.format(e))
+        else:
+            success = True
+
+        if not success:
+            return self.finish_with_failure()
+
         # Test fingerprint and keyserver, and that the key isn't revoked or expired
         success = False
         try:
@@ -171,19 +184,6 @@ class Verifier(QtCore.QThread):
         o = urlparse(self.url)
         if (o.scheme != b'http' and o.scheme != b'https') or o.netloc == '':
             self.alert_error.emit('URL is invalid.')
-        else:
-            success = True
-
-        if not success:
-            return self.finish_with_failure()
-
-        # Test loading URL
-        success = False
-        try:
-            self.q.add_message('Testing downloading URL {}'.format(self.url.decode()))
-            msg_bytes = e.fetch_url()
-        except URLDownloadError as e:
-            self.alert_error.emit('URL failed to download: {}'.format(e))
         else:
             success = True
 
