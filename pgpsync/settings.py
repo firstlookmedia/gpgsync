@@ -37,10 +37,15 @@ class Settings(object):
     def configure_run_automatically(self):
         if platform.system() == 'Darwin':
             share_filename = 'org.firstlook.pgpsync.plist'
-            autorun_filename = os.path.join(os.path.expanduser("~/Library/LaunchAgents"), share_filename)
+            autorun_dir = os.path.expanduser("~/Library/LaunchAgents")
         elif platform.system() == 'Linux':
             share_filename = 'pgpsync.desktop'
-            autorun_filename = os.path.join(os.path.expanduser("~/.config/autostart"), share_filename)
+            autorun_dir = os.path.expanduser("~/.config/autostart")
+
+        if not os.path.exists(autorun_dir):
+            os.makedirs(autorun_dir)
+
+        autorun_filename = os.path.join(autorun_dir, share_filename)
 
         if self.run_automatically:
             buf = open(common.get_resource_path(share_filename)).read()
