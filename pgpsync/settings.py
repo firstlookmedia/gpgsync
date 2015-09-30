@@ -36,11 +36,15 @@ class Settings(object):
 
     def configure_run_automatically(self):
         if platform.system() == 'Darwin':
-            filename = os.path.expanduser("~/Library/LaunchAgents/org.firstlook.pgpsync.plist")
+            share_filename = 'org.firstlook.pgpsync.plist'
+            autorun_filename = os.path.join(os.path.expanduser("~/Library/LaunchAgents"), share_filename)
+        elif platform.system() == 'Linux':
+            share_filename = 'pgpsync.desktop'
+            autorun_filename = os.path.join(os.path.expanduser("~/.config/autostart"), share_filename)
 
-            if self.run_automatically:
-                plist = open(common.get_resource_path('org.firstlook.pgpsync.plist')).read()
-                open(filename, 'w').write(plist)
-            else:
-                if os.path.exists(filename):
-                    os.remove(filename)
+        if self.run_automatically:
+            buf = open(common.get_resource_path(share_filename)).read()
+            open(autorun_filename, 'w').write(buf)
+        else:
+            if os.path.exists(autorun_filename):
+                os.remove(autorun_filename)

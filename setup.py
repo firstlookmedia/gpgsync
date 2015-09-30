@@ -38,7 +38,7 @@ if system == 'Linux':
         data_files=[
             (os.path.join(sys.prefix, 'share/applications'), ['install/pgpsync.desktop']),
             (os.path.join(sys.prefix, 'share/pixmaps'), ['share/pgpsync.png']),
-            (os.path.join(sys.prefix, 'share/pgpsync/'), share_files)
+            (os.path.join(sys.prefix, 'share/pgpsync/'), share_files + ['install/pgpsync.desktop'])
         ]
     )
 elif system == 'Darwin':
