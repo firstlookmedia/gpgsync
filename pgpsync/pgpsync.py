@@ -101,7 +101,7 @@ class PGPSync(QtWidgets.QMainWindow):
         # Timer to refresh endpoints
         self.refresh_timer = QtCore.QTimer()
         self.refresh_timer.timeout.connect(self.sync_all_endpoints)
-        self.refresh_timer.start(3600000) # 1 hour
+        self.refresh_timer.start(21600000) # 6 hours
 
         # Decide if window should start out shown or hidden
         if len(self.settings.endpoints) == 0:
