@@ -66,8 +66,11 @@ class GnuPG(object):
         keyserver = common.clean_keyserver(keyserver).decode()
 
         keyserver_options = []
-        if use_proxy:
-            keyserver_options.append('http-proxy=socks5://{}:{}'.format(proxy_host.decode(), proxy_port.decode()))
+
+        # GPG's http-proxy option is deprecated, and does not appear to work with GnuPG 2.1.11
+        #if use_proxy:
+        #    keyserver_options.append('http-proxy=socks5://{}:{}'.format(proxy_host.decode(), proxy_port.decode()))
+
         if keyserver == 'hkps://hkps.pool.sks-keyservers.net':
             # Hack, because gpg has a bug where if your keyserver-options ca-cert-file has a space
             # in the filename (and it always does, because it's in "PGP Sync.app/") it fails. But we
