@@ -54,12 +54,8 @@ class Buttons(QtWidgets.QVBoxLayout):
         s = int(remaining_time / 1000) # remaining_time is in milliseconds
         minutes = s // 60
         seconds = s - (minutes * 60)
-        hours = minutes // 60
-        minutes = minutes - (hours * 60)
 
-        if hours > 0:
-            next_check = '{} hours, {} minutes'.format(hours, minutes)
-        elif minutes > 0:
+        if minutes > 0:
             next_check = '{} minutes'.format(minutes)
         else:
             next_check = '{} seconds'.format(seconds)
