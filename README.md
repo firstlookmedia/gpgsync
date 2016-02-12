@@ -12,6 +12,16 @@ PGP Sync solves this problem. It works like this:
 
 Now each member of your organization will have up-to-date public keys for each other member, and key changes will be transitioned smoothly without any further work or interaction.
 
+## How is PGP Sync different than S/MIME, or running a Certificate Authority for PGP keys?
+
+PGP Sync does one thing: Makes sure members of an organization always have up-to-date public keys from a centrally-managed list.
+
+Unlike with S/MIME and or CAs, users don't need to trust the central authority. At worst, a malicious authority would make you download fake public keys. If you manually verify fingerprints and sign keys, your OpenPGP software should pick the correct key to encrypt to each time. If you don't manually verify fingerprints and sign keys, then at least you won't be automatically encrypting to people's old revoked keys, and you'll get the latest keys for new members of your org without having to manually find them and import them.
+
+If you trust the person who manages the authority key, you could even sign it and set an ownertrust to Full. As long as the authority key signs the keys of everyone in your org, you'll have an internal web of trust, and can have much stronger confidence in all of the keys, even without requiring everyone to sign everyone else's key (a decentralized process that requires exponentially more work with each person who joins the org).
+
+S/MIME might be a better option than OpenPGP for some organizations. But PGP has the advantage that it's more popular, it doesn't require any trusting a central authority, and it's simpler to use when communicating securely with people from different organizations.
+
 ## Creating the fingerprints file
 
 First you must generate an authority key. For higher security, I recommend that you store this key on an OpenPGP smart card. Here's the example authority key that I made:
@@ -23,9 +33,9 @@ pub   4096R/39094117 2015-09-03 [expires: 2016-09-02]
 uid       [ultimate] GPG Authority
 ```
 
-You should put a list of all of the fingerprints that your organization uses. I recommend that you manually compare each person's fingerprint before adding it to this list. And while this isn't required by PGP Sync, it's a good idea to sign each person's key with your authority key, so you can build an internal PGP certificate authority.
+Now create a list of all of the fingerprints that your organization uses. I recommend that you manually compare each person's fingerprint before adding it to this list. And while this isn't required by PGP Sync, it's a good idea to sign each person's key with your authority key, so you can build an internal web of trust.
 
-Here's my example `fingerprints.txt`. Spaces are optional, and separate each fingerprint with newlines.
+Spaces are optional, and separate each fingerprint with newlines. Comments (which start with "#" signs) and whitespace is all ignored, so feel free to mark up your fingerprints file with notes. Here's my example `fingerprints.txt`.
 
 ```
 927F 419D 7EC8 2C2F 149C  1BD1 403C 2657 CD99 4F73
@@ -36,7 +46,7 @@ Here's my example `fingerprints.txt`. Spaces are optional, and separate each fin
 Next, clearsign your list of fingerprints using your authority key. Here's how I'm doing it in my example:
 
 ```sh
-gpg --default-key 39094117 --clearsign fingerprints.txt
+gpg -u 39094117 --clearsign fingerprints.txt
 ```
 
 And I end up with a signed version of `fingerprint.txt` called `fingerprints.txt.asc`:
@@ -70,6 +80,6 @@ Finally, upload `fingerprints.txt.asc` to a website and make a note of the URL, 
 
 Each time there is a key change in your organization, you need to add the new fingerprints to `fingerprints.txt`, re-sign it with your authority key, and re-upload it to the same URL.
 
-## Configuring PGP Sync
+## Configuring PGP Sync on everyone's computers
 
-TODO: write the client
+TODO: Add screenshot and instructions.
