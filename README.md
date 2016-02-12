@@ -1,6 +1,6 @@
 # PGP Sync
 
-PGP Sync is designed to let users always have up-to-date PGP public keys for other members of their organization. It works on Mac OS X and Linux.
+PGP Sync is designed to let users always have up-to-date PGP public keys for other members of their organization.
 
 If you're part of an organization that uses PGP internally you might notice that it doesn't scale well. New people join and create new keys and existing people revoke their old keys and transition to new ones. It quickly becomes unwieldy to ensure that everyone has a copy of everyone else's current key, and that old revoked keys get refreshed to prevent users from accidentally using them.
 
@@ -11,6 +11,15 @@ PGP Sync solves this problem. It works like this:
 * When new keys in your organization are added, add them to the end of the fingerprint list, re-sign it with the authority key, and upload it to the same URL. If users migrate to new keys, make sure their old fingerprints remain on the list so that all other members can tell that their old keys were revoked.
 
 Now each member of your organization will have up-to-date public keys for each other member, and key changes will be transitioned smoothly without any further work or interaction.
+
+Here are some features:
+
+* Works in Mac OS X and Linux
+* Creates system tray applet that launches automatically on boot
+* Downloads from HKPS keyserver by default, but customizable
+* Supports fetching fingerprints URL over Tor or other SOCKS5 proxies
+* Makes sure non-revoked public keys are refreshed once a day
+* Works seamlessly with the web of trust
 
 ## How is PGP Sync different than S/MIME, or running a Certificate Authority for PGP keys?
 
