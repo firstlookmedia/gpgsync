@@ -1,5 +1,7 @@
 # PGP Sync
 
+![PGP Sync](/logo/logo.png)
+
 PGP Sync is designed to let users always have up-to-date PGP public keys for other members of their organization.
 
 If you're part of an organization that uses PGP internally you might notice that it doesn't scale well. New people join and create new keys and existing people revoke their old keys and transition to new ones. It quickly becomes unwieldy to ensure that everyone has a copy of everyone else's current key, and that old revoked keys get refreshed to prevent users from accidentally using them.
