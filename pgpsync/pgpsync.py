@@ -118,6 +118,8 @@ class PGPSync(QtWidgets.QMainWindow):
     def toggle_show_window(self):
         if self.isHidden():
             self.show()
+            self.showNormal()
+            self.activateWindow()
             self.systray.set_window_show(True)
         else:
             self.hide()
