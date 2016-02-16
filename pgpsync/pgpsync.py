@@ -49,6 +49,7 @@ class PGPSync(QtWidgets.QMainWindow):
         self.systray.show_signal.connect(self.toggle_show_window)
         self.systray.sync_now_signal.connect(self.sync_all_endpoints)
         self.systray.quit_signal.connect(self.app.quit)
+        self.systray.clicked_applet_signal.connect(self.clicked_applet)
 
         # Endpoint selection GUI
         self.endpoint_selection = EndpointSelection(self.gpg)
@@ -118,12 +119,19 @@ class PGPSync(QtWidgets.QMainWindow):
     def toggle_show_window(self):
         if self.isHidden():
             self.show()
+            self.raise_()
             self.showNormal()
             self.activateWindow()
             self.systray.set_window_show(True)
         else:
             self.hide()
             self.systray.set_window_show(False)
+
+    def clicked_applet(self):
+        if not self.isHidden():
+            self.raise_()
+            self.showNormal()
+            self.activateWindow()
 
     def update_ui(self):
         if self.isHidden():

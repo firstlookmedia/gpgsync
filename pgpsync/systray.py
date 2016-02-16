@@ -8,6 +8,7 @@ class SysTray(QtWidgets.QSystemTrayIcon):
     show_signal = QtCore.pyqtSignal()
     sync_now_signal = QtCore.pyqtSignal(bool)
     quit_signal = QtCore.pyqtSignal()
+    clicked_applet_signal = QtCore.pyqtSignal()
 
     def __init__(self):
         super(SysTray, self).__init__(common.get_icon())
@@ -31,8 +32,9 @@ class SysTray(QtWidgets.QSystemTrayIcon):
         self.show()
 
     def clicked_activated(self, reason):
-        # Clicking the systray icon does nothing in OSX
+        # Clicking the systray icon raises window in OSX
         if platform.system() == 'Darwin':
+            self.clicked_applet_signal.emit()
             return
 
         # Clicking the systray icon shows/hides the window
