@@ -43,7 +43,7 @@ class Buttons(QtWidgets.QVBoxLayout):
     def quit(self):
         self.quit_signal.emit()
 
-    def update_sync_label(self, msg):
+    def update_sync_label(self, msg=None):
         if msg:
             self.sync_label.setText(msg)
         else:
