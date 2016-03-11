@@ -21,6 +21,7 @@ class FingerprintsListNotSigned(Exception):
 
 class Endpoint(object):
     def __init__(self):
+        self.verified = False
         self.fingerprint = b''
         self.url = b'https://'
         self.keyserver = b'hkps://hkps.pool.sks-keyservers.net'

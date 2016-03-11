@@ -168,6 +168,7 @@ class PGPSync(QtWidgets.QMainWindow):
 
     def edit_endpoint_save(self, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port):
         # Save the settings
+        self.settings.endpoints[self.current_endpoint].verified = True
         self.settings.endpoints[self.current_endpoint].fingerprint = fingerprint
         self.settings.endpoints[self.current_endpoint].url = url
         self.settings.endpoints[self.current_endpoint].keyserver = keyserver
@@ -279,11 +280,12 @@ class PGPSync(QtWidgets.QMainWindow):
         self.waiting_refreshers = []
         self.active_refreshers = []
         for e in self.settings.endpoints:
-            refresher = Refresher(self.gpg, self.status_q, e, force)
-            refresher.finished.connect(self.refresher_finished)
-            refresher.success.connect(self.refresher_success)
-            refresher.error.connect(self.refresher_error)
-            self.waiting_refreshers.append(refresher)
+            if e.verified:
+                refresher = Refresher(self.gpg, self.status_q, e, force)
+                refresher.finished.connect(self.refresher_finished)
+                refresher.success.connect(self.refresher_success)
+                refresher.error.connect(self.refresher_error)
+                self.waiting_refreshers.append(refresher)
 
         # Start the first refresher thread
         if len(self.waiting_refreshers) > 0:
