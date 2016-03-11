@@ -62,7 +62,7 @@ Now you should have `dist/PGP Sync.pkg`. NOTE: This isn't implemented yet.
 Install dependencies:
 
 ```sh
-sudo apt-get install python3-pyqt5 python3-pycurl python3-nose python3-stdeb
+sudo apt-get install python3-pyqt5 python3-pycurl python3-nose python3-stdeb gnupg2
 ```
 
 Make and install a .deb:
