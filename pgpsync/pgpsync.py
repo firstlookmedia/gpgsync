@@ -75,7 +75,7 @@ class PGPSync(QtWidgets.QMainWindow):
         self.buttons = Buttons(self.settings)
         self.buttons.sync_now_signal.connect(self.sync_all_endpoints)
         self.buttons.quit_signal.connect(self.app.quit)
-        self.next_sync_check_msg = None
+        self.sync_msg = None
 
         # Layout
         hlayout = QtWidgets.QHBoxLayout()
@@ -102,7 +102,7 @@ class PGPSync(QtWidgets.QMainWindow):
         # Timer to refresh endpoints
         self.refresh_timer = QtCore.QTimer()
         self.refresh_timer.timeout.connect(self.sync_all_endpoints)
-        self.refresh_timer.start(3600000) # 1 hour
+        self.refresh_timer.start(60000) # 1 minute
 
         # Decide if window should start out shown or hidden
         if len(self.settings.endpoints) == 0:
@@ -156,11 +156,11 @@ class PGPSync(QtWidgets.QMainWindow):
         # Endpoint display
         self.endpoint_selection.reload_endpoints()
 
-        # Next sync
-        if(self.next_sync_check_msg):
-            self.buttons.update_next_sync(None, self.next_sync_check_msg)
+        # Sync message
+        if(self.sync_msg):
+            self.buttons.update_sync_label(self.sync_msg)
         else:
-            self.buttons.update_next_sync(self.refresh_timer.remainingTime())
+            self.buttons.update_sync_label()
 
     def edit_endpoint_alert_error(self, msg, icon=QtWidgets.QMessageBox.Warning):
         common.alert(msg, icon)
@@ -292,7 +292,7 @@ class PGPSync(QtWidgets.QMainWindow):
             r.start()
             self.toggle_input(False, "Syncing: {} {}".format(self.gpg.get_uid(r.e.fingerprint), common.fp_to_keyid(r.e.fingerprint).decode()))
 
-    def toggle_input(self, enabled=False, next_sync_check_msg=None):
+    def toggle_input(self, enabled=False, sync_msg=None):
         # Show/hide loading graphic
         if enabled:
             self.status_bar.hide_loading()
@@ -309,9 +309,9 @@ class PGPSync(QtWidgets.QMainWindow):
 
         # Next sync check message
         if enabled:
-            self.next_sync_check_msg = None
+            self.sync_msg = None
         else:
-            self.next_sync_check_msg = next_sync_check_msg
+            self.sync_msg = sync_msg
 
 def main():
     app = Application()
