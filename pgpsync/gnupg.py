@@ -34,9 +34,12 @@ class SignedWithWrongKey(Exception):
     pass
 
 class GnuPG(object):
-    def __init__(self, homedir=None, debug=False):
-        self.homedir = homedir
+    def __init__(self, debug=False):
         self.debug = debug
+
+        self.homedir = tempfile.mkdtemp()
+        if self.debug:
+            print('gpg homedir created: {}'.format(self.homedir))
 
         self.system = platform.system()
         self.creationflags = 0
@@ -52,6 +55,12 @@ class GnuPG(object):
         # Remember uids that have already been queried
         self.uids = dict()
 
+    def __del__(self):
+        # Delete the temporary homedir
+        shutil.rmtree(self.homedir, ignore_errors=True)
+        if self.debug:
+            print('gpg homedir deleted: {}'.format(self.homedir))
+
     def is_gpg_available(self):
         if self.system == 'Windows':
             return os.path.isfile(self.gpg_path)
@@ -65,26 +74,20 @@ class GnuPG(object):
         fp = common.clean_fp(fp)
         keyserver = common.clean_keyserver(keyserver).decode()
 
-        keyserver_options = []
+        default_hkps_server = 'hkps://hkps.pool.sks-keyservers.net'
+        ca_cert_file = common.get_resource_path('sks-keyservers.netCA.pem')
 
-        # GPG's http-proxy option is deprecated, and does not appear to work with GnuPG 2.1.11
-        #if use_proxy:
-        #    keyserver_options.append('http-proxy=socks5://{}:{}'.format(proxy_host.decode(), proxy_port.decode()))
+        # Create gpg.conf and dirmngr.conf
+        dirmngr_conf = ''
+        gpg_conf = 'require-cross-certification\n'
+        gpg_conf += 'keyserver {}\n'.format(keyserver)
+        if keyserver == default_hkps_server:
+            gpg_conf += 'keyserver-options ca-cert-file={}\n'.format(ca_cert_file)
+            dirmngr_conf += 'hkp-cacert {}\n'.format(ca_cert_file)
+        open(os.path.join(self.homedir, 'dirmngr.conf'), 'w').write(dirmngr_conf)
+        open(os.path.join(self.homedir, 'gpg.conf'), 'w').write(gpg_conf)
 
-        if keyserver == 'hkps://hkps.pool.sks-keyservers.net':
-            # Hack, because gpg has a bug where if your keyserver-options ca-cert-file has a space
-            # in the filename (and it always does, because it's in "PGP Sync.app/") it fails. But we
-            # just not include the ca-cert-file for OSX, because GPGTools bundles it.
-            if self.system != 'Darwin':
-                keyserver_options.append('ca-cert-file={}'.format(common.get_resource_path('sks-keyservers.netCA.pem')))
-
-        args = ['--keyserver', keyserver]
-        if len(keyserver_options) > 0:
-            args.append('--keyserver-options')
-            args.append(','.join(keyserver_options))
-        args.append('--recv-keys')
-        args.append(fp)
-
+        args = ['--recv-keys', fp]
         out,err = self._gpg(args)
 
         if b"No keyserver available" in err:
@@ -95,6 +98,9 @@ class GnuPG(object):
 
         if b"keyserver receive failed" in err:
             raise KeyserverError(keyserver)
+
+        # Import key into default homedir
+        self.import_to_default_homedir(fp)
 
     def test_key(self, fp):
         if not common.valid_fp(fp):
@@ -158,10 +164,29 @@ class GnuPG(object):
                     raise SignedWithWrongKey
                 break
 
+    def import_to_default_homedir(self, fp):
+        # Export public key from the temporary homedir
+        out,err = self._gpg(['--armor', '--export', fp])
+        pubkey = out
+
+        # Import public key into default homedir
+        if not b'gpg: WARNING: nothing exported' in err:
+            p = subprocess.Popen([self.gpg_path, '--import'],
+                stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+            (out, err) = p.communicate(pubkey)
+
+            if self.debug:
+                print('importing keys into default homedir')
+                if out != '':
+                    print('stdout', out)
+                if err != '':
+                    print('stderr', err)
+
     def _gpg(self, args, input=None):
-        default_args = [self.gpg_path, '--batch', '--no-tty']
-        if self.homedir:
-            default_args += ['--homedir', self.homedir]
+        default_args = [self.gpg_path, '--batch', '--no-tty', '--homedir', self.homedir]
+
+        if self.debug:
+            print('gpg args', default_args + args)
 
         p = subprocess.Popen(default_args + args,
             stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -173,7 +198,6 @@ class GnuPG(object):
             err = p.stderr.read()
 
         if self.debug:
-            print('gpg args', default_args + args)
             if out != '':
                 print('stdout', out)
             if err != '':

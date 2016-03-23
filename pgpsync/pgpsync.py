@@ -43,6 +43,12 @@ class PGPSync(QtWidgets.QMainWindow):
         # Load settings
         self.settings = Settings()
         self.current_endpoint = None
+        try:
+            for e in self.settings.endpoints:
+                if e.verified:
+                    e.fetch_public_key(self.gpg)
+        except:
+            pass
 
         # Initialize the system tray icon
         self.systray = SysTray()
