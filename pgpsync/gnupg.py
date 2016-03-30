@@ -190,13 +190,9 @@ class GnuPG(object):
 
         p = subprocess.Popen(default_args + args,
             stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
-        if input:
-            (out, err) = p.communicate(input)
-        else:
-            p.wait()
-            out = p.stdout.read()
-            err = p.stderr.read()
-
+        print("Waiting...")
+        (out, err) = p.communicate(input)
+        
         if self.debug:
             if out != '':
                 print('stdout', out)
