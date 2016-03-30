@@ -140,10 +140,7 @@ class PGPSync(QtWidgets.QMainWindow):
             self.activateWindow()
 
     def update_ui(self):
-        if self.isHidden():
-            return
-
-        # Status bar
+        # Print events, and update status bar
         events = []
         done = False
         while not done:
@@ -155,9 +152,16 @@ class PGPSync(QtWidgets.QMainWindow):
 
         for event in events:
             if event['type'] == 'update':
-                self.status_bar.showMessage(event['msg'], event['timeout'])
+                print(event['msg'])
+                if not self.isHidden():
+                    self.status_bar.showMessage(event['msg'], event['timeout'])
             elif event['type'] == 'clear':
-                self.status_bar.clearMessage()
+                if not self.isHidden():
+                    self.status_bar.clearMessage()
+
+        # Ignore the rest of the UI if window is hidden
+        if self.isHidden():
+            return
 
         # Endpoint display
         self.endpoint_selection.reload_endpoints()
@@ -273,8 +277,9 @@ class PGPSync(QtWidgets.QMainWindow):
         self.endpoint_selection.reload_endpoint(e)
         self.settings.save()
 
-    def refresher_error(self, e, err):
-        e.last_checked = datetime.datetime.now()
+    def refresher_error(self, e, err, reset_last_checked=True):
+        if reset_last_checked:
+            e.last_checked = datetime.datetime.now()
         e.warning = None
         e.error = err
 
@@ -298,7 +303,10 @@ class PGPSync(QtWidgets.QMainWindow):
             r = self.waiting_refreshers.pop()
             self.active_refreshers.append(r)
             r.start()
-            self.toggle_input(False, "Syncing: {} {}".format(self.gpg.get_uid(r.e.fingerprint), common.fp_to_keyid(r.e.fingerprint).decode()))
+
+            sync_string = "Syncing: {} {}".format(self.gpg.get_uid(r.e.fingerprint), common.fp_to_keyid(r.e.fingerprint).decode())
+            print(sync_string)
+            self.toggle_input(False, sync_string)
 
     def toggle_input(self, enabled=False, sync_msg=None):
         # Show/hide loading graphic

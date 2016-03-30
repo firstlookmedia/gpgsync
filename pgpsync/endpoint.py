@@ -231,7 +231,7 @@ class Verifier(QtCore.QThread):
 
 class Refresher(QtCore.QThread):
     success = QtCore.pyqtSignal(Endpoint, list, list)
-    error = QtCore.pyqtSignal(Endpoint, str)
+    error = QtCore.pyqtSignal(Endpoint, str, bool)
 
     def __init__(self, gpg, q, endpoint, force=False):
         super(Refresher, self).__init__()
@@ -240,10 +240,9 @@ class Refresher(QtCore.QThread):
         self.e = endpoint
         self.force = force
 
-    def finish_with_failure(self, err):
+    def finish_with_failure(self, err, reset_last_checked=True):
         self.q.add_message(type='clear')
-        self.error.emit(self.e, err)
-        self.finished.emit()
+        self.error.emit(self.e, err, reset_last_checked)
 
     def run(self):
         # Refresh if it's forced, if it's never been checked before,
@@ -252,6 +251,7 @@ class Refresher(QtCore.QThread):
         if self.force or not self.e.last_checked or (datetime.datetime.now() - self.e.last_checked).seconds >= one_day:
             # Fetch signing key from keyserver, make sure it's not expired or revoked
             success = False
+            reset_last_checked = True
             try:
                 self.q.add_message('Fetching public key {}'.format(common.fp_to_keyid(self.e.fingerprint).decode()))
                 self.e.fetch_public_key(self.gpg)
@@ -267,11 +267,14 @@ class Refresher(QtCore.QThread):
                 err = 'The signing key is revoked'
             except ExpiredKey:
                 err = 'The signing key is expired'
+            except KeyserverError:
+                err = 'Error connecting to keyserver'
+                reset_last_checked = False
             else:
                 success = True
 
             if not success:
-                return self.finish_with_failure(err)
+                return self.finish_with_failure(err, reset_last_checked)
 
             # Download URL
             success = False
@@ -351,5 +354,3 @@ class Refresher(QtCore.QThread):
 
             # All done
             self.success.emit(self.e, invalid_fingerprints, notfound_fingerprints)
-
-        self.finished.emit()
