@@ -27,7 +27,12 @@ def get_resource_path(filename):
     if platform.system() == 'Linux':
         prefix = os.path.join(sys.prefix, 'share/pgpsync')
     elif platform.system() == 'Darwin':
-        prefix = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))), 'share')
+        # Check if app is "frozen" with pyinstaller
+        # https://pythonhosted.org/PyInstaller/#run-time-information
+        if getattr(sys, 'frozen', False):
+            prefix = os.path.join(os.path.dirname(sys._MEIPASS), 'Resources/share')
+        else:
+            prefix = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'share')
 
     resource_path = os.path.join(prefix, filename)
     return resource_path

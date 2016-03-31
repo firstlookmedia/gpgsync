@@ -41,27 +41,3 @@ if system == 'Linux':
             (os.path.join(sys.prefix, 'share/pgpsync/'), share_files + ['install/pgpsync.desktop'])
         ]
     )
-elif system == 'Darwin':
-    setup(
-        name='PGP Sync',
-        version=version,
-        description=description,
-        long_description=long_description,
-        app=['install/pgpsync'],
-        data_files=[
-            ('share', share_files + ['share/org.firstlook.pgpsync.plist'])
-        ],
-        options={
-            'py2app': {
-                'argv_emulation': True,
-                'iconfile': 'install/pgpsync.icns',
-                'includes': ['sip', 'PyQt5', 'PyQt5.QtCore', 'PyQt5.QtGui', 'PyQt5.QtWidgets', 'pycurl'],
-                'excludes': [],
-                'plist': {
-                    'CFBundleIdentifier': 'org.firstlook.pgpsync',
-                    'LSUIElement': True
-                }
-            }
-        },
-        setup_requires=['py2app'],
-    )
