@@ -141,6 +141,8 @@ class GnuPG(object):
                 self.uids[fp] = uid
                 return uid
 
+        return ''
+
     def verify(self, msg, fp):
         if not common.valid_fp(fp):
             raise InvalidFingerprint(fp)
