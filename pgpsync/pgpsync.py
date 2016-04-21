@@ -106,6 +106,7 @@ class PGPSync(QtWidgets.QMainWindow):
         self.update_ui_timer.start(500) # 0.5 seconds
 
         # Timer to refresh endpoints
+        self.currently_syncing = False
         self.refresh_timer = QtCore.QTimer()
         self.refresh_timer.timeout.connect(self.sync_all_endpoints)
         self.refresh_timer.start(60000) # 1 minute
@@ -257,6 +258,7 @@ class PGPSync(QtWidgets.QMainWindow):
             r.start()
         else:
             self.status_q.add_message('Syncing complete.', timeout=4000)
+            self.currently_syncing = False
             self.toggle_input(True)
 
     def refresher_success(self, e, invalid_fingerprints, notfound_fingerprints):
@@ -287,6 +289,12 @@ class PGPSync(QtWidgets.QMainWindow):
         self.settings.save()
 
     def sync_all_endpoints(self, force=False):
+        # Skip if a sync is currently in progress
+        if self.currently_syncing:
+            return
+
+        self.currently_syncing = True
+
         # Make a refresher for each endpoint
         self.waiting_refreshers = []
         self.active_refreshers = []
