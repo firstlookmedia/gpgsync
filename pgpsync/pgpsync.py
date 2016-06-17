@@ -231,6 +231,7 @@ class PGPSync(QtWidgets.QMainWindow):
         self.endpoint_selection.delete_endpoint(self.settings.endpoints[self.current_endpoint])
         self.settings.endpoints.remove(self.settings.endpoints[self.current_endpoint])
         self.current_endpoint = None
+        self.settings.save()
 
     def endpoint_clicked(self, item):
         try:
