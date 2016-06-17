@@ -42,7 +42,7 @@ class Endpoint(object):
     def fetch_url(self):
         try:
           if self.use_proxy:
-            socks5_address = 'socks5://{0}:{1}'.format(self.proxy_host, self.proxy_port)
+            socks5_address = 'socks5://{0}:{1}'.format(self.proxy_host.decode("utf-8"), self.proxy_port.decode("utf-8"))
 
             proxies = {
               'https': socks5_address,
