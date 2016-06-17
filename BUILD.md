@@ -15,7 +15,7 @@ brew install python3 pyqt5 qt5
 Install some dependencies using pip3:
 
 ```sh
-sudo pip3 install pyinstaller pycurl
+sudo pip3 install pyinstaller requests requests[socks]
 ```
 
 Now you're ready to build the actual app. Go to the `pgpsync` folder before and run this to build the app:
