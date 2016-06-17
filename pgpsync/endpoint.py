@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import pycurl, uuid, datetime
+import requests, uuid, datetime
 from io import BytesIO
 from PyQt5 import QtCore, QtWidgets
 
@@ -41,21 +41,24 @@ class Endpoint(object):
 
     def fetch_url(self):
         try:
-            buffer = BytesIO()
-            c = pycurl.Curl()
-            c.setopt(pycurl.URL, self.url)
-            c.setopt(c.WRITEDATA, buffer)
-            if self.use_proxy:
-                c.setopt(pycurl.PROXY, self.proxy_host)
-                c.setopt(pycurl.PROXYPORT, int(self.proxy_port))
-                c.setopt(pycurl.PROXYTYPE, pycurl.PROXYTYPE_SOCKS5)
-            c.perform()
-            c.close()
-            msg_bytes = buffer.getvalue()
-        except pycurl.error as e:
-            raise URLDownloadError(e)
+          if self.use_proxy:
+            socks5_address = 'socks5://{0}:{1}'.format(self.proxy_host, self.proxy_port)
 
-        return msg_bytes
+            proxies = {
+              'https': socks5_address,
+              'http': socks5_address
+            }
+
+            r = requests.get(self.url, proxies = proxies)
+          else:
+            r = requests.get(self.url)
+
+          r.close()
+          msg_bytes = r.content
+        except requests.exceptions.RequestException as e:
+          raise URLDownloadError(e)
+
+        return  msg_bytes
 
     def verify_fingerprints_sig(self, gpg, msg_bytes):
         # Make sure the signature is valid
