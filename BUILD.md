@@ -41,7 +41,7 @@ Now you should have `dist/PGP Sync.pkg`. NOTE: This isn't implemented yet.
 Install dependencies:
 
 ```sh
-sudo apt-get install python3-pyqt5 python3-pycurl python3-nose python3-stdeb gnupg2
+sudo apt-get install python3-pyqt5 python3-nose python3-stdeb python3-requests python3-socks gnupg2
 ```
 
 Make and install a .deb:
@@ -49,12 +49,6 @@ Make and install a .deb:
 ```sh
 ./install/build_deb.sh
 sudo dpkg -i deb_dist/pgpsync_*.deb
-```
-
-*Arch*
-
-```sh
-sudo pacman -S python-pyqt5 python-pycurl python-nose
 ```
 
 ## Run the tests
