@@ -10,5 +10,7 @@
         <string>-a</string>
         <string>PGP Sync</string>
     </array>
+    <key>RunAtLoad</key>
+    <true/>
 </dict>
 </plist>
