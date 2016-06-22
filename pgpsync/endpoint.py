@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import requests, uuid, datetime
+import requests, socks, uuid, datetime
 from io import BytesIO
 from PyQt5 import QtCore, QtWidgets
 
@@ -58,7 +58,7 @@ class Endpoint(object):
 
           r.close()
           msg_bytes = r.content
-        except requests.exceptions.RequestException as e:
+        except (socks.ProxyConnectionError, requests.exceptions.RequestException, requests.exceptions.ConnectionError) as e:
           if self.use_proxy:
             raise ProxyURLDownloadError(e)
           else:
@@ -293,7 +293,9 @@ class Refresher(QtCore.QThread):
                 self.q.add_message('Downloading URL {}'.format(self.e.url.decode()))
                 msg_bytes = self.e.fetch_url()
             except URLDownloadError as e:
-                err = 'URL failed to download: {}'.format(e)
+                err = 'Failed to download: Check your internet connection'
+            except ProxyURLDownloadError as e:
+                err = 'Failed to download: Check your internet connection and proxy configuration'
             else:
                 success = True
 
