@@ -17,6 +17,7 @@ long_description = description + " " + "If you're part of an organization that u
 share_files = [
     'share/pgpsync.png',
     'share/syncing.png',
+    'share/error.png',
     'share/loading.gif',
     'share/sks-keyservers.netCA.pem',
     'share/sks-keyservers.netCA.pem.asc'
