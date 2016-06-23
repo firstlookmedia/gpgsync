@@ -173,8 +173,8 @@ class PGPSync(QtWidgets.QMainWindow):
         else:
             self.buttons.update_sync_label()
 
-    def edit_endpoint_alert_error(self, msg, icon=QtWidgets.QMessageBox.Warning):
-        common.alert(msg, icon)
+    def edit_endpoint_alert_error(self, msg, details='', icon=QtWidgets.QMessageBox.Warning):
+        common.alert(msg, details, icon)
         self.toggle_input(True)
 
     def edit_endpoint_save(self, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port):

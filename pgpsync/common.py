@@ -2,10 +2,14 @@
 import os, sys, re, platform, inspect
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-def alert(msg, icon=QtWidgets.QMessageBox.Warning):
+def alert(msg, details='', icon=QtWidgets.QMessageBox.Warning):
     d = QtWidgets.QMessageBox()
     d.setWindowTitle('PGP Sync')
     d.setText(msg)
+
+    if details:
+        d.setDetailedText(details)
+
     d.setIcon(icon)
     d.exec_()
 

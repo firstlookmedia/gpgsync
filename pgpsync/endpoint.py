@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import requests, uuid, datetime
+import requests, socks, uuid, datetime
 from io import BytesIO
 from PyQt5 import QtCore, QtWidgets
 
@@ -7,6 +7,9 @@ from . import common
 from .gnupg import *
 
 class URLDownloadError(Exception):
+    pass
+
+class ProxyURLDownloadError(Exception):
     pass
 
 class InvalidFingerprints(Exception):
@@ -55,8 +58,11 @@ class Endpoint(object):
 
           r.close()
           msg_bytes = r.content
-        except requests.exceptions.RequestException as e:
-          raise URLDownloadError(e)
+        except (socks.ProxyConnectionError, requests.exceptions.RequestException, requests.exceptions.ConnectionError) as e:
+          if self.use_proxy:
+            raise ProxyURLDownloadError(e)
+          else:
+            raise URLDownloadError(e)
 
         return  msg_bytes
 
@@ -117,7 +123,7 @@ class Endpoint(object):
         return fingerprints
 
 class Verifier(QtCore.QThread):
-    alert_error = QtCore.pyqtSignal(str)
+    alert_error = QtCore.pyqtSignal(str, str)
     success = QtCore.pyqtSignal(bytes, bytes, bytes, bool, bytes, bytes)
 
     def __init__(self, gpg, q, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port):
@@ -150,8 +156,10 @@ class Verifier(QtCore.QThread):
         try:
             self.q.add_message('Testing downloading URL {}'.format(self.url.decode()))
             msg_bytes = e.fetch_url()
+        except ProxyURLDownloadError as e:
+            self.alert_error.emit('URL failed to download: Check your internet connection and proxy settings.', str(e))
         except URLDownloadError as e:
-            self.alert_error.emit('URL failed to download: {}'.format(e))
+            self.alert_error.emit('URL failed to download: Check your internet connection.', str(e))
         else:
             success = True
 
@@ -219,7 +227,7 @@ class Verifier(QtCore.QThread):
             self.q.add_message('Validating fingerprint list')
             e.get_fingerprint_list(msg_bytes)
         except InvalidFingerprints as e:
-            self.alert_error.emit('Invalid fingerprints: {}'.format(e))
+            self.alert_error.emit('Invalid fingerprints', str(e))
         except FingerprintsListNotSigned:
             self.alert_error.emit('Fingerprints list is not signed.')
         else:
@@ -285,7 +293,9 @@ class Refresher(QtCore.QThread):
                 self.q.add_message('Downloading URL {}'.format(self.e.url.decode()))
                 msg_bytes = self.e.fetch_url()
             except URLDownloadError as e:
-                err = 'URL failed to download: {}'.format(e)
+                err = 'Failed to download: Check your internet connection'
+            except ProxyURLDownloadError as e:
+                err = 'Failed to download: Check your internet connection and proxy configuration'
             else:
                 success = True
 
