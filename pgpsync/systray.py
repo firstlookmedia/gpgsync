@@ -57,7 +57,6 @@ class SysTray(QtWidgets.QSystemTrayIcon):
         self.sync_now_signal.emit(True)
 
     def clicked_update_now(self):
-        print('hhhhh')
         self.check_updates_now_signal.emit(True)
 
     def clicked_quit(self):
