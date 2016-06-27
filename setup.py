@@ -8,7 +8,8 @@ except ImportError:
     from distutils.core import setup
 
 system = platform.system()
-version = open('version').read().strip()
+version_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'share', 'version')
+version = open(version_file).read().strip()
 
 description = "PGP Sync lets users have up-to-date public keys for all other members of their organization."
 
