@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os, sys, platform, queue, datetime, requests
-from packaging.version import parse
+if platform.system != 'Linux':
+    from packaging.version import parse
 from urllib.parse import urlparse
 from PyQt5 import QtCore, QtWidgets
 
