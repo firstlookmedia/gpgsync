@@ -22,8 +22,9 @@ class SysTray(QtWidgets.QSystemTrayIcon):
         self.show_act.triggered.connect(self.clicked_show)
         self.refresh_act = self.menu.addAction('Sync endpoints')
         self.refresh_act.triggered.connect(self.clicked_refresh)
-        self.update_act = self.menu.addAction('Check for updates')
-        self.update_act.triggered.connect(self.clicked_update_now)
+        if platform.system() != 'Linux':
+            self.update_act = self.menu.addAction('Check for updates')
+            self.update_act.triggered.connect(self.clicked_update_now)
         self.menu.addSeparator()
         self.quit_act = self.menu.addAction('Quit')
         self.quit_act.triggered.connect(self.clicked_quit)

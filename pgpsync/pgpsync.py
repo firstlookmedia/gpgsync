@@ -54,13 +54,13 @@ class PGPSync(QtWidgets.QMainWindow):
         except:
             pass
 
-        self.checking_for_updates = False
-
         # Initialize the system tray icon
         self.systray = SysTray()
         self.systray.show_signal.connect(self.toggle_show_window)
         self.systray.sync_now_signal.connect(self.sync_all_endpoints)
-        self.systray.check_updates_now_signal.connect(self.force_check_for_updates)
+        if self.system != 'Linux':
+            self.checking_for_updates = False
+            self.systray.check_updates_now_signal.connect(self.force_check_for_updates)
         self.systray.quit_signal.connect(self.app.quit)
         self.systray.clicked_applet_signal.connect(self.clicked_applet)
 
@@ -119,10 +119,11 @@ class PGPSync(QtWidgets.QMainWindow):
         self.refresh_timer.start(60000) # 1 minute
 
         # Timer to check for automatic updates
-        self.check_for_updates() # Check first on start up
-        self.updater_timer = QtCore.QTimer()
-        self.updater_timer.timeout.connect(self.check_for_updates)
-        self.updater_timer.start(86400000) # 24 hours
+        if self.system != 'Linux':
+            self.check_for_updates() # Check first on start up
+            self.updater_timer = QtCore.QTimer()
+            self.updater_timer.timeout.connect(self.check_for_updates)
+            self.updater_timer.start(86400000) # 24 hours
 
         # Decide if window should start out shown or hidden
         if len(self.settings.endpoints) == 0:
