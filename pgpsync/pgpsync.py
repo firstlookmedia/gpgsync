@@ -30,7 +30,7 @@ class PGPSync(QtWidgets.QMainWindow):
         self.setWindowTitle('PGP Sync')
         self.setWindowIcon(common.get_icon())
         version_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'share', 'version')
-        self.version = parse(open(version_file).read())
+        self.version = parse(open(version_file).read().strip())
         self.saved_update_version = self.version
 
         # Initialize gpg
