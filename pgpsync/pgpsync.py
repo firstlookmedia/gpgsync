@@ -385,12 +385,10 @@ class PGPSync(QtWidgets.QMainWindow):
                 if self.saved_update_version < latest_version or force:
                     self.show_main_window()
 
-                    common.alert('A new version of PGP Sync is available.<span style="font-weight:normal;"><br><br>Current: {}<br>Latest: &nbsp;&nbsp;{}<br><br>Please download the <a href="{}?access_token={}">latest</a> version.</span>'.format(self.version, latest_version, release['assets'][0]['browser_download_url'], token))
+                    common.alert('A new version of PGP Sync is available.<span style="font-weight:normal;"><br><br>Current: {}<br>Latest: &nbsp;&nbsp;{}<br><br>Please download the <a href="{}?access_token={}">latest</a> version.</span>'.format(self.version, latest_version, release['html_url'], token))
                     self.saved_update_version = latest_version
             elif self.version == latest_version and force:
-                print('same same')
                 self.show_main_window()
-
                 common.alert('No updates available.')
 
         self.checking_for_updates = False
