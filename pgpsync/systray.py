@@ -7,6 +7,7 @@ from . import common
 class SysTray(QtWidgets.QSystemTrayIcon):
     show_signal = QtCore.pyqtSignal()
     sync_now_signal = QtCore.pyqtSignal(bool)
+    check_updates_now_signal = QtCore.pyqtSignal(bool)
     quit_signal = QtCore.pyqtSignal()
     clicked_applet_signal = QtCore.pyqtSignal()
 
@@ -21,6 +22,8 @@ class SysTray(QtWidgets.QSystemTrayIcon):
         self.show_act.triggered.connect(self.clicked_show)
         self.refresh_act = self.menu.addAction('Sync endpoints')
         self.refresh_act.triggered.connect(self.clicked_refresh)
+        self.update_act = self.menu.addAction('Check for updates')
+        self.update_act.triggered.connect(self.clicked_update_now)
         self.menu.addSeparator()
         self.quit_act = self.menu.addAction('Quit')
         self.quit_act.triggered.connect(self.clicked_quit)
@@ -52,6 +55,10 @@ class SysTray(QtWidgets.QSystemTrayIcon):
 
     def clicked_refresh(self):
         self.sync_now_signal.emit(True)
+
+    def clicked_update_now(self):
+        print('hhhhh')
+        self.check_updates_now_signal.emit(True)
 
     def clicked_quit(self):
         self.quit_signal.emit()

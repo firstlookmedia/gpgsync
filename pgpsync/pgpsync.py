@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-import sys, platform, queue, datetime
+import os, sys, platform, queue, datetime, requests
+from packaging.version import parse
 from urllib.parse import urlparse
 from PyQt5 import QtCore, QtWidgets
 
@@ -28,6 +29,9 @@ class PGPSync(QtWidgets.QMainWindow):
         self.system = platform.system()
         self.setWindowTitle('PGP Sync')
         self.setWindowIcon(common.get_icon())
+        version_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'share', 'version')
+        self.version = parse(open(version_file).read())
+        self.saved_update_version = self.version
 
         # Initialize gpg
         self.gpg = GnuPG()
@@ -50,10 +54,13 @@ class PGPSync(QtWidgets.QMainWindow):
         except:
             pass
 
+        self.checking_for_updates = False
+
         # Initialize the system tray icon
         self.systray = SysTray()
         self.systray.show_signal.connect(self.toggle_show_window)
         self.systray.sync_now_signal.connect(self.sync_all_endpoints)
+        self.systray.check_updates_now_signal.connect(self.force_check_for_updates)
         self.systray.quit_signal.connect(self.app.quit)
         self.systray.clicked_applet_signal.connect(self.clicked_applet)
 
@@ -111,6 +118,12 @@ class PGPSync(QtWidgets.QMainWindow):
         self.refresh_timer.timeout.connect(self.sync_all_endpoints)
         self.refresh_timer.start(60000) # 1 minute
 
+        # Timer to check for automatic updates
+        self.check_for_updates() # Check first on start up
+        self.updater_timer = QtCore.QTimer()
+        self.updater_timer.timeout.connect(self.check_for_updates)
+        self.updater_timer.start(86400000) # 24 hours
+
         # Decide if window should start out shown or hidden
         if len(self.settings.endpoints) == 0:
             self.show()
@@ -133,6 +146,14 @@ class PGPSync(QtWidgets.QMainWindow):
         else:
             self.hide()
             self.systray.set_window_show(False)
+
+    def show_main_window(self):
+        if self.isHidden():
+            self.show()
+            self.raise_()
+            self.showNormal()
+            self.activateWindow()
+            self.systray.set_window_show(True)
 
     def clicked_applet(self):
         if not self.isHidden():
@@ -337,6 +358,45 @@ class PGPSync(QtWidgets.QMainWindow):
             self.sync_msg = None
         else:
             self.sync_msg = sync_msg
+
+    def check_for_updates(self, force=False):
+        if self.checking_for_updates:
+            return
+
+        self.checking_for_updates = True
+
+        try:
+            url = 'https://api.github.com/repos/firstlookmedia/automatic-updates-test/releases/latest'
+            token = ''
+
+            r = requests.get(url, headers={
+                'Authorization': 'token {}'.format(token)
+                })
+
+            release = r.json()
+        except (requests.exceptions.RequestException, requests.exceptions.ConnectionError) as e:
+            self.checking_for_updates = False
+            return
+
+        if release and 'tag_name' in release:
+            latest_version = parse(release['tag_name'])
+
+            if self.version < latest_version:
+                if self.saved_update_version < latest_version or force:
+                    self.show_main_window()
+
+                    common.alert('A new version of PGP Sync is available.<span style="font-weight:normal;"><br><br>Current: {}<br>Latest: &nbsp;&nbsp;{}<br><br>Please download the <a href="{}?access_token={}">latest</a> version.</span>'.format(self.version, latest_version, release['assets'][0]['browser_download_url'], token))
+                    self.saved_update_version = latest_version
+            elif self.version == latest_version and force:
+                print('same same')
+                self.show_main_window()
+
+                common.alert('No updates available.')
+
+        self.checking_for_updates = False
+
+    def force_check_for_updates(self):
+        self.check_for_updates(True)
 
 def main():
     app = Application()
