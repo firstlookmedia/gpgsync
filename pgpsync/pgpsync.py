@@ -367,7 +367,7 @@ class PGPSync(QtWidgets.QMainWindow):
         self.checking_for_updates = True
 
         try:
-            url = 'https://api.github.com/repos/firstlookmedia/automatic-updates-test/releases/latest'
+            url = 'https://api.github.com/repos/firstlookmedia/pgpsync/releases/latest'
             token = ''
 
             r = requests.get(url, headers={
