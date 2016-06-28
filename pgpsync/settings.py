@@ -16,19 +16,32 @@ class Settings(object):
     def load(self):
         if os.path.isfile(self.settings_path):
             self.settings = pickle.load(open(self.settings_path, 'rb'))
-            self.endpoints = self.settings['endpoints']
-            self.run_automatically = self.settings['run_automatically']
+            if 'endpoints' in self.settings:
+                self.endpoints = self.settings['endpoints']
+            else:
+                self.endpoints = []
+            if 'run_automatically' in self.settings:
+                self.run_automatically = self.settings['run_automatically']
+            else:
+                self.run_automatically = True
+            if 'run_autoupdate' in self.settings:
+                self.run_autoupdate = self.settings['run_autoupdate']
+            else:
+                self.run_autoupdate = True
         else:
             # default settings
             self.endpoints = []
             self.run_automatically = True
+            self.run_autoupdate = True
 
         self.configure_run_automatically()
 
     def save(self):
         self.settings = {
             'endpoints': self.endpoints,
-            'run_automatically': self.run_automatically
+            'run_automatically': self.run_automatically,
+            'run_autoupdate': self.run_autoupdate
+
         }
         pickle.dump(self.settings, open(self.settings_path, 'wb'))
 

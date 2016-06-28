@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
+import platform
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 class Buttons(QtWidgets.QVBoxLayout):
     sync_now_signal = QtCore.pyqtSignal(bool)
     quit_signal = QtCore.pyqtSignal()
+    autoupdate_signal = QtCore.pyqtSignal(bool)
 
     def __init__(self, settings):
         super(Buttons, self).__init__()
@@ -25,6 +27,14 @@ class Buttons(QtWidgets.QVBoxLayout):
             self.run_automatically_checkbox.setCheckState(QtCore.Qt.Unchecked)
         self.run_automatically_checkbox.stateChanged.connect(self.run_automatically_changed)
 
+        # Check for automatic updates
+        self.run_autoupdate_checkbox = QtWidgets.QCheckBox("Check for updates automatically")
+        if self.settings.run_autoupdate:
+            self.run_autoupdate_checkbox.setCheckState(QtCore.Qt.Checked)
+        else:
+            self.run_autoupdate_checkbox.setCheckState(QtCore.Qt.Unchecked)
+        self.run_autoupdate_checkbox.stateChanged.connect(self.run_autoupdate_changed)
+
         # Next sync label
         self.sync_label = QtWidgets.QLabel()
         self.update_sync_label(None)
@@ -36,6 +46,8 @@ class Buttons(QtWidgets.QVBoxLayout):
         self.addLayout(buttons_layout)
         self.addWidget(self.sync_label)
         self.addWidget(self.run_automatically_checkbox)
+        if platform.system() != 'Linux':
+            self.addWidget(self.run_autoupdate_checkbox)
 
     def sync_now(self):
         self.sync_now_signal.emit(True)
@@ -52,3 +64,8 @@ class Buttons(QtWidgets.QVBoxLayout):
     def run_automatically_changed(self, state):
         self.settings.run_automatically = (state == QtCore.Qt.Checked)
         self.settings.save()
+
+    def run_autoupdate_changed(self, state):
+        self.settings.run_autoupdate = (state == QtCore.Qt.Checked)
+        self.settings.save()
+        self.autoupdate_signal.emit((state == QtCore.Qt.Checked))
