@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import os, sys, platform, queue, datetime, requests
-if platform.system != 'Linux':
-    from packaging.version import parse
+from packaging.version import parse
 from urllib.parse import urlparse
 from PyQt5 import QtCore, QtWidgets
 
@@ -30,7 +29,7 @@ class PGPSync(QtWidgets.QMainWindow):
         self.system = platform.system()
         self.setWindowTitle('PGP Sync')
         self.setWindowIcon(common.get_icon())
-        version_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'share', 'version')
+        version_file = common.get_resource_path('version')
         self.version = parse(open(version_file).read().strip())
         self.saved_update_version = self.version
 

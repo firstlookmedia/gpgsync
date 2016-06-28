@@ -21,7 +21,8 @@ share_files = [
     'share/error.png',
     'share/loading.gif',
     'share/sks-keyservers.netCA.pem',
-    'share/sks-keyservers.netCA.pem.asc'
+    'share/sks-keyservers.netCA.pem.asc',
+    'share/version'
 ]
 
 if system == 'Linux':
