@@ -11,7 +11,7 @@ from .settings import Settings
 
 from .endpoint_selection import EndpointSelection
 from .edit_endpoint import EditEndpoint
-from .endpoint import Endpoint, Verifier, Refresher, URLDownloadError, InvalidFingerprints, FingerprintsListNotSigned
+from .endpoint import Endpoint, Verifier, Refresher, URLDownloadError, ProxyURLDownloadError, InvalidFingerprints, FingerprintsListNotSigned
 from .buttons import Buttons
 from .status_bar import StatusBar, MessageQueue
 from .systray import SysTray

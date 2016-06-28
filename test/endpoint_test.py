@@ -16,7 +16,7 @@ def test_fetch_url_invalid_url():
     e.url = b'https://somethingfake'
     e.fetch_url()
 
-@raises(URLDownloadError)
+@raises(ProxyURLDownloadError)
 def test_fetch_url_valid_url_invalid_proxy():
     # Assuming 127.0.0.1:9988 is not a valid SOCKS5 proxy...
     e = Endpoint()
