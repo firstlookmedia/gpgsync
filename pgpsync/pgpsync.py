@@ -393,7 +393,11 @@ class PGPSync(QtWidgets.QMainWindow):
                 common.alert('No updates available.')
         elif release and 'tag_name' not in release:
             self.show_main_window()
-            common.alert('Having trouble connecting to the release server.')
+            details = ''
+            for key, val in release.items():
+                details += '{}: {}\n\n'.format(key, val)
+
+            common.alert('Error checking for updates.', details)
 
         self.checking_for_updates = False
 
