@@ -87,6 +87,7 @@ class PGPSync(QtWidgets.QMainWindow):
         # Buttons
         self.buttons = Buttons(self.settings)
         self.buttons.sync_now_signal.connect(self.sync_all_endpoints)
+        self.buttons.autoupdate_signal.connect(self.configure_autoupdate)
         self.buttons.quit_signal.connect(self.app.quit)
         self.sync_msg = None
 
@@ -119,7 +120,7 @@ class PGPSync(QtWidgets.QMainWindow):
         self.refresh_timer.start(60000) # 1 minute
 
         # Timer to check for automatic updates
-        if self.system != 'Linux':
+        if self.system != 'Linux' and self.settings.run_autoupdate:
             self.check_for_updates() # Check first on start up
             self.updater_timer = QtCore.QTimer()
             self.updater_timer.timeout.connect(self.check_for_updates)
@@ -399,6 +400,21 @@ class PGPSync(QtWidgets.QMainWindow):
 
     def force_check_for_updates(self):
         self.check_for_updates(True)
+
+    def configure_autoupdate(self, state):
+        if state:
+            try:
+                if self.updater_timer:
+                    self.force_check_for_updates()
+                    self.updater_timer.start(86400000)
+            except:
+                self.check_for_updates() # Check first on start up
+                self.updater_timer = QtCore.QTimer()
+                self.updater_timer.timeout.connect(self.check_for_updates)
+                self.updater_timer.start(86400000) # 24 hours
+        else:
+            if self.updater_timer:
+                self.updater_timer.stop()
 
 def main():
     app = Application()
