@@ -54,3 +54,10 @@ def get_syncing_icon():
     if not syncing_icon:
         syncing_icon = QtGui.QIcon(get_resource_path('syncing.png'))
     return syncing_icon
+
+error_icon = None
+def get_error_icon():
+    global error_icon
+    if not error_icon:
+        error_icon = QtGui.QIcon(get_resource_path('error.png'))
+    return error_icon
