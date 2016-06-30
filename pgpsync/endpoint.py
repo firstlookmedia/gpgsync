@@ -32,6 +32,8 @@ class Endpoint(object):
         self.proxy_host = b'127.0.0.1'
         self.proxy_port = b'9050'
         self.last_checked = None
+        self.last_synced = None
+        self.last_failed = None
         self.error = None
         self.warning = None
 
