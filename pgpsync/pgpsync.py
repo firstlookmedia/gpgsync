@@ -115,6 +115,7 @@ class PGPSync(QtWidgets.QMainWindow):
 
         # Timer to refresh endpoints
         self.currently_syncing = False
+        self.syncing_errors = []
         self.refresh_timer = QtCore.QTimer()
         self.refresh_timer.timeout.connect(self.sync_all_endpoints)
         self.refresh_timer.start(60000) # 1 minute
@@ -304,6 +305,7 @@ class PGPSync(QtWidgets.QMainWindow):
         self.settings.save()
 
     def refresher_error(self, e, err, reset_last_checked=True):
+        self.syncing_errors.append(e)
         if reset_last_checked:
             e.last_checked = datetime.datetime.now()
         e.warning = None
@@ -318,6 +320,7 @@ class PGPSync(QtWidgets.QMainWindow):
             return
 
         self.currently_syncing = True
+        self.syncing_errors = []
 
         # Make a refresher for each endpoint
         self.waiting_refreshers = []
@@ -360,6 +363,9 @@ class PGPSync(QtWidgets.QMainWindow):
             self.sync_msg = None
         else:
             self.sync_msg = sync_msg
+
+        if len(self.syncing_errors) > 0:
+            self.systray.setIcon(common.get_error_icon())
 
     def check_for_updates(self, force=False):
         if self.checking_for_updates:
