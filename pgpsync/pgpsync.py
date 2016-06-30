@@ -298,6 +298,7 @@ class PGPSync(QtWidgets.QMainWindow):
             warning = ', '.join(warnings)
 
         e.last_checked = datetime.datetime.now()
+        e.last_synced = datetime.datetime.now()
         e.warning = warning
         e.error = None
 
@@ -308,6 +309,7 @@ class PGPSync(QtWidgets.QMainWindow):
         self.syncing_errors.append(e)
         if reset_last_checked:
             e.last_checked = datetime.datetime.now()
+        e.last_failed = datetime.datetime.now()
         e.warning = None
         e.error = err
 

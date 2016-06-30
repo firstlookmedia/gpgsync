@@ -69,7 +69,10 @@ class EndpointWidget(QtWidgets.QWidget):
 
         # Last updated
         if self.e.last_checked:
-            diff = datetime.datetime.now() - self.e.last_checked
+            if self.e.error:
+                diff = datetime.datetime.now() - self.e.last_failed
+            else:
+                diff = datetime.datetime.now() - self.e.last_synced
             s = diff.seconds
             hours = s // 3600
             s = s - (hours * 3600)
@@ -84,7 +87,11 @@ class EndpointWidget(QtWidgets.QWidget):
                 last_checked = '{} seconds ago'.format(seconds)
         else:
             last_checked = 'never'
-        self.last_checked_label.setText('Last updated: {}'.format(last_checked))
+
+        if self.e.error:
+            self.last_checked_label.setText('Last attempted: {}'.format(last_checked))
+        else:
+            self.last_checked_label.setText('Last synced: {}'.format(last_checked))
 
         # Warning and error
         if self.e.warning:
