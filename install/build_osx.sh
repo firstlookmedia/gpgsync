@@ -10,6 +10,7 @@ rm -rf $ROOT/dist &>/dev/null 2>&1
 echo Building .app
 pyinstaller install/pyinstaller-osx.spec --clean
 
-if [ "$1" = "--sign" ]; then
+if [ "$1" = "--release" ]; then
   echo "Codesigning is not yet implemented"
+  productbuild --component "dist/PGP Sync.app" /Applications "dist/PGP Sync.pkg"
 fi
