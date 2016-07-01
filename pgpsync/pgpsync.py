@@ -377,7 +377,7 @@ class PGPSync(QtWidgets.QMainWindow):
 
         try:
             url = 'https://api.github.com/repos/firstlookmedia/pgpsync/releases/latest'
-            token = ''
+            token = '8890473be7c382a70eadb8fbc58ffe0fea913b77'
 
             r = requests.get(url, headers={
                 'Authorization': 'token {}'.format(token)
