@@ -9,7 +9,7 @@ except ImportError:
 
 system = platform.system()
 version_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'share', 'version')
-version = open(version_file).read().strip()
+version = open(version_file).read().strip().lstrip('v')
 
 description = "PGP Sync lets users have up-to-date public keys for all other members of their organization."
 

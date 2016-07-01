@@ -2,6 +2,9 @@
 
 block_cipher = None
 
+# Get the version
+version = open('share/version').read().strip().lstrip('v')
+
 a = Analysis(
     ['pgpsync-osx.py'],
     pathex=['.'],
@@ -45,5 +48,6 @@ app = BUNDLE(
     bundle_identifier='org.firstlook.pgpsync',
     info_plist={
         'LSUIElement': 'True',
-        'NSHighResolutionCapable': 'True'
+        'NSHighResolutionCapable': 'True',
+        'CFBundleShortVersionString': version
     })
