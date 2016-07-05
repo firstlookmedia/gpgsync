@@ -174,19 +174,19 @@ class Verifier(QtCore.QThread):
             self.q.add_message('Downloading {} from keyserver {}'.format(common.fp_to_keyid(self.fingerprint).decode(), self.keyserver.decode()))
             e.fetch_public_key(self.gpg)
         except InvalidFingerprint:
-            self.alert_error.emit('Invalid signing key fingerprint.')
+            self.alert_error.emit('Invalid signing key fingerprint.', '')
         except InvalidKeyserver:
-            self.alert_error.emit('Invalid keyserver.')
+            self.alert_error.emit('Invalid keyserver.', '')
         except KeyserverError:
-            self.alert_error.emit('Error with keyserver {}.'.format(self.keyserver.decode()))
+            self.alert_error.emit('Error with keyserver {}.'.format(self.keyserver.decode()), '')
         except NotFoundOnKeyserver:
-            self.alert_error.emit('Signing key is not found on keyserver. Upload signing key and try again.')
+            self.alert_error.emit('Signing key is not found on keyserver. Upload signing key and try again.', '')
         except NotFoundInKeyring:
-            self.alert_error.emit('Signing key is not found in keyring. Something went wrong.')
+            self.alert_error.emit('Signing key is not found in keyring. Something went wrong.', '')
         except RevokedKey:
-            self.alert_error.emit('The signing key is revoked.')
+            self.alert_error.emit('The signing key is revoked.', '')
         except ExpiredKey:
-            self.alert_error.emit('The signing key is expired.')
+            self.alert_error.emit('The signing key is expired.', '')
         else:
             success = True
 
@@ -197,7 +197,7 @@ class Verifier(QtCore.QThread):
         success = False
         o = urlparse(self.url)
         if (o.scheme != b'http' and o.scheme != b'https') or o.netloc == '':
-            self.alert_error.emit('URL is invalid.')
+            self.alert_error.emit('URL is invalid.', '')
         else:
             success = True
 
@@ -210,13 +210,13 @@ class Verifier(QtCore.QThread):
             self.q.add_message('Verifying signature')
             e.verify_fingerprints_sig(self.gpg, msg_bytes)
         except VerificationError:
-            self.alert_error.emit('Signature does not verify.')
+            self.alert_error.emit('Signature does not verify.', '')
         except BadSignature:
-            self.alert_error.emit('Bad signature.')
+            self.alert_error.emit('Bad signature.', '')
         except RevokedKey:
-            self.alert_error.emit('The signing key is revoked.')
+            self.alert_error.emit('The signing key is revoked.', '')
         except SignedWithWrongKey:
-            self.alert_error.emit('Valid signature, but signed with wrong signing key.')
+            self.alert_error.emit('Valid signature, but signed with wrong signing key.', '')
         else:
             success = True
 
@@ -229,9 +229,9 @@ class Verifier(QtCore.QThread):
             self.q.add_message('Validating fingerprint list')
             e.get_fingerprint_list(msg_bytes)
         except InvalidFingerprints as e:
-            self.alert_error.emit('Invalid fingerprints', str(e))
+            self.alert_error.emit('Invalid fingerprints', str(e), '')
         except FingerprintsListNotSigned:
-            self.alert_error.emit('Fingerprints list is not signed.')
+            self.alert_error.emit('Fingerprints list is not signed.', '')
         else:
             success = True
 
