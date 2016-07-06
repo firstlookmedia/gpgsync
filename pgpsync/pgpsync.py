@@ -221,6 +221,8 @@ class PGPSync(QtWidgets.QMainWindow):
         self.edit_endpoint_wrapper.hide()
         self.current_endpoint = None
 
+        self.sync_all_endpoints(True)
+
     def add_endpoint(self):
         e = Endpoint()
         self.settings.endpoints.append(e)
