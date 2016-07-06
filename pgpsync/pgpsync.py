@@ -55,7 +55,7 @@ class PGPSync(QtWidgets.QMainWindow):
             pass
 
         # Initialize the system tray icon
-        self.systray = SysTray()
+        self.systray = SysTray(self.version)
         self.systray.show_signal.connect(self.toggle_show_window)
         self.systray.sync_now_signal.connect(self.sync_all_endpoints)
         if self.system != 'Linux':
