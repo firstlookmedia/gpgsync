@@ -11,13 +11,15 @@ class SysTray(QtWidgets.QSystemTrayIcon):
     quit_signal = QtCore.pyqtSignal()
     clicked_applet_signal = QtCore.pyqtSignal()
 
-    def __init__(self):
+    def __init__(self, version):
         super(SysTray, self).__init__(common.get_icon())
         self.show_text = 'Show PGP Sync'
         self.hide_text = 'Hide PGP Sync'
 
         # Menu
         self.menu = QtWidgets.QMenu()
+        self.version_info = self.menu.addAction('Version {}'.format(version))
+        self.version_info.setEnabled(False)
         self.show_act = self.menu.addAction(self.show_text)
         self.show_act.triggered.connect(self.clicked_show)
         self.refresh_act = self.menu.addAction('Sync endpoints')
