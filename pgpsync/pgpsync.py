@@ -32,6 +32,7 @@ class PGPSync(QtWidgets.QMainWindow):
         version_file = common.get_resource_path('version')
         self.version = parse(open(version_file).read().strip())
         self.saved_update_version = self.version
+        self.unconfigured_endpoint = None
 
         # Initialize gpg
         self.gpg = GnuPG()
@@ -51,6 +52,8 @@ class PGPSync(QtWidgets.QMainWindow):
             for e in self.settings.endpoints:
                 if e.verified:
                     e.fetch_public_key(self.gpg)
+                else:
+                    self.unconfigured_endpoint = e
         except:
             pass
 
@@ -73,6 +76,9 @@ class PGPSync(QtWidgets.QMainWindow):
 
         self.endpoint_selection.add_endpoint_signal.connect(self.add_endpoint)
         self.endpoint_selection.endpoint_list.itemClicked.connect(self.endpoint_clicked)
+
+        if self.unconfigured_endpoint is not None:
+            self.endpoint_selection.add_btn.setEnabled(False)
 
         # Edit endpoint GUI
         self.edit_endpoint = EditEndpoint()
@@ -211,6 +217,7 @@ class PGPSync(QtWidgets.QMainWindow):
         self.settings.endpoints[self.current_endpoint].proxy_host = proxy_host
         self.settings.endpoints[self.current_endpoint].proxy_port = proxy_port
         self.settings.save()
+        self.unconfigured_endpoint = None
 
         # Refresh the display
         self.toggle_input(True)
@@ -227,6 +234,8 @@ class PGPSync(QtWidgets.QMainWindow):
         e = Endpoint()
         self.settings.endpoints.append(e)
         self.endpoint_selection.add_endpoint(e)
+        self.unconfigured_endpoint = e
+        self.endpoint_selection.add_btn.setEnabled(False)
 
         # Click on the newest endpoint
         count = self.endpoint_selection.endpoint_list.count()
@@ -254,6 +263,9 @@ class PGPSync(QtWidgets.QMainWindow):
 
     def delete_endpoint(self):
         self.edit_endpoint_wrapper.hide()
+        if self.settings.endpoints[self.current_endpoint] is self.unconfigured_endpoint:
+            self.unconfigured_endpoint = None
+            self.endpoint_selection.add_btn.setEnabled(True)
         self.endpoint_selection.delete_endpoint(self.settings.endpoints[self.current_endpoint])
         self.settings.endpoints.remove(self.settings.endpoints[self.current_endpoint])
         self.current_endpoint = None
@@ -357,7 +369,11 @@ class PGPSync(QtWidgets.QMainWindow):
             self.systray.setIcon(common.get_syncing_icon())
 
         # Disable/enable all input
-        self.endpoint_selection.setEnabled(enabled)
+        if self.unconfigured_endpoint is not None:
+            self.endpoint_selection.add_btn.setEnabled(False)
+            self.endpoint_selection.endpoint_list.setEnabled(enabled)
+        else:
+            self.endpoint_selection.setEnabled(enabled)
         self.edit_endpoint_wrapper.setEnabled(enabled)
         self.buttons.sync_now_btn.setEnabled(enabled)
         self.systray.refresh_act.setEnabled(enabled)
