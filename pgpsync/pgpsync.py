@@ -245,12 +245,12 @@ class PGPSync(QtWidgets.QMainWindow):
 
     def save_endpoint(self):
         # Get values for endpoint
-        fingerprint = common.clean_fp(self.edit_endpoint.fingerprint_edit.text().encode())
-        url         = self.edit_endpoint.url_edit.text().encode()
-        keyserver   = self.edit_endpoint.keyserver_edit.text().encode()
+        fingerprint = common.clean_fp(self.edit_endpoint.fingerprint_edit.text().strip().encode())
+        url         = self.edit_endpoint.url_edit.text().strip().encode()
+        keyserver   = self.edit_endpoint.keyserver_edit.text().strip().encode()
         use_proxy   = self.edit_endpoint.use_proxy.checkState() == QtCore.Qt.Checked
-        proxy_host  = self.edit_endpoint.proxy_host_edit.text().encode()
-        proxy_port  = self.edit_endpoint.proxy_port_edit.text().encode()
+        proxy_host  = self.edit_endpoint.proxy_host_edit.text().strip().encode()
+        proxy_port  = self.edit_endpoint.proxy_port_edit.text().strip().encode()
 
         # Show loading graphic, and disable all input until it's finished Verifying
         self.toggle_input(False)
