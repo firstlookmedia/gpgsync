@@ -17,10 +17,16 @@ from .status_bar import StatusBar, MessageQueue
 from .systray import SysTray
 
 class Application(QtWidgets.QApplication):
+    dock_icon_signal = QtCore.pyqtSignal(object)
+
     def __init__(self):
         if platform.system() == 'Linux':
             self.setAttribute(QtCore.Qt.AA_X11InitThreads, True)
         QtWidgets.QApplication.__init__(self, sys.argv)
+
+    def event(self, e):
+        self.dock_icon_signal.emit(e)
+        return QtWidgets.QApplication.event(self, e)
 
 class PGPSync(QtWidgets.QMainWindow):
     def __init__(self, app):
@@ -97,6 +103,11 @@ class PGPSync(QtWidgets.QMainWindow):
         self.buttons.quit_signal.connect(self.app.quit)
         self.sync_msg = None
 
+        # Dock icon click state (OS X specific)
+        if self.system == 'Darwin':
+            self.dock_icon_events_initial = True # To ignore the first instance
+            self.dock_icon_prev_event = None
+
         # Layout
         hlayout = QtWidgets.QHBoxLayout()
         hlayout.addWidget(endpoint_selection_wrapper)
@@ -140,6 +151,20 @@ class PGPSync(QtWidgets.QMainWindow):
         else:
             self.hide()
             self.systray.set_window_show(False)
+
+        if self.system == 'Darwin':
+            self.app.dock_icon_signal.connect(self.dock_icon_clicked)
+
+    def dock_icon_clicked(self, e):
+        if self.dock_icon_prev_event == '121' and str(e.type()) == '214':
+            if self.dock_icon_events_initial:
+                self.dock_icon_events_initial = False
+            else:
+                self.show_main_window()
+                self.dock_icon_prev_event = None
+        else:
+            self.dock_icon_prev_event = str(e.type())
+            return
 
     def closeEvent(self, e):
         self.toggle_show_window()
