@@ -141,6 +141,23 @@ class PGPSync(QtWidgets.QMainWindow):
             self.hide()
             self.systray.set_window_show(False)
 
+        # Handle application state changes
+        self.first_state_change_ignored = False
+        self.app.applicationStateChanged.connect(self.application_state_change)
+
+    def application_state_change(self, state):
+        # Ignore the very first state change, so window has the chance of
+        # starting out hidden
+        if not self.first_state_change_ignored:
+            self.first_state_change_ignored = True
+            return
+
+        # If the application state is Qt::ApplicationActive, such as clicking
+        # on the OS X dock icon
+        # https://doc.qt.io/qt-5/qt.html#ApplicationState-enum
+        if state == 4:
+            self.show_main_window()
+
     def closeEvent(self, e):
         self.toggle_show_window()
         e.ignore()
