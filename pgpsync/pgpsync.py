@@ -408,7 +408,7 @@ class PGPSync(QtWidgets.QMainWindow):
         run_update = False
         if self.settings.last_update_check is None:
             run_update = True
-        elif datetime.datetime.now() - self.settings.last_update_check > datetime.timedelta(seconds=10):
+        elif datetime.datetime.now() - self.settings.last_update_check > datetime.timedelta(days=10):
             run_update = True
         elif force:
             run_update = True
