@@ -125,7 +125,7 @@ class PGPSync(QtWidgets.QMainWindow):
 
         self.global_timer = QtCore.QTimer()
         self.global_timer.timeout.connect(self.run_interval_tasks)
-        self.global_timer.start(10000)
+        self.global_timer.start(60000)
 
         # Decide if window should start out shown or hidden
         if len(self.settings.endpoints) == 0:
