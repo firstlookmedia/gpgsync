@@ -444,13 +444,16 @@ class PGPSync(QtWidgets.QMainWindow):
                 elif self.version == latest_version and force:
                     self.show_main_window()
                     common.alert('No updates available.')
+                self.settings.last_update_check_err = False
             elif release and 'tag_name' not in release:
-                self.show_main_window()
-                details = ''
-                for key, val in release.items():
-                    details += '{}: {}\n\n'.format(key, val)
+                if not self.settings.last_update_check_err or force:
+                    self.settings.last_update_check_err = True
+                    self.show_main_window()
+                    details = ''
+                    for key, val in release.items():
+                        details += '{}: {}\n\n'.format(key, val)
 
-                common.alert('Error checking for updates.', details)
+                    common.alert('Error checking for updates.', details)
 
             self.settings.last_update_check = datetime.datetime.now()
             self.settings.save()
