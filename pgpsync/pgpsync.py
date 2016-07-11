@@ -119,19 +119,13 @@ class PGPSync(QtWidgets.QMainWindow):
         self.update_ui_timer.timeout.connect(self.update_ui)
         self.update_ui_timer.start(500) # 0.5 seconds
 
-        # Timer to refresh endpoints
+        # Timed tasks intialize
         self.currently_syncing = False
         self.syncing_errors = []
-        self.refresh_timer = QtCore.QTimer()
-        self.refresh_timer.timeout.connect(self.sync_all_endpoints)
-        self.refresh_timer.start(60000) # 1 minute
 
-        # Timer to check for automatic updates
-        if self.system != 'Linux' and self.settings.run_autoupdate:
-            self.check_for_updates() # Check first on start up
-            self.updater_timer = QtCore.QTimer()
-            self.updater_timer.timeout.connect(self.check_for_updates)
-            self.updater_timer.start(86400000) # 24 hours
+        self.global_timer = QtCore.QTimer()
+        self.global_timer.timeout.connect(self.run_interval_tasks)
+        self.global_timer.start(60000) # 1 minute
 
         # Decide if window should start out shown or hidden
         if len(self.settings.endpoints) == 0:
@@ -144,6 +138,12 @@ class PGPSync(QtWidgets.QMainWindow):
         # Handle application state changes
         self.first_state_change_ignored = False
         self.app.applicationStateChanged.connect(self.application_state_change)
+
+    def run_interval_tasks(self):
+        self.sync_all_endpoints(False)
+
+        if self.system != 'Linux' and self.settings.run_autoupdate:
+            self.check_for_updates(False)
 
     def application_state_change(self, state):
         # Ignore the very first state change, so window has the chance of
@@ -405,63 +405,66 @@ class PGPSync(QtWidgets.QMainWindow):
             self.systray.setIcon(common.get_error_icon())
 
     def check_for_updates(self, force=False):
-        if self.checking_for_updates:
-            return
+        run_update = False
+        if self.settings.last_update_check is None:
+            run_update = True
+        elif datetime.datetime.now() - self.settings.last_update_check > datetime.timedelta(days=1):
+            run_update = True
+        elif force:
+            run_update = True
 
-        self.checking_for_updates = True
+        if run_update:
+            if self.checking_for_updates:
+                return
 
-        try:
-            url = 'https://api.github.com/repos/firstlookmedia/pgpsync/releases/latest'
-            token = '8890473be7c382a70eadb8fbc58ffe0fea913b77'
+            self.checking_for_updates = True
 
-            r = requests.get(url, headers={
-                'Authorization': 'token {}'.format(token)
-                })
+            try:
+                url = 'https://api.github.com/repos/firstlookmedia/pgpsync/releases/latest'
+                token = '8890473be7c382a70eadb8fbc58ffe0fea913b77'
 
-            release = r.json()
-        except (requests.exceptions.RequestException, requests.exceptions.ConnectionError) as e:
-            self.checking_for_updates = False
-            return
+                r = requests.get(url, headers={
+                    'Authorization': 'token {}'.format(token)
+                    })
 
-        if release and 'tag_name' in release:
-            latest_version = parse(release['tag_name'])
+                release = r.json()
+            except (requests.exceptions.RequestException, requests.exceptions.ConnectionError) as e:
+                self.checking_for_updates = False
+                return
 
-            if self.version < latest_version:
-                if self.saved_update_version < latest_version or force:
+            if release and 'tag_name' in release:
+                latest_version = parse(release['tag_name'])
+
+                if self.version < latest_version:
+                    if self.saved_update_version < latest_version or force:
+                        self.show_main_window()
+
+                        common.alert('A new version of PGP Sync is available.<span style="font-weight:normal;"><br><br>Current: {}<br>Latest: &nbsp;&nbsp;{}<br><br>Please download the <a href="{}?access_token={}">latest</a> version.</span>'.format(self.version, latest_version, release['html_url'], token))
+                        self.saved_update_version = latest_version
+                elif self.version == latest_version and force:
                     self.show_main_window()
+                    common.alert('No updates available.')
+                self.settings.last_update_check_err = False
+            elif release and 'tag_name' not in release:
+                if not self.settings.last_update_check_err or force:
+                    self.show_main_window()
+                    details = ''
+                    for key, val in release.items():
+                        details += '{}: {}\n\n'.format(key, val)
 
-                    common.alert('A new version of PGP Sync is available.<span style="font-weight:normal;"><br><br>Current: {}<br>Latest: &nbsp;&nbsp;{}<br><br>Please download the <a href="{}?access_token={}">latest</a> version.</span>'.format(self.version, latest_version, release['html_url'], token))
-                    self.saved_update_version = latest_version
-            elif self.version == latest_version and force:
-                self.show_main_window()
-                common.alert('No updates available.')
-        elif release and 'tag_name' not in release:
-            self.show_main_window()
-            details = ''
-            for key, val in release.items():
-                details += '{}: {}\n\n'.format(key, val)
+                    common.alert('Error checking for updates.', details)
+                self.settings.last_update_check_err = True
 
-            common.alert('Error checking for updates.', details)
-
-        self.checking_for_updates = False
+            self.settings.last_update_check = datetime.datetime.now()
+            self.settings.save()
+            self.checking_for_updates = False
 
     def force_check_for_updates(self):
         self.check_for_updates(True)
 
     def configure_autoupdate(self, state):
         if state:
-            try:
-                if self.updater_timer:
-                    self.force_check_for_updates()
-                    self.updater_timer.start(86400000)
-            except:
-                self.check_for_updates() # Check first on start up
-                self.updater_timer = QtCore.QTimer()
-                self.updater_timer.timeout.connect(self.check_for_updates)
-                self.updater_timer.start(86400000) # 24 hours
-        else:
-            if self.updater_timer:
-                self.updater_timer.stop()
+            self.force_check_for_updates()
 
 def main():
     app = Application()

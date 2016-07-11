@@ -28,11 +28,21 @@ class Settings(object):
                 self.run_autoupdate = self.settings['run_autoupdate']
             else:
                 self.run_autoupdate = True
+            if 'last_update_check' in self.settings:
+                self.last_update_check = self.settings['last_update_check']
+            else:
+                self.last_update_check = None
+            if 'last_update_check_err' in self.settings:
+                self.last_update_check_err = self.settings['last_update_check_err']
+            else:
+                self.last_update_check_err = False
         else:
             # default settings
             self.endpoints = []
             self.run_automatically = True
             self.run_autoupdate = True
+            self.last_update_check = None
+            self.last_update_check_err = False
 
         self.configure_run_automatically()
 
@@ -40,7 +50,9 @@ class Settings(object):
         self.settings = {
             'endpoints': self.endpoints,
             'run_automatically': self.run_automatically,
-            'run_autoupdate': self.run_autoupdate
+            'run_autoupdate': self.run_autoupdate,
+            'last_update_check': self.last_update_check,
+            'last_update_check_err': self.last_update_check_err
 
         }
         pickle.dump(self.settings, open(self.settings_path, 'wb'))
