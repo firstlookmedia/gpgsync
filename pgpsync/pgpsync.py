@@ -119,19 +119,13 @@ class PGPSync(QtWidgets.QMainWindow):
         self.update_ui_timer.timeout.connect(self.update_ui)
         self.update_ui_timer.start(500) # 0.5 seconds
 
-        # Timer to refresh endpoints
+        # Timed tasks intialize
         self.currently_syncing = False
         self.syncing_errors = []
-        self.refresh_timer = QtCore.QTimer()
-        self.refresh_timer.timeout.connect(self.sync_all_endpoints)
-        self.refresh_timer.start(60000) # 1 minute
 
-        # Timer to check for automatic updates
-        if self.system != 'Linux' and self.settings.run_autoupdate:
-            self.check_for_updates() # Check first on start up
-            self.updater_timer = QtCore.QTimer()
-            self.updater_timer.timeout.connect(self.check_for_updates)
-            self.updater_timer.start(60000) # 1 minute
+        self.global_timer = QtCore.QTimer()
+        self.global_timer.timeout.connect(self.run_interval_tasks)
+        self.global_timer.start(10000)
 
         # Decide if window should start out shown or hidden
         if len(self.settings.endpoints) == 0:
@@ -144,6 +138,12 @@ class PGPSync(QtWidgets.QMainWindow):
         # Handle application state changes
         self.first_state_change_ignored = False
         self.app.applicationStateChanged.connect(self.application_state_change)
+
+    def run_interval_tasks(self):
+        self.sync_all_endpoints(False)
+
+        if self.system != 'Linux' and self.settings.run_autoupdate:
+            self.check_for_updates(False)
 
     def application_state_change(self, state):
         # Ignore the very first state change, so window has the chance of
@@ -408,7 +408,7 @@ class PGPSync(QtWidgets.QMainWindow):
         run_update = False
         if self.settings.last_update_check is None:
             run_update = True
-        elif datetime.datetime.now() - self.settings.last_update_check > datetime.timedelta(days=1):
+        elif datetime.datetime.now() - self.settings.last_update_check > datetime.timedelta(seconds=10):
             run_update = True
         elif force:
             run_update = True
@@ -461,18 +461,7 @@ class PGPSync(QtWidgets.QMainWindow):
 
     def configure_autoupdate(self, state):
         if state:
-            try:
-                if self.updater_timer:
-                    self.force_check_for_updates()
-                    self.updater_timer.start(86400000)
-            except:
-                self.check_for_updates() # Check first on start up
-                self.updater_timer = QtCore.QTimer()
-                self.updater_timer.timeout.connect(self.check_for_updates)
-                self.updater_timer.start(86400000) # 24 hours
-        else:
-            if self.updater_timer:
-                self.updater_timer.stop()
+            self.force_check_for_updates()
 
 def main():
     app = Application()
