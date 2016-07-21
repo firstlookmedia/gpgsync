@@ -405,10 +405,11 @@ class PGPSync(QtWidgets.QMainWindow):
             self.systray.setIcon(common.get_error_icon())
 
     def check_for_updates(self, force=False):
+        one_day = 60*60*24 # One day
         run_update = False
         if self.settings.last_update_check is None:
             run_update = True
-        elif datetime.datetime.now() - self.settings.last_update_check > datetime.timedelta(days=1):
+        elif (datetime.datetime.now() - self.settings.last_update_check).total_seconds() >= one_day:
             run_update = True
         elif force:
             run_update = True
