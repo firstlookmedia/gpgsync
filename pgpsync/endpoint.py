@@ -272,7 +272,7 @@ class Refresher(QtCore.QThread):
         if not self.e.last_checked:
             print('Never been checked before')
             run_refresher = True
-        else:insta
+        else:
             print('been checked before')
 
         time_diff = (datetime.datetime.now() - self.e.last_checked).total_seconds()
