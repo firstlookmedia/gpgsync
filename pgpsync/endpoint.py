@@ -266,21 +266,12 @@ class Refresher(QtCore.QThread):
         if self.force:
             print('Forcing sync')
             run_refresher = True
-        else:
-            print('not forced')
-
-        if not self.e.last_checked:
+        elif not self.e.last_checked:
             print('Never been checked before')
             run_refresher = True
-        else:
-            print('been checked before')
-
-        time_diff = (datetime.datetime.now() - self.e.last_checked).total_seconds()
-        if time_diff >= one_day:
+        elif (datetime.datetime.now() - self.e.last_checked).total_seconds() >= one_day:
             print('Been 24 hours since last sync')
             run_refresher = True
-        else:
-            print('Less than 24 hours')
 
         if not run_refresher:
             return
