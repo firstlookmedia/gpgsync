@@ -260,112 +260,126 @@ class Refresher(QtCore.QThread):
     def run(self):
         # Refresh if it's forced, if it's never been checked before,
         # or if it's been 24 hours since last check
-        one_day = 60*60*24
-        if self.force or not self.e.last_checked or (datetime.datetime.now() - self.e.last_checked).seconds >= one_day:
-            # Fetch signing key from keyserver, make sure it's not expired or revoked
-            success = False
-            reset_last_checked = True
+        one_day = 60*60*24 # This = 86400, but much more readable and easier to understand
+        run_refresher = False
+
+        if self.force:
+            print('Forcing sync')
+            run_refresher = True
+        elif not self.e.last_checked:
+            print('Never been checked before')
+            run_refresher = True
+        elif (datetime.datetime.now() - self.e.last_checked).total_seconds() >= one_day:
+            print('Been 24 hours since last sync')
+            run_refresher = True
+
+        if not run_refresher:
+            return
+
+        # Fetch signing key from keyserver, make sure it's not expired or revoked
+        success = False
+        reset_last_checked = True
+        try:
+            self.q.add_message('Fetching public key {} {}'.format(common.fp_to_keyid(self.e.fingerprint).decode(), self.gpg.get_uid(self.e.fingerprint)))
+            self.e.fetch_public_key(self.gpg)
+        except InvalidFingerprint:
+            err = 'Invalid signing key fingerprint'
+        except InvalidKeyserver:
+            err = 'Invalid keyserver'
+        except NotFoundOnKeyserver:
+            err = 'Signing key is not found on keyserver'
+        except NotFoundInKeyring:
+            err = 'Signing key is not found in keyring'
+        except RevokedKey:
+            err = 'The signing key is revoked'
+        except ExpiredKey:
+            err = 'The signing key is expired'
+        except KeyserverError:
+            err = 'Error connecting to keyserver'
+            reset_last_checked = False
+        else:
+            success = True
+
+        if not success:
+            return self.finish_with_failure(err, reset_last_checked)
+
+        # Download URL
+        success = False
+        try:
+            self.q.add_message('Downloading URL {}'.format(self.e.url.decode()))
+            msg_bytes = self.e.fetch_url()
+        except URLDownloadError as e:
+            err = 'Failed to download: Check your internet connection'
+        except ProxyURLDownloadError as e:
+            err = 'Failed to download: Check your internet connection and proxy configuration'
+        else:
+            success = True
+
+        if not success:
+            return self.finish_with_failure(err)
+
+        # Verifiy signature
+        success = False
+        try:
+            self.q.add_message('Verifying signature')
+            self.e.verify_fingerprints_sig(self.gpg, msg_bytes)
+        except VerificationError:
+            err = 'Signature does not verify'
+        except BadSignature:
+            err = 'Bad signature'
+        except RevokedKey:
+            err = 'The signing key is revoked'
+        except SignedWithWrongKey:
+            err = 'Valid signature, but signed with wrong signing key'
+        else:
+            success = True
+
+        if not success:
+            return self.finish_with_failure(err)
+
+        # Get fingerprint list
+        success = False
+        try:
+            self.q.add_message('Validating fingerprints')
+            fingerprints = self.e.get_fingerprint_list(msg_bytes)
+        except InvalidFingerprints as e:
+            err = 'Invalid fingerprints: {}'.format(e)
+        except FingerprintsListNotSigned:
+            err = 'Fingerprints list is not signed'
+        else:
+            success = True
+
+        if not success:
+            return self.finish_with_failure(err)
+
+        # Build list of fingerprints to fetch
+        fingerprints_to_fetch = []
+        invalid_fingerprints = []
+        for fingerprint in fingerprints:
             try:
-                self.q.add_message('Fetching public key {} {}'.format(common.fp_to_keyid(self.e.fingerprint).decode(), self.gpg.get_uid(self.e.fingerprint)))
-                self.e.fetch_public_key(self.gpg)
+                self.gpg.test_key(fingerprint)
             except InvalidFingerprint:
-                err = 'Invalid signing key fingerprint'
+                invalid_fingerprints.append(fingerprint)
+            except (NotFoundInKeyring, ExpiredKey):
+                # Fetch these ones
+                fingerprints_to_fetch.append(fingerprint)
+            except RevokedKey:
+                # Skip revoked keys
+                pass
+            else:
+                # Fetch all others
+                fingerprints_to_fetch.append(fingerprint)
+
+        # Fetch fingerprints
+        notfound_fingerprints = []
+        for fingerprint in fingerprints_to_fetch:
+            try:
+                self.q.add_message('Fetching public key {} {}'.format(common.fp_to_keyid(fingerprint).decode(), self.gpg.get_uid(fingerprint)))
+                self.gpg.recv_key(self.e.keyserver, fingerprint, self.e.use_proxy, self.e.proxy_host, self.e.proxy_port)
             except InvalidKeyserver:
-                err = 'Invalid keyserver'
+                return self.finish_with_failure('Invalid keyserver')
             except NotFoundOnKeyserver:
-                err = 'Signing key is not found on keyserver'
-            except NotFoundInKeyring:
-                err = 'Signing key is not found in keyring'
-            except RevokedKey:
-                err = 'The signing key is revoked'
-            except ExpiredKey:
-                err = 'The signing key is expired'
-            except KeyserverError:
-                err = 'Error connecting to keyserver'
-                reset_last_checked = False
-            else:
-                success = True
+                notfound_fingerprints.append(fingerprint)
 
-            if not success:
-                return self.finish_with_failure(err, reset_last_checked)
-
-            # Download URL
-            success = False
-            try:
-                self.q.add_message('Downloading URL {}'.format(self.e.url.decode()))
-                msg_bytes = self.e.fetch_url()
-            except URLDownloadError as e:
-                err = 'Failed to download: Check your internet connection'
-            except ProxyURLDownloadError as e:
-                err = 'Failed to download: Check your internet connection and proxy configuration'
-            else:
-                success = True
-
-            if not success:
-                return self.finish_with_failure(err)
-
-            # Verifiy signature
-            success = False
-            try:
-                self.q.add_message('Verifying signature')
-                self.e.verify_fingerprints_sig(self.gpg, msg_bytes)
-            except VerificationError:
-                err = 'Signature does not verify'
-            except BadSignature:
-                err = 'Bad signature'
-            except RevokedKey:
-                err = 'The signing key is revoked'
-            except SignedWithWrongKey:
-                err = 'Valid signature, but signed with wrong signing key'
-            else:
-                success = True
-
-            if not success:
-                return self.finish_with_failure(err)
-
-            # Get fingerprint list
-            success = False
-            try:
-                self.q.add_message('Validating fingerprints')
-                fingerprints = self.e.get_fingerprint_list(msg_bytes)
-            except InvalidFingerprints as e:
-                err = 'Invalid fingerprints: {}'.format(e)
-            except FingerprintsListNotSigned:
-                err = 'Fingerprints list is not signed'
-            else:
-                success = True
-
-            if not success:
-                return self.finish_with_failure(err)
-
-            # Build list of fingerprints to fetch
-            fingerprints_to_fetch = []
-            invalid_fingerprints = []
-            for fingerprint in fingerprints:
-                try:
-                    self.gpg.test_key(fingerprint)
-                except InvalidFingerprint:
-                    invalid_fingerprints.append(fingerprint)
-                except (NotFoundInKeyring, ExpiredKey):
-                    # Fetch these ones
-                    fingerprints_to_fetch.append(fingerprint)
-                except RevokedKey:
-                    # Skip revoked keys
-                    pass
-                else:
-                    # Fetch all others
-                    fingerprints_to_fetch.append(fingerprint)
-
-            # Fetch fingerprints
-            notfound_fingerprints = []
-            for fingerprint in fingerprints_to_fetch:
-                try:
-                    self.q.add_message('Fetching public key {} {}'.format(common.fp_to_keyid(fingerprint).decode(), self.gpg.get_uid(fingerprint)))
-                    self.gpg.recv_key(self.e.keyserver, fingerprint, self.e.use_proxy, self.e.proxy_host, self.e.proxy_port)
-                except InvalidKeyserver:
-                    return self.finish_with_failure('Invalid keyserver')
-                except NotFoundOnKeyserver:
-                    notfound_fingerprints.append(fingerprint)
-
-            # All done
-            self.success.emit(self.e, invalid_fingerprints, notfound_fingerprints)
+        # All done
+        self.success.emit(self.e, invalid_fingerprints, notfound_fingerprints)
