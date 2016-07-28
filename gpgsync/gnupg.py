@@ -84,7 +84,7 @@ class GnuPG(object):
         if keyserver == default_hkps_server:
             # Don't need to add ca_cert_file in OS X, because GPG Tools includes the
             # correct .pem for hkps://hkps.pool.sks-keyservers.net, and specifying it
-            # breaks because of a space in the filename (in "PGP Sync.app")
+            # breaks because of a space in the filename (in "GPG Sync.app")
             if not self.system == 'Darwin':
                 gpg_conf += 'keyserver-options ca-cert-file={}\n'.format(ca_cert_file)
                 dirmngr_conf += 'hkp-cacert {}\n'.format(ca_cert_file)

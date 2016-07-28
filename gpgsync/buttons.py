@@ -20,7 +20,7 @@ class Buttons(QtWidgets.QVBoxLayout):
         self.quit_btn.clicked.connect(self.quit)
 
         # Run automatically
-        self.run_automatically_checkbox = QtWidgets.QCheckBox("Run PGP Sync automatically on login")
+        self.run_automatically_checkbox = QtWidgets.QCheckBox("Run GPG Sync automatically on login")
         if self.settings.run_automatically:
             self.run_automatically_checkbox.setCheckState(QtCore.Qt.Checked)
         else:

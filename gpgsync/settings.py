@@ -7,9 +7,9 @@ class Settings(object):
         system = platform.system()
         if system == 'Windows':
             appdata = os.environ['APPDATA']
-            self.settings_path = '{0}\\pgpsync'.format(appdata)
+            self.settings_path = '{0}\\gpgsync'.format(appdata)
         else:
-            self.settings_path = os.path.expanduser("~/.pgpsync")
+            self.settings_path = os.path.expanduser("~/.gpgsync")
 
         self.load()
 
@@ -61,10 +61,10 @@ class Settings(object):
 
     def configure_run_automatically(self):
         if platform.system() == 'Darwin':
-            share_filename = 'org.firstlook.pgpsync.plist'
+            share_filename = 'org.firstlook.gpgsync.plist'
             autorun_dir = os.path.expanduser("~/Library/LaunchAgents")
         elif platform.system() == 'Linux':
-            share_filename = 'pgpsync.desktop'
+            share_filename = 'gpgsync.desktop'
             autorun_dir = os.path.expanduser("~/.config/autostart")
 
         if not os.path.exists(autorun_dir):

@@ -11,12 +11,12 @@ system = platform.system()
 version_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'share', 'version')
 version = open(version_file).read().strip().lstrip('v')
 
-description = "PGP Sync lets users have up-to-date public keys for all other members of their organization."
+description = "GPG Sync lets users have up-to-date public keys for all other members of their organization."
 
-long_description = description + " " + "If you're part of an organization that uses PGP internally you might notice that it doesn't scale well. New people join and create new keys and existing people revoke their old keys and transition to new ones. It quickly becomes unwieldy to ensure that everyone has a copy of everyone else's current key, and that old revoked keys get refreshed to prevent users from accidentally using them."
+long_description = description + " " + "If you're part of an organization that uses GPG internally you might notice that it doesn't scale well. New people join and create new keys and existing people revoke their old keys and transition to new ones. It quickly becomes unwieldy to ensure that everyone has a copy of everyone else's current key, and that old revoked keys get refreshed to prevent users from accidentally using them."
 
 share_files = [
-    'share/pgpsync.png',
+    'share/gpgsync.png',
     'share/syncing.png',
     'share/error.png',
     'share/loading.gif',
@@ -27,20 +27,20 @@ share_files = [
 
 if system == 'Linux':
     setup(
-        name='pgpsync',
+        name='gpgsync',
         version=version,
         description=description,
         long_description=long_description,
         author='Micah Lee',
         author_email='micah.lee@theintercept.com',
-        url='https://github.com/firstlook/pgpsync',
+        url='https://github.com/firstlook/gpgsync',
         license="GPL v3",
-        keywords='pgpsync, pgp, gpg, gnupg',
-        packages=['pgpsync'],
-        scripts=['install/pgpsync'],
+        keywords='gpgsync, pgp, openpgp, gpg, gnupg',
+        packages=['gpgsync'],
+        scripts=['install/gpgsync'],
         data_files=[
-            (os.path.join(sys.prefix, 'share/applications'), ['install/pgpsync.desktop']),
-            (os.path.join(sys.prefix, 'share/pixmaps'), ['share/pgpsync.png']),
-            (os.path.join(sys.prefix, 'share/pgpsync/'), share_files + ['install/pgpsync.desktop'])
+            (os.path.join(sys.prefix, 'share/applications'), ['install/gpgsync.desktop']),
+            (os.path.join(sys.prefix, 'share/pixmaps'), ['share/gpgsync.png']),
+            (os.path.join(sys.prefix, 'share/gpgsync/'), share_files + ['install/gpgsync.desktop'])
         ]
     )

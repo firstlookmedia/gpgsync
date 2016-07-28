@@ -1,4 +1,4 @@
 include *.md
 include version
-include install/pgpsync.desktop
+include install/gpgsync.desktop
 include share/*

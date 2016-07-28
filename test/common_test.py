@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from nose import with_setup
-from pgpsync import common
+from gpgsync import common
 
 def test_valid_fp():
     assert common.valid_fp(b'734F 6E70 7434 ECA6 C007  E1AE 82BD 6C96 16DA BB79')

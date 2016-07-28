@@ -4,7 +4,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 
 def alert(msg, details='', icon=QtWidgets.QMessageBox.Warning):
     d = QtWidgets.QMessageBox()
-    d.setWindowTitle('PGP Sync')
+    d.setWindowTitle('GPG Sync')
     d.setText(msg)
 
     if details:
@@ -29,7 +29,7 @@ def clean_keyserver(keyserver):
 
 def get_resource_path(filename):
     if platform.system() == 'Linux':
-        prefix = os.path.join(sys.prefix, 'share/pgpsync')
+        prefix = os.path.join(sys.prefix, 'share/gpgsync')
     elif platform.system() == 'Darwin':
         # Check if app is "frozen" with pyinstaller
         # https://pythonhosted.org/PyInstaller/#run-time-information
@@ -45,7 +45,7 @@ icon = None
 def get_icon():
     global icon
     if not icon:
-        icon = QtGui.QIcon(get_resource_path('pgpsync.png'))
+        icon = QtGui.QIcon(get_resource_path('gpgsync.png'))
     return icon
 
 syncing_icon = None

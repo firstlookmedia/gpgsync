@@ -6,7 +6,7 @@ block_cipher = None
 version = open('share/version').read().strip().lstrip('v')
 
 a = Analysis(
-    ['pgpsync-osx.py'],
+    ['gpgsync-osx.py'],
     pathex=['.'],
     binaries=None,
     datas=[('../share/*', 'share')],
@@ -26,7 +26,7 @@ exe = EXE(
     pyz,
     a.scripts,
     exclude_binaries=True,
-    name='pgpsync',
+    name='gpgsync',
     debug=False,
     strip=False,
     upx=True,
@@ -39,13 +39,13 @@ coll = COLLECT(
     a.datas,
     strip=False,
     upx=True,
-    name='pgpsync')
+    name='gpgsync')
 
 app = BUNDLE(
     coll,
-    name='PGP Sync.app',
-    icon='install/pgpsync.icns',
-    bundle_identifier='org.firstlook.pgpsync',
+    name='GPG Sync.app',
+    icon='install/gpgsync.icns',
+    bundle_identifier='org.firstlook.gpgsync',
     info_plist={
         'LSUIElement': 'True',
         'NSHighResolutionCapable': 'True',

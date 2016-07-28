@@ -18,13 +18,13 @@ Install some dependencies using pip3:
 sudo pip3 install pyinstaller requests requests[socks] packaging
 ```
 
-Now you're ready to build the actual app. Go to the `pgpsync` folder before and run this to build the app:
+Now you're ready to build the actual app. Go to the `gpgsync` folder before and run this to build the app:
 
 ```sh
 install/build_osx.sh
 ```
 
-Now you should have `dist/PGP Sync.app`.
+Now you should have `dist/GPG Sync.app`.
 
 To codesign and build a .pkg for distribution:
 
@@ -32,7 +32,7 @@ To codesign and build a .pkg for distribution:
 install/build_osx.sh --sign
 ```
 
-Now you should have `dist/PGP Sync.pkg`. NOTE: This isn't implemented yet.
+Now you should have `dist/GPG Sync.pkg`. NOTE: This isn't implemented yet.
 
 ## Linux distributions
 
@@ -48,12 +48,12 @@ Make and install a .deb:
 
 ```sh
 ./install/build_deb.sh
-sudo dpkg -i deb_dist/pgpsync_*.deb
+sudo dpkg -i deb_dist/gpgsync_*.deb
 ```
 
 ## Run the tests
 
-From the `pgpsync` folder run:
+From the `gpgsync` folder run:
 
 ```sh
 nosetests

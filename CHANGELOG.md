@@ -1,4 +1,4 @@
-# PGP Sync Changelog
+# GPG Sync Changelog
 
 ## 0.1.0
 

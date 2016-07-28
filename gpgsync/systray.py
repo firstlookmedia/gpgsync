@@ -13,8 +13,8 @@ class SysTray(QtWidgets.QSystemTrayIcon):
 
     def __init__(self, version):
         super(SysTray, self).__init__(common.get_icon())
-        self.show_text = 'Show PGP Sync'
-        self.hide_text = 'Hide PGP Sync'
+        self.show_text = 'Show GPG Sync'
+        self.hide_text = 'Hide GPG Sync'
 
         # Menu
         self.menu = QtWidgets.QMenu()

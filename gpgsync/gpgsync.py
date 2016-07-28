@@ -22,12 +22,12 @@ class Application(QtWidgets.QApplication):
             self.setAttribute(QtCore.Qt.AA_X11InitThreads, True)
         QtWidgets.QApplication.__init__(self, sys.argv)
 
-class PGPSync(QtWidgets.QMainWindow):
+class GPGSync(QtWidgets.QMainWindow):
     def __init__(self, app):
-        super(PGPSync, self).__init__()
+        super(GPGSync, self).__init__()
         self.app = app
         self.system = platform.system()
-        self.setWindowTitle('PGP Sync')
+        self.setWindowTitle('GPG Sync')
         self.setWindowIcon(common.get_icon())
         version_file = common.get_resource_path('version')
         self.version = parse(open(version_file).read().strip())
@@ -421,7 +421,7 @@ class PGPSync(QtWidgets.QMainWindow):
             self.checking_for_updates = True
 
             try:
-                url = 'https://api.github.com/repos/firstlookmedia/pgpsync/releases/latest'
+                url = 'https://api.github.com/repos/firstlookmedia/gpgsync/releases/latest'
                 token = '8890473be7c382a70eadb8fbc58ffe0fea913b77'
 
                 r = requests.get(url, headers={
@@ -440,7 +440,7 @@ class PGPSync(QtWidgets.QMainWindow):
                     if self.saved_update_version < latest_version or force:
                         self.show_main_window()
 
-                        common.alert('A new version of PGP Sync is available.<span style="font-weight:normal;"><br><br>Current: {}<br>Latest: &nbsp;&nbsp;{}<br><br>Please download the <a href="{}?access_token={}">latest</a> version.</span>'.format(self.version, latest_version, release['html_url'], token))
+                        common.alert('A new version of GPG Sync is available.<span style="font-weight:normal;"><br><br>Current: {}<br>Latest: &nbsp;&nbsp;{}<br><br>Please download the <a href="{}?access_token={}">latest</a> version.</span>'.format(self.version, latest_version, release['html_url'], token))
                         self.saved_update_version = latest_version
                 elif self.version == latest_version and force:
                     self.show_main_window()
@@ -469,7 +469,7 @@ class PGPSync(QtWidgets.QMainWindow):
 
 def main():
     app = Application()
-    gui = PGPSync(app)
+    gui = GPGSync(app)
 
     sys.exit(app.exec_())
 

@@ -15,7 +15,7 @@ python3 setup.py --command-packages=stdeb.command bdist_deb
 echo ""
 if [[ $? -eq 0 ]]; then
     echo "To install, run:"
-    echo "sudo dpkg -i deb_dist/pgpsync_*.deb"
+    echo "sudo dpkg -i deb_dist/gpgsync_*.deb"
 else
-    echo "PGP Sync failed to build!"
+    echo "GPG Sync failed to build!"
 fi

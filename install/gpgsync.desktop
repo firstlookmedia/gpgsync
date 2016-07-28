@@ -1,0 +1,9 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=GPG Sync
+Comment=Keep up with your organization's GPG public keys
+Exec=/usr/bin/gpgsync
+Terminal=false
+Type=Application
+Icon=/usr/share/pixmaps/gpgsync.png
+Categories=Network;
