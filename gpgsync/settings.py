@@ -36,6 +36,10 @@ class Settings(object):
                 self.last_update_check_err = self.settings['last_update_check_err']
             else:
                 self.last_update_check_err = False
+            if 'update_interval_hours' in self.settings:
+                self.update_interval_hours = self.settings['update_interval_hours']
+            else:
+                self.update_interval_hours = b'12'
         else:
             # default settings
             self.endpoints = []
@@ -43,6 +47,7 @@ class Settings(object):
             self.run_autoupdate = True
             self.last_update_check = None
             self.last_update_check_err = False
+            self.update_interval_hours = b'12'
 
         self.configure_run_automatically()
 
@@ -52,7 +57,8 @@ class Settings(object):
             'run_automatically': self.run_automatically,
             'run_autoupdate': self.run_autoupdate,
             'last_update_check': self.last_update_check,
-            'last_update_check_err': self.last_update_check_err
+            'last_update_check_err': self.last_update_check_err,
+            'update_interval_hours': self.update_interval_hours
 
         }
         pickle.dump(self.settings, open(self.settings_path, 'wb'))
