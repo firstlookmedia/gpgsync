@@ -4,11 +4,11 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 class SettingsWindow(QtWidgets.QWidget):
     def __init__(self, settings):
         super(SettingsWindow, self).__init__()
-        self.setWindowTitle('PGP Sync Settings')
+        self.setWindowTitle('GPG Sync Settings')
         self.setMinimumWidth(425)
         self.setMaximumWidth(425)
-        self.setMinimumHeight(250)
-        self.setMaximumHeight(250)
+        # self.setMinimumHeight(250)
+        # self.setMaximumHeight(250)
         self.settings = settings
         self.settings_layout = SettingsLayout(self.settings)
 
@@ -21,12 +21,17 @@ class SettingsLayout(QtWidgets.QVBoxLayout):
         super(SettingsLayout, self).__init__()
         self.settings = settings
 
-        self.run_automatically_checkbox = QtWidgets.QCheckBox("Run PGP Sync automatically on login")
+        self.run_automatically_checkbox = QtWidgets.QCheckBox("Run GPG Sync automatically on login")
         if self.settings.run_automatically:
             self.run_automatically_checkbox.setCheckState(QtCore.Qt.Checked)
         else:
             self.run_automatically_checkbox.setCheckState(QtCore.Qt.Unchecked)
-        # self.run_autoupdate_checkbox.stateChanged.connect(self.run_autoupdate_changed)
+
+        autostart_vlayout = QtWidgets.QVBoxLayout()
+        autostart_vlayout.addWidget(self.run_automatically_checkbox)
+        autostart_group = QtWidgets.QGroupBox("Start automatically")
+        autostart_group.setLayout(autostart_vlayout)
+
 
         self.run_autoupdate_checkbox = QtWidgets.QCheckBox("Check for updates automatically")
         if self.settings.run_autoupdate:
@@ -37,11 +42,14 @@ class SettingsLayout(QtWidgets.QVBoxLayout):
 
         # Update interval
         update_interval_hlayout = QtWidgets.QHBoxLayout()
-        update_interval_label = QtWidgets.QLabel('Update interval (in hours)')
+        update_interval_label = QtWidgets.QLabel('Time between syncs (in hours)')
         self.update_interval_edit = QtWidgets.QLineEdit()
         self.update_interval_edit.setText(self.settings.update_interval_hours.decode())
         update_interval_hlayout.addWidget(update_interval_label)
         update_interval_hlayout.addWidget(self.update_interval_edit)
+
+        update_interval_group = QtWidgets.QGroupBox("Sync frequency")
+        update_interval_group.setLayout(update_interval_hlayout)
 
         # SOCKS5 proxy settings
         self.use_proxy = QtWidgets.QCheckBox()
@@ -70,8 +78,8 @@ class SettingsLayout(QtWidgets.QVBoxLayout):
         self.save_btn = QtWidgets.QPushButton("Save Settings")
         self.save_btn.clicked.connect(self.save_settings)
 
-        self.addWidget(self.run_automatically_checkbox)
-        self.addLayout(update_interval_hlayout)
+        self.addWidget(autostart_group)
+        self.addWidget(update_interval_group)
         self.addWidget(proxy_group)
         # self.addWidget(update_interval_label)
         # self.addWidget(self.update_interval_edit)

@@ -261,7 +261,7 @@ class Refresher(QtCore.QThread):
 
     def run(self):
         # Refresh if it's forced, if it's never been checked before,
-        # or if it's been 24 hours since last check
+        # or if it's been longer than the configured refresh interval
         update_interval = 60*60*(self.refresh_interval)
         run_refresher = False
 
