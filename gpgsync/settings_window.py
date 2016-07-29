@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import os, sys, platform, queue, datetime, requests
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 class SettingsWindow(QtWidgets.QWidget):
