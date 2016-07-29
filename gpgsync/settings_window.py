@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import platform
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 class SettingsWindow(QtWidgets.QWidget):
@@ -42,7 +43,7 @@ class SettingsLayout(QtWidgets.QVBoxLayout):
 
         # Update interval
         update_interval_hlayout = QtWidgets.QHBoxLayout()
-        update_interval_label = QtWidgets.QLabel('Time between syncs (in hours)')
+        update_interval_label = QtWidgets.QLabel('Time between endpoint syncs (in hours)')
         self.update_interval_edit = QtWidgets.QLineEdit()
         self.update_interval_edit.setText(self.settings.update_interval_hours.decode())
         update_interval_hlayout.addWidget(update_interval_label)
@@ -58,8 +59,10 @@ class SettingsLayout(QtWidgets.QVBoxLayout):
 
         proxy_host_label = QtWidgets.QLabel('Host')
         self.proxy_host_edit = QtWidgets.QLineEdit()
+        self.proxy_host_edit.setText(self.settings.automatic_update_proxy_host.decode())
         proxy_port_label = QtWidgets.QLabel('Port')
         self.proxy_port_edit = QtWidgets.QLineEdit()
+        self.proxy_port_edit.setText(self.settings.automatic_update_proxy_port.decode())
 
         proxy_hlayout = QtWidgets.QHBoxLayout()
         proxy_hlayout.addWidget(proxy_host_label)
@@ -72,17 +75,16 @@ class SettingsLayout(QtWidgets.QVBoxLayout):
         proxy_vlayout.addWidget(self.use_proxy)
         proxy_vlayout.addLayout(proxy_hlayout)
 
-        proxy_group = QtWidgets.QGroupBox("Automatic Updates")
-        proxy_group.setLayout(proxy_vlayout)
+        autoupdate_group = QtWidgets.QGroupBox("Automatic Updates")
+        autoupdate_group.setLayout(proxy_vlayout)
 
         self.save_btn = QtWidgets.QPushButton("Save Settings")
         self.save_btn.clicked.connect(self.save_settings)
 
         self.addWidget(autostart_group)
         self.addWidget(update_interval_group)
-        self.addWidget(proxy_group)
-        # self.addWidget(update_interval_label)
-        # self.addWidget(self.update_interval_edit)
+        if platform.system() != 'Linux':
+            self.addWidget(autoupdate_group)
         self.addWidget(self.save_btn)
 
     def is_number(self, input):
@@ -93,12 +95,17 @@ class SettingsLayout(QtWidgets.QVBoxLayout):
             return False
 
     def save_settings(self):
-        self.settings.run_autoupdate = (self.run_autoupdate_checkbox.checkState() == QtCore.Qt.Checked)
         self.settings.run_automatically = (self.run_automatically_checkbox.checkState() == QtCore.Qt.Checked)
+        if platform.system() != 'Linux':
+            self.settings.run_autoupdate = (self.run_autoupdate_checkbox.checkState() == QtCore.Qt.Checked)
+            self.settings.automatic_update_use_proxy = (self.use_proxy.checkState() == QtCore.Qt.Checked)
+            self.settings.automatic_update_proxy_host = self.proxy_host_edit.text().strip().encode()
+            self.settings.automatic_update_proxy_port = self.proxy_port_edit.text().strip().encode()
 
         # test that the input is actually a number, eventually visually show an error if not
         if self.is_number(self.update_interval_edit.text().strip()):
             self.settings.update_interval_hours = self.update_interval_edit.text().strip().encode()
 
         self.settings.save()
+        # determine if save was successful, close the window if so
 

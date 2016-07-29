@@ -40,6 +40,10 @@ class Settings(object):
                 self.update_interval_hours = self.settings['update_interval_hours']
             else:
                 self.update_interval_hours = b'12'
+            if 'automatic_update_use_proxy' in self.settings:
+                self.automatic_update_use_proxy = self.settings['automatic_update_use_proxy']
+            else:
+                self.automatic_update_use_proxy = False
             if 'automatic_update_proxy_host' in self.settings:
                 self.automatic_update_proxy_host = self.settings['automatic_update_proxy_host']
             else:
@@ -56,6 +60,7 @@ class Settings(object):
             self.last_update_check = None
             self.last_update_check_err = False
             self.update_interval_hours = b'12'
+            self.automatic_update_use_proxy = False
             self.automatic_update_proxy_host = b'127.0.0.1'
             self.automatic_update_proxy_port = b'9050'
 
@@ -69,6 +74,7 @@ class Settings(object):
             'last_update_check': self.last_update_check,
             'last_update_check_err': self.last_update_check_err,
             'update_interval_hours': self.update_interval_hours,
+            'automatic_update_use_proxy': self.automatic_update_use_proxy,
             'automatic_update_proxy_host': self.automatic_update_proxy_host,
             'automatic_update_proxy_port': self.automatic_update_proxy_port
 
