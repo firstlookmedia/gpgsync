@@ -25,6 +25,8 @@ Here are some features:
 * Makes sure non-revoked public keys are refreshed once a day
 * Works seamlessly with the web of trust
 
+If you'd like to test out GPG Sync without creating your own authority key and fingerprints file, you can use one that [we created for testing](/fingerprints/README.md).
+
 ## How is GPG Sync different than S/MIME, or running a Certificate Authority for GPG keys?
 
 GPG Sync does one thing: Makes sure members of an organization always have up-to-date public keys from a centrally-managed list.
