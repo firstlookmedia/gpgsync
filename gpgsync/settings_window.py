@@ -55,7 +55,10 @@ class SettingsLayout(QtWidgets.QVBoxLayout):
         # SOCKS5 proxy settings
         self.use_proxy = QtWidgets.QCheckBox()
         self.use_proxy.setText("Check for updates through SOCKS5 proxy (e.g. Tor)")
-        self.use_proxy.setCheckState(QtCore.Qt.Unchecked)
+        if self.settings.automatic_update_use_proxy:
+            self.use_proxy.setCheckState(QtCore.Qt.Checked)
+        else:
+            self.use_proxy.setCheckState(QtCore.Qt.Unchecked)
 
         proxy_host_label = QtWidgets.QLabel('Host')
         self.proxy_host_edit = QtWidgets.QLineEdit()
