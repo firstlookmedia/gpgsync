@@ -3,12 +3,12 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>org.firstlook.pgpsync</string>
+    <string>org.firstlook.gpgsync</string>
     <key>ProgramArguments</key>
     <array>
         <string>open</string>
         <string>-a</string>
-        <string>PGP Sync</string>
+        <string>GPG Sync</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
