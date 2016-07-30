@@ -11,6 +11,18 @@ echo Building .app
 pyinstaller install/pyinstaller-osx.spec --clean
 
 if [ "$1" = "--release" ]; then
-  echo "Codesigning is not yet implemented"
-  productbuild --component "dist/GPG Sync.app" /Applications "dist/GPG Sync.pkg"
+  APP_PATH="dist/GPG Sync.app"
+  PKG_PATH="dist/GPG Sync.pkg"
+  IDENTITY_NAME="FIRST LOOK PRODUCTIONS, INC."
+
+  echo "Codesigning the app bundle"
+  codesign --deep -s "$IDENTITY_NAME" "$APP_PATH"
+
+  echo "Creating an installer"
+  productbuild --sign "$IDENTITY_NAME" --component "$APP_PATH" /Applications "$PKG_PATH"
+
+  echo "Cleaning up"
+  rm -rf dist/gpgsync "$APP_PATH"
+
+  echo "All done, your installer is in: $PKG_PATH"
 fi
