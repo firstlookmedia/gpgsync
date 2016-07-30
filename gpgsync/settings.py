@@ -82,6 +82,7 @@ class Settings(object):
         pickle.dump(self.settings, open(self.settings_path, 'wb'))
 
         self.configure_run_automatically()
+        return True
 
     def configure_run_automatically(self):
         if platform.system() == 'Darwin':

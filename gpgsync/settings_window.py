@@ -106,6 +106,6 @@ class SettingsLayout(QtWidgets.QVBoxLayout):
         if self.is_number(self.update_interval_edit.text().strip()):
             self.settings.update_interval_hours = self.update_interval_edit.text().strip().encode()
 
-        self.settings.save()
-        # determine if save was successful, close the window if so
-
+        # if save is successful, hide the window
+        if self.settings.save():
+            self.parent().parent().hide()
