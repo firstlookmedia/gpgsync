@@ -19,22 +19,6 @@ class Buttons(QtWidgets.QVBoxLayout):
         self.quit_btn = QtWidgets.QPushButton("Quit")
         self.quit_btn.clicked.connect(self.quit)
 
-        # Run automatically
-        self.run_automatically_checkbox = QtWidgets.QCheckBox("Run GPG Sync automatically on login")
-        if self.settings.run_automatically:
-            self.run_automatically_checkbox.setCheckState(QtCore.Qt.Checked)
-        else:
-            self.run_automatically_checkbox.setCheckState(QtCore.Qt.Unchecked)
-        self.run_automatically_checkbox.stateChanged.connect(self.run_automatically_changed)
-
-        # Check for automatic updates
-        self.run_autoupdate_checkbox = QtWidgets.QCheckBox("Check for updates automatically")
-        if self.settings.run_autoupdate:
-            self.run_autoupdate_checkbox.setCheckState(QtCore.Qt.Checked)
-        else:
-            self.run_autoupdate_checkbox.setCheckState(QtCore.Qt.Unchecked)
-        self.run_autoupdate_checkbox.stateChanged.connect(self.run_autoupdate_changed)
-
         # Next sync label
         self.sync_label = QtWidgets.QLabel()
         self.update_sync_label(None)
@@ -45,9 +29,6 @@ class Buttons(QtWidgets.QVBoxLayout):
         buttons_layout.addWidget(self.quit_btn)
         self.addLayout(buttons_layout)
         self.addWidget(self.sync_label)
-        self.addWidget(self.run_automatically_checkbox)
-        if platform.system() != 'Linux':
-            self.addWidget(self.run_autoupdate_checkbox)
 
     def sync_now(self):
         self.sync_now_signal.emit(True)
@@ -60,12 +41,3 @@ class Buttons(QtWidgets.QVBoxLayout):
             self.sync_label.setText(msg)
         else:
             self.sync_label.setText("")
-
-    def run_automatically_changed(self, state):
-        self.settings.run_automatically = (state == QtCore.Qt.Checked)
-        self.settings.save()
-
-    def run_autoupdate_changed(self, state):
-        self.settings.run_autoupdate = (state == QtCore.Qt.Checked)
-        self.settings.save()
-        self.autoupdate_signal.emit((state == QtCore.Qt.Checked))

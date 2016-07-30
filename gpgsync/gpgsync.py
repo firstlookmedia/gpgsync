@@ -15,6 +15,7 @@ from .endpoint import Endpoint, Verifier, Refresher, URLDownloadError, ProxyURLD
 from .buttons import Buttons
 from .status_bar import StatusBar, MessageQueue
 from .systray import SysTray
+from .settings_window import SettingsWindow
 
 class Application(QtWidgets.QApplication):
     def __init__(self):
@@ -57,6 +58,8 @@ class GPGSync(QtWidgets.QMainWindow):
         except:
             pass
 
+        self.settings_window = SettingsWindow(self.settings)
+
         # Initialize the system tray icon
         self.systray = SysTray(self.version)
         self.systray.show_signal.connect(self.toggle_show_window)
@@ -65,6 +68,7 @@ class GPGSync(QtWidgets.QMainWindow):
             self.checking_for_updates = False
             self.systray.check_updates_now_signal.connect(self.force_check_for_updates)
         self.systray.quit_signal.connect(self.app.quit)
+        self.systray.show_settings_window_signal.connect(self.open_settings_window)
         self.systray.clicked_applet_signal.connect(self.clicked_applet)
 
         # Endpoint selection GUI
@@ -247,6 +251,10 @@ class GPGSync(QtWidgets.QMainWindow):
 
         self.sync_all_endpoints(True)
 
+    def open_settings_window(self):
+        self.show_main_window()
+        self.settings_window.show()
+
     def add_endpoint(self):
         e = Endpoint()
         self.settings.endpoints.append(e)
@@ -360,7 +368,7 @@ class GPGSync(QtWidgets.QMainWindow):
         self.active_refreshers = []
         for e in self.settings.endpoints:
             if e.verified:
-                refresher = Refresher(self.gpg, self.status_q, e, force)
+                refresher = Refresher(self.gpg, self.settings.update_interval_hours, self.status_q, e, force)
                 refresher.finished.connect(self.refresher_finished)
                 refresher.success.connect(self.refresher_success)
                 refresher.error.connect(self.refresher_error)
@@ -424,9 +432,21 @@ class GPGSync(QtWidgets.QMainWindow):
                 url = 'https://api.github.com/repos/firstlookmedia/gpgsync/releases/latest'
                 token = '8890473be7c382a70eadb8fbc58ffe0fea913b77'
 
-                r = requests.get(url, headers={
-                    'Authorization': 'token {}'.format(token)
-                    })
+                if self.settings.automatic_update_use_proxy:
+                    socks5_address = 'socks5://{}:{}'.format(self.settings.automatic_update_proxy_host.decode(), self.settings.automatic_update_proxy_port.decode())
+
+                    proxies = {
+                      'https': socks5_address,
+                      'http': socks5_address
+                    }
+
+                    r = requests.get(url, proxies=proxies, headers={
+                            'Authorization': 'token {}'.format(token)
+                        })
+                else:
+                    r = requests.get(url, headers={
+                        'Authorization': 'token {}'.format(token)
+                        })
 
                 release = r.json()
             except (requests.exceptions.RequestException, requests.exceptions.ConnectionError) as e:

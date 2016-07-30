@@ -8,6 +8,7 @@ class SysTray(QtWidgets.QSystemTrayIcon):
     show_signal = QtCore.pyqtSignal()
     sync_now_signal = QtCore.pyqtSignal(bool)
     check_updates_now_signal = QtCore.pyqtSignal(bool)
+    show_settings_window_signal = QtCore.pyqtSignal(bool)
     quit_signal = QtCore.pyqtSignal()
     clicked_applet_signal = QtCore.pyqtSignal()
 
@@ -27,6 +28,8 @@ class SysTray(QtWidgets.QSystemTrayIcon):
         if platform.system() != 'Linux':
             self.update_act = self.menu.addAction('Check for updates')
             self.update_act.triggered.connect(self.clicked_update_now)
+        self.settings_window = self.menu.addAction('Settings...')
+        self.settings_window.triggered.connect(self.clicked_settings)
         self.menu.addSeparator()
         self.quit_act = self.menu.addAction('Quit')
         self.quit_act.triggered.connect(self.clicked_quit)
@@ -61,6 +64,9 @@ class SysTray(QtWidgets.QSystemTrayIcon):
 
     def clicked_update_now(self):
         self.check_updates_now_signal.emit(True)
+
+    def clicked_settings(self):
+        self.show_settings_window_signal.emit(True)
 
     def clicked_quit(self):
         self.quit_signal.emit()

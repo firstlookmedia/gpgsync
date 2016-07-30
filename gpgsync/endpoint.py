@@ -246,9 +246,11 @@ class Refresher(QtCore.QThread):
     success = QtCore.pyqtSignal(Endpoint, list, list)
     error = QtCore.pyqtSignal(Endpoint, str, bool)
 
-    def __init__(self, gpg, q, endpoint, force=False):
+    def __init__(self, gpg, refresh_interval, q, endpoint, force=False):
         super(Refresher, self).__init__()
         self.gpg = gpg
+        # this should be safe to cast directly to a float since it passed the input test
+        self.refresh_interval = float(refresh_interval)
         self.q = q
         self.e = endpoint
         self.force = force
@@ -259,8 +261,8 @@ class Refresher(QtCore.QThread):
 
     def run(self):
         # Refresh if it's forced, if it's never been checked before,
-        # or if it's been 24 hours since last check
-        one_day = 60*60*24 # This = 86400, but much more readable and easier to understand
+        # or if it's been longer than the configured refresh interval
+        update_interval = 60*60*(self.refresh_interval)
         run_refresher = False
 
         if self.force:
@@ -269,8 +271,8 @@ class Refresher(QtCore.QThread):
         elif not self.e.last_checked:
             print('Never been checked before')
             run_refresher = True
-        elif (datetime.datetime.now() - self.e.last_checked).total_seconds() >= one_day:
-            print('Been 24 hours since last sync')
+        elif (datetime.datetime.now() - self.e.last_checked).total_seconds() >= update_interval:
+            print('It has been {} hours since the last sync.'.format(self.refresh_interval))
             run_refresher = True
 
         if not run_refresher:
