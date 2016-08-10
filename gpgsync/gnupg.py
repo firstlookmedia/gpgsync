@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import subprocess, os, platform, tempfile, shutil
+import re, subprocess, os, platform, tempfile, shutil
 from urllib.parse import urlparse
 from . import common
 
@@ -166,9 +166,21 @@ class GnuPG(object):
         lines = err.split(b'\n')
         for i in range(len(lines)):
             if lines[i].startswith(b'gpg: Signature made'):
-                if lines[i+1].split()[-1] != common.fp_to_keyid(fp):
+                if lines[i+1].split()[-1] not in self.list_all_keyids(fp):
                     raise SignedWithWrongKey
                 break
+
+    def list_all_keyids(self, fp):
+        if not common.valid_fp(fp):
+            raise InvalidFingerprint(fp)
+
+        fp = common.clean_fp(fp)
+
+        out, err = self._gpg(['--keyid-format', '0xlong', '--list-keys'], fp)
+        if b'gpg: error reading key: No public key' in err:
+            raise NotFoundInKeyring
+
+        return re.findall(b'0x[A-F\d]{16}', out)
 
     def import_to_default_homedir(self, fp):
         # Export public key from the temporary homedir
