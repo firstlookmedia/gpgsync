@@ -19,11 +19,11 @@ class EndpointWidget(QtWidgets.QWidget):
         self.uid_label = QtWidgets.QLabel()
         self.uid_label.setStyleSheet("QLabel { font-weight: bold; }")
         self.keyid_label = QtWidgets.QLabel()
-        self.keyid_label.setStyleSheet("QLabel { font-style: italic; color: #666666; }")
+        self.keyid_label.setStyleSheet("QLabel { font-style: italic; color: #333333; }")
 
         # Last updated
         self.last_checked_label = QtWidgets.QLabel()
-        self.last_checked_label.setStyleSheet("QLabel { color: #666666; }")
+        self.last_checked_label.setStyleSheet("QLabel { color: #333333; }")
 
         # Warning and error
         self.warning_label = QtWidgets.QLabel()
@@ -117,6 +117,10 @@ class EndpointList(QtWidgets.QListWidget):
     def __init__(self, gpg):
         super(EndpointList, self).__init__()
         self.gpg = gpg
+        self.setStyleSheet("""
+            QListWidget::item { background: rgb(255, 255, 255);  }
+            QListWidget::item:selected { background: rgb(153, 204, 255); }
+        """)
 
     def iter_all_items(self):
         for i in range(self.count()):
