@@ -64,46 +64,15 @@ Each fingerprint should have its own line. Spaces within fingerprints are option
 91C0 C982 A41F 8D39 3953  1A71 FAB7 37F9 C5C1 CA80
 ```
 
-Next, clearsign your list of fingerprints using your authority key. Here's how I'm doing it in my example:
+Next, create a detached signature of your list of fingerprints using your authority key. Here's how I'm doing it in my example:
 
 ```sh
-$ gpg2 -u 980EA13A --clearsign fingerprints.txt
+$ gpg2 -u 980EA13A --detach-sign fingerprints.txt
 ```
 
-And I end up with a signed version of `fingerprint.txt` called `fingerprints.txt.asc`:
+This creates a second file, `fingerprints.txt.sig`, which contains the signature.
 
-```
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA256
-
-# Micah Lee
-927F 419D 7EC8 2C2F 149C  1BD1 403C 2657 CD99 4F73 # current
-0B14 9192 9806 5962 5470  0155 FD72 0AD9 EBA3 4B1C # old, revoked
-
-# TODO: add other keys
-
-# First Look warrant canary key
-91C0 C982 A41F 8D39 3953  1A71 FAB7 37F9 C5C1 CA80
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJXfraEAAoJEPC23HeYDqE6E8AP/AkheYSq6etx1fsdBdbDQHrR
-2DDDeXbjPwGxy9BAHynVKqxqxUyouTmHi2V5yKQUQ7IX7RMmXONINQOaZlmSnpF+
-Tc7VgjD6dJpz67fSnUtx6YeivMtO8a5VEMvr2fg2E/a1+gYEdL7biF17eQdp1Htg
-N4XozwpE1DrI0sll8VwSiCbloOmpFofQpVYZCVEg28gq8yGB5Wz0y/f45gCLHoAd
-jR5VpTsdBSZDA/Ty63ciaZn2QPdu0XCsB1CVrnmN3LgU2uGIjbNAOoHWLNQ2kexm
-n8aeKaARH431cVK/76ouNYS4LDPnKYWm9MpCwT2gmulCuaPBtAT3FXxi8r+2Rmok
-Z1JoxRYvmibsVT8tAF3fWctkI1trNZKtwygPHnJNKhXenwpoCfovWiap3rc8VFa1
-2YScsoN83JKESjD9MoGC0rfQK8bJM+zI+0AveC7D+7jryQGBSf2wtKdH5iLkBKCn
-g39sN3nSwNCN2VOakxI98ORq5gauByt1d8Cd584gnjMEydwqi58u6e1ngHerwxYk
-aFuNY8Ozoe1IwAn+zYzcgTfce4y6808kA4xWQwxoi4QpNFM6gM9MWQ7j809/aprv
-kqtxNFU8eXiOda5IBSIB0cOoZMo5hqmTZn+rAtHZ3KPkN5V8ZbvI3vJKl7CxJXLt
-Mw4F3dk/+Xs9XnEh3R2q
-=wdmj
------END PGP SIGNATURE-----
-```
-
-Finally, upload `fingerprints.txt.asc` to a website (if you'd like, you could maintain this file in a public git repository) and make a note of the URL, as well as the authority key fingerprint. You'll need to give these two pieces of information to each member of your organization in order to configure GPG Sync on their computers.
+Finally, upload `fingerprints.txt` and `fingerprints.txt.sig` to a website (if you'd like, you could maintain this file in a public git repository) and make a note of the URL, as well as the authority key fingerprint. You'll need to give the signing key fingerprint and the URL of `fingerprints.txt` to each member of your organization in order to configure GPG Sync on their computers.
 
 Each time there is a key change in your organization, you need to add the new fingerprints to `fingerprints.txt`, re-sign it with your authority key, and re-upload it to the same URL.
 
