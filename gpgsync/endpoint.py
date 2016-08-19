@@ -27,6 +27,7 @@ class Endpoint(object):
         self.verified = False
         self.fingerprint = b''
         self.url = b'https://'
+        self.sig_url = b'https://.sig'
         self.keyserver = b'hkps://hkps.pool.sks-keyservers.net'
         self.use_proxy = False
         self.proxy_host = b'127.0.0.1'
@@ -44,7 +45,13 @@ class Endpoint(object):
         # Test the key for issues
         gpg.test_key(self.fingerprint)
 
-    def fetch_url(self):
+    def fetch_msg_url(self):
+        return self.fetch_url(self.url)
+
+    def fetch_msg_sig_url(self):
+        return self.fetch_url(self.sig_url)
+
+    def fetch_url(self, url):
         try:
           if self.use_proxy:
             socks5_address = 'socks5://{}:{}'.format(self.proxy_host.decode(), self.proxy_port.decode())
@@ -54,9 +61,9 @@ class Endpoint(object):
               'http': socks5_address
             }
 
-            r = requests.get(self.url, proxies = proxies)
+            r = requests.get(url, proxies = proxies)
           else:
-            r = requests.get(self.url)
+            r = requests.get(url)
 
           r.close()
           msg_bytes = r.content
@@ -68,43 +75,15 @@ class Endpoint(object):
 
         return  msg_bytes
 
-    def verify_fingerprints_sig(self, gpg, msg_bytes):
+    def verify_fingerprints_sig(self, gpg, msg_sig_bytes, msg_bytes):
         # Make sure the signature is valid
-        gpg.verify(msg_bytes, self.fingerprint)
+        gpg.verify(msg_sig_bytes, msg_bytes, self.fingerprint)
 
     def get_fingerprint_list(self, msg_bytes):
-        # OpenPGP message format: https://tools.ietf.org/html/rfc4880
-
-        if msg_bytes[-2:] == b'\r\n':
-            sep = b'\r\n'
-        else:
-            sep = b'\n'
-
-        cleartext_header = b'-----BEGIN PGP SIGNED MESSAGE-----' + sep
-        sig_header = b'-----BEGIN PGP SIGNATURE-----' + sep
-        sig_footer = b'-----END PGP SIGNATURE-----' + sep
-
-        if cleartext_header not in msg_bytes or sig_header not in msg_bytes or sig_footer not in msg_bytes:
-            raise FingerprintsListNotSigned
-
-        # Get the content, plus armor headers and blank line
-        start = msg_bytes.find(cleartext_header) + len(cleartext_header)
-        end = msg_bytes.find(sig_header)
-        content = msg_bytes[start:end]
-
-        # Split the content into lines, and cut off the armor headers
-        lines = content.split(sep)
-        blank_i = None
-        for i in range(len(lines)):
-            if lines[i] == b'':
-                blank_i = i
-                break
-        lines = lines[blank_i+1:]
-
-        # Convert the content into a list of fingerprints
+        # Convert the message content into a list of fingerprints
         fingerprints = []
         invalid_fingerprints = []
-        for line in lines:
+        for line in msg_bytes.split(b'\n'):
             # If there are comments in the line, remove the comments
             if b'#' in line:
                 line = line.split(b'#')[0]
@@ -134,6 +113,7 @@ class Verifier(QtCore.QThread):
         self.q = q
         self.fingerprint = fingerprint
         self.url = url
+        self.sig_url = self.url + b'.sig'
         self.keyserver = keyserver
         self.use_proxy = use_proxy
         self.proxy_host = proxy_host
@@ -148,6 +128,7 @@ class Verifier(QtCore.QThread):
         e = Endpoint()
         e.fingerprint = self.fingerprint
         e.url = self.url
+        e.sig_url = self.sig_url
         e.keyserver = self.keyserver
         e.use_proxy = self.use_proxy
         e.proxy_host = self.proxy_host
@@ -157,7 +138,22 @@ class Verifier(QtCore.QThread):
         success = False
         try:
             self.q.add_message('Testing downloading URL {}'.format(self.url.decode()))
-            msg_bytes = e.fetch_url()
+            msg_bytes = e.fetch_msg_url()
+        except ProxyURLDownloadError as e:
+            self.alert_error.emit('URL failed to download: Check your internet connection and proxy settings.', str(e))
+        except URLDownloadError as e:
+            self.alert_error.emit('URL failed to download: Check your internet connection.', str(e))
+        else:
+            success = True
+
+        if not success:
+            return self.finish_with_failure()
+
+        # Test loading signature URL
+        success = False
+        try:
+            self.q.add_message('Testing downloading URL {}'.format(self.sig_url.decode()))
+            msg_sig_bytes = e.fetch_msg_sig_url()
         except ProxyURLDownloadError as e:
             self.alert_error.emit('URL failed to download: Check your internet connection and proxy settings.', str(e))
         except URLDownloadError as e:
@@ -208,7 +204,7 @@ class Verifier(QtCore.QThread):
         success = False
         try:
             self.q.add_message('Verifying signature')
-            e.verify_fingerprints_sig(self.gpg, msg_bytes)
+            e.verify_fingerprints_sig(self.gpg, msg_sig_bytes, msg_bytes)
         except VerificationError:
             self.alert_error.emit('Signature does not verify.', '')
         except BadSignature:
@@ -309,7 +305,22 @@ class Refresher(QtCore.QThread):
         success = False
         try:
             self.q.add_message('Downloading URL {}'.format(self.e.url.decode()))
-            msg_bytes = self.e.fetch_url()
+            msg_bytes = self.e.fetch_msg_url()
+        except URLDownloadError as e:
+            err = 'Failed to download: Check your internet connection'
+        except ProxyURLDownloadError as e:
+            err = 'Failed to download: Check your internet connection and proxy configuration'
+        else:
+            success = True
+
+        if not success:
+            return self.finish_with_failure(err)
+
+        # Download signature URL
+        success = False
+        try:
+            self.q.add_message('Downloading URL {}'.format(self.e.sig_url.decode()))
+            msg_sig_bytes = self.e.fetch_msg_sig_url()
         except URLDownloadError as e:
             err = 'Failed to download: Check your internet connection'
         except ProxyURLDownloadError as e:
@@ -324,7 +335,7 @@ class Refresher(QtCore.QThread):
         success = False
         try:
             self.q.add_message('Verifying signature')
-            self.e.verify_fingerprints_sig(self.gpg, msg_bytes)
+            self.e.verify_fingerprints_sig(self.gpg, msg_sig_bytes, msg_bytes)
         except VerificationError:
             err = 'Signature does not verify'
         except BadSignature:

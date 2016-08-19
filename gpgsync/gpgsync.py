@@ -233,6 +233,7 @@ class GPGSync(QtWidgets.QMainWindow):
         self.settings.endpoints[self.current_endpoint].verified = True
         self.settings.endpoints[self.current_endpoint].fingerprint = fingerprint
         self.settings.endpoints[self.current_endpoint].url = url
+        self.settings.endpoints[self.current_endpoint].sig_url = url + b'.sig'
         self.settings.endpoints[self.current_endpoint].keyserver = keyserver
         self.settings.endpoints[self.current_endpoint].use_proxy = use_proxy
         self.settings.endpoints[self.current_endpoint].proxy_host = proxy_host

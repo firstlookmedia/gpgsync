@@ -14,12 +14,18 @@ class EditEndpoint(QtWidgets.QVBoxLayout):
         self.endpoint = None
 
         # Signing key fingerprint
-        fingerprint_label = QtWidgets.QLabel("Signing key fingerprint")
+        fingerprint_label = QtWidgets.QLabel("GPG Fingerprint")
         self.fingerprint_edit = QtWidgets.QLineEdit()
 
-        # Signed-fingerprints URL
-        url_label = QtWidgets.QLabel("Signed fingerprints URL")
+        # Fingerprints URL
+        url_label = QtWidgets.QLabel("Fingerprints URL")
         self.url_edit = QtWidgets.QLineEdit()
+
+        # Signature URL
+        sig_url_label = QtWidgets.QLabel("Signature URL")
+        self.sig_url_edit = QtWidgets.QLineEdit()
+        self.sig_url_edit.setEnabled(False)
+        self.url_edit.textChanged.connect(self.update_sig_url)
 
         # Keyserver
         keyserver_label = QtWidgets.QLabel("Key server")
@@ -65,6 +71,9 @@ class EditEndpoint(QtWidgets.QVBoxLayout):
         self.addWidget(url_label)
         self.addWidget(self.url_edit)
         self.addStretch(1)
+        self.addWidget(sig_url_label)
+        self.addWidget(self.sig_url_edit)
+        self.addStretch(1)
         self.addWidget(keyserver_label)
         self.addWidget(self.keyserver_edit)
         self.addStretch(1)
@@ -94,3 +103,6 @@ class EditEndpoint(QtWidgets.QVBoxLayout):
 
     def delete(self):
         self.delete_signal.emit()
+
+    def update_sig_url(self, text):
+        self.sig_url_edit.setText("{}.sig".format(text))

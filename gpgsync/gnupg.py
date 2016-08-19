@@ -143,14 +143,23 @@ class GnuPG(object):
 
         return ''
 
-    def verify(self, msg, fp):
+    def verify(self, msg_sig, msg, fp):
         if not common.valid_fp(fp):
             raise InvalidFingerprint(fp)
 
         fp = common.clean_fp(fp)
 
+        # Write message and detached signature to disk
+        msg_sig_filename = tempfile.NamedTemporaryFile(delete=False).name
+        open(msg_sig_filename, 'wb').write(msg_sig)
+        msg_filename = tempfile.NamedTemporaryFile(delete=False).name
+        open(msg_filename, 'wb').write(msg)
+
         # Verify the signature
-        out,err = self._gpg(['--keyid-format', '0xlong', '--verify'], msg)
+        out,err = self._gpg(['--keyid-format', '0xlong', '--verify', msg_sig_filename, msg_filename])
+        os.unlink(msg_filename)
+        os.unlink(msg_sig_filename)
+
         if b'BAD signature' in err:
             raise BadSignature()
         if b"Can't check signature: No public key" in err or b'no valid OpenPGP data found' in err or b'the signature could not be verified' in err:
