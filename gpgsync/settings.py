@@ -33,8 +33,15 @@ class Settings(object):
         self.load()
 
     def load(self):
+        load_settings = False
         if os.path.isfile(self.settings_path):
-            self.settings = pickle.load(open(self.settings_path, 'rb'))
+            try:
+                self.settings = pickle.load(open(self.settings_path, 'rb'))
+                load_settings = True
+            except:
+                print("Error loading settings file, starting from scratch")
+
+        if load_settings:
             if 'endpoints' in self.settings:
                 self.endpoints = self.settings['endpoints']
             else:
