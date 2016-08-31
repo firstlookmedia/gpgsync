@@ -410,6 +410,8 @@ class Refresher(QtCore.QThread):
                 self.gpg.recv_key(self.e.keyserver, fingerprint, self.e.use_proxy, self.e.proxy_host, self.e.proxy_port)
             except InvalidKeyserver:
                 return self.finish_with_failure('Invalid keyserver')
+            except KeyserverError:
+                return self.finish_with_failure('Keyserver error')
             except NotFoundOnKeyserver:
                 notfound_fingerprints.append(fingerprint)
 

@@ -13,13 +13,14 @@ pyinstaller install/pyinstaller-osx.spec --clean
 if [ "$1" = "--release" ]; then
   APP_PATH="dist/GPG Sync.app"
   PKG_PATH="dist/GPG Sync.pkg"
-  IDENTITY_NAME="FIRST LOOK PRODUCTIONS, INC."
+  IDENTITY_NAME_APPLICATION="Developer ID Application: FIRST LOOK PRODUCTIONS, INC."
+  IDENTITY_NAME_INSTALLER="Developer ID Installer: FIRST LOOK PRODUCTIONS, INC."
 
   echo "Codesigning the app bundle"
-  codesign --deep -s "$IDENTITY_NAME" "$APP_PATH"
+  codesign --deep -s "$IDENTITY_NAME_APPLICATION" "$APP_PATH"
 
   echo "Creating an installer"
-  productbuild --sign "$IDENTITY_NAME" --component "$APP_PATH" /Applications "$PKG_PATH"
+  productbuild --sign "$IDENTITY_NAME_INSTALLER" --component "$APP_PATH" /Applications "$PKG_PATH"
 
   echo "Cleaning up"
   rm -rf dist/gpgsync "$APP_PATH"
