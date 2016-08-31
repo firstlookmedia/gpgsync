@@ -60,7 +60,6 @@ target/
 
 # Other files
 test/homedir
-*.swp
 *.DS_Store
 MANIFEST
-pgpsync-*.tar.gz
+gpgsync-*.tar.gz
