@@ -450,7 +450,6 @@ class GPGSync(QtWidgets.QMainWindow):
 
             try:
                 url = 'https://api.github.com/repos/firstlookmedia/gpgsync/releases/latest'
-                token = ''
 
                 if self.settings.automatic_update_use_proxy:
                     socks5_address = 'socks5://{}:{}'.format(self.settings.automatic_update_proxy_host.decode(), self.settings.automatic_update_proxy_port.decode())
@@ -460,13 +459,9 @@ class GPGSync(QtWidgets.QMainWindow):
                       'http': socks5_address
                     }
 
-                    r = requests.get(url, proxies=proxies, headers={
-                            'Authorization': 'token {}'.format(token)
-                        })
+                    r = requests.get(url, proxies=proxies)
                 else:
-                    r = requests.get(url, headers={
-                        'Authorization': 'token {}'.format(token)
-                        })
+                    r = requests.get(url)
 
                 release = r.json()
             except (requests.exceptions.RequestException, requests.exceptions.ConnectionError) as e:
