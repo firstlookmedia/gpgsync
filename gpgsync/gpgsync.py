@@ -450,7 +450,7 @@ class GPGSync(QtWidgets.QMainWindow):
 
             try:
                 url = 'https://api.github.com/repos/firstlookmedia/gpgsync/releases/latest'
-                token = '8890473be7c382a70eadb8fbc58ffe0fea913b77'
+                token = ''
 
                 if self.settings.automatic_update_use_proxy:
                     socks5_address = 'socks5://{}:{}'.format(self.settings.automatic_update_proxy_host.decode(), self.settings.automatic_update_proxy_port.decode())
