@@ -15,8 +15,14 @@ brew install python3 pyqt5 qt5
 Install some dependencies using pip3:
 
 ```sh
-sudo pip3 install pyinstaller requests requests[socks] packaging
+sudo pip3 install requests requests[socks] packaging
 ```
+
+Install the latest development version of cx_Freeze:
+
+* Download a [snapshot](https://bitbucket.org/anthony_tuininga/cx_freeze/downloads) of the latest development version of cx_Freeze, extract it, and cd into the folder you extracted it to
+* Build the package: `python3 setup.py bdist_wheel`
+* Install it with pip: `sudo pip3 install dist/cx_Freeze-5.0-cp35-cp35m-macosx_10_11_x86_64.whl`
 
 Now you're ready to build the actual app. Go to the `gpgsync` folder before and run this to build the app:
 

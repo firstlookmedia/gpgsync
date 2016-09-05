@@ -50,10 +50,10 @@ def get_resource_path(filename):
     if platform.system() == 'Linux':
         prefix = os.path.join(sys.prefix, 'share/gpgsync')
     elif platform.system() == 'Darwin':
-        # Check if app is "frozen" with pyinstaller
-        # https://pythonhosted.org/PyInstaller/#run-time-information
+        # Check if app is "frozen"
+        # http://cx-freeze.readthedocs.io/en/latest/faq.html#using-data-files
         if getattr(sys, 'frozen', False):
-            prefix = os.path.join(os.path.dirname(sys._MEIPASS), 'Resources/share')
+            prefix = os.path.join(os.path.dirname(sys.executable), 'share')
         else:
             prefix = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'share')
 

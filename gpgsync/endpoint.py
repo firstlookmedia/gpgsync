@@ -72,27 +72,27 @@ class Endpoint(object):
 
     def fetch_url(self, url):
         try:
-          if self.use_proxy:
-            socks5_address = 'socks5://{}:{}'.format(self.proxy_host.decode(), self.proxy_port.decode())
+            if self.use_proxy:
+                socks5_address = 'socks5://{}:{}'.format(self.proxy_host.decode(), self.proxy_port.decode())
 
-            proxies = {
-              'https': socks5_address,
-              'http': socks5_address
-            }
+                proxies = {
+                  'https': socks5_address,
+                  'http': socks5_address
+                }
 
-            r = requests.get(url, proxies = proxies)
-          else:
-            r = requests.get(url)
+                r = requests.get(url, proxies=proxies)
+            else:
+                r = requests.get(url)
 
-          r.close()
-          msg_bytes = r.content
+            r.close()
+            msg_bytes = r.content
         except (socks.ProxyConnectionError, requests.exceptions.RequestException, requests.exceptions.ConnectionError) as e:
-          if self.use_proxy:
-            raise ProxyURLDownloadError(e)
-          else:
-            raise URLDownloadError(e)
+            if self.use_proxy:
+                raise ProxyURLDownloadError(e)
+            else:
+                raise URLDownloadError(e)
 
-        return  msg_bytes
+        return msg_bytes
 
     def verify_fingerprints_sig(self, gpg, msg_sig_bytes, msg_bytes):
         # Make sure the signature is valid

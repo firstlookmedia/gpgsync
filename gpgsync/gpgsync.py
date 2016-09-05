@@ -503,6 +503,10 @@ class GPGSync(QtWidgets.QMainWindow):
             self.force_check_for_updates()
 
 def main():
+    # https://stackoverflow.com/questions/15157502/requests-library-missing-file-after-cx-freeze
+    if getattr(sys, 'frozen', False):
+        os.environ["REQUESTS_CA_BUNDLE"] = os.path.join(os.path.dirname(sys.executable), 'cacert.pem')
+
     app = Application()
     gui = GPGSync(app)
 
