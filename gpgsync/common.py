@@ -18,7 +18,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import os, sys, re, platform, inspect
+import datetime, os, sys, re, platform, inspect
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 def alert(msg, details='', icon=QtWidgets.QMessageBox.Warning):
@@ -80,3 +80,9 @@ def get_error_icon():
     if not error_icon:
         error_icon = QtGui.QIcon(get_resource_path('error.png'))
     return error_icon
+
+def serialize_settings(o):
+    if isinstance(o, bytes):
+        return o.decode()
+    if isinstance(o, datetime.datetime):
+        return o.isoformat()
