@@ -29,6 +29,7 @@ def update_settings_location():
     if os.path.isfile(OLD_SETTINGS_PATH):
         try:
             settings = pickle.load(open(OLD_SETTINGS_PATH, 'rb'))
+            os.remove(OLD_SETTINGS_PATH)
             return settings
         except:
             return None

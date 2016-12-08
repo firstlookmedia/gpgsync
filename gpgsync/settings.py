@@ -41,10 +41,11 @@ class Settings(object):
     def load(self):
         load_settings = False
         use_old = False
+        settings_file = os.path.join(self.settings_path, 'settings.json')
 
-        if os.path.isfile(self.settings_path):
+        if os.path.isfile(settings_file):
             try:
-                self.settings = json.load(open(self.settings_path, 'rb'))
+                self.settings = json.load(open(settings_file, 'r'))
                 load_settings = True
             except:
                 print("Error loading settings file, starting from scratch")
@@ -118,6 +119,9 @@ class Settings(object):
             self.automatic_update_use_proxy = False
             self.automatic_update_proxy_host = b'127.0.0.1'
             self.automatic_update_proxy_port = b'9050'
+
+        if use_old:
+            self.save()
 
         self.configure_run_automatically()
 
