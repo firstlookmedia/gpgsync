@@ -57,6 +57,26 @@ class Endpoint(object):
         self.error = None
         self.warning = None
 
+    """
+        Acts as a secondary constructor to load an endpoint from settings
+    """
+    def load(self, e):
+        self.verified = e['verified']
+        self.fingerprint = str.encode(e['fingerprint'])
+        self.url = str.encode(e['url'])
+        self.sig_url = str.encode(e['sig_url'])
+        self.keyserver = str.encode(e['keyserver'])
+        self.use_proxy = False
+        self.proxy_host = str.encode(e['proxy_host'])
+        self.proxy_port = str.encode(e['proxy_port'])
+        self.last_checked = None
+        self.last_synced = None
+        self.last_failed = None
+        self.error = None
+        self.warning = None
+
+        return self
+
     def serialize(self):
         return dict((k, v.decode() if type(v) is type(b'') else v) for k, v in self.__dict__.items())
 
