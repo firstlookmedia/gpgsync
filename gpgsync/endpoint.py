@@ -19,6 +19,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import requests, socks, uuid, datetime
+import dateutil.parser as date_parser
 from io import BytesIO
 from PyQt5 import QtCore, QtWidgets
 
@@ -66,19 +67,29 @@ class Endpoint(object):
         self.url = str.encode(e['url'])
         self.sig_url = str.encode(e['sig_url'])
         self.keyserver = str.encode(e['keyserver'])
-        self.use_proxy = False
+        self.use_proxy = e['use_proxy']
         self.proxy_host = str.encode(e['proxy_host'])
         self.proxy_port = str.encode(e['proxy_port'])
-        self.last_checked = None
-        self.last_synced = None
-        self.last_failed = None
-        self.error = None
-        self.warning = None
+        self.last_checked = (date_parser.parse(e['last_checked']) if e['last_checked'] is not None else None)
+        self.last_synced = (date_parser.parse(e['last_synced']) if e['last_synced'] is not None else None)
+        self.last_failed = (date_parser.parse(e['last_failed']) if e['last_failed'] is not None else None)
+        self.error = e['error']
+        self.warning = e['warning']
 
         return self
 
     def serialize(self):
-        return dict((k, v.decode() if type(v) is type(b'') else v) for k, v in self.__dict__.items())
+        tmp = {}
+
+        for k, v in self.__dict__.items():
+            if isinstance(v, bytes):
+                tmp[k] = v.decode()
+            elif isinstance(v, datetime.datetime):
+                tmp[k] = v.isoformat()
+            else:
+                tmp[k] = v
+
+        return tmp
 
     def fetch_public_key(self, gpg):
         # Retreive the signing key from the keyserver
