@@ -27,8 +27,10 @@ class Settings(object):
         if system == 'Windows':
             appdata = os.environ['APPDATA']
             self.settings_path = '{0}\\gpgsync'.format(appdata)
+        else if system == 'Darwin':
+            self.settings_path = os.path.expanduser("~/Library/Application Support/GPG Sync/settings.json")
         else:
-            self.settings_path = os.path.expanduser("~/.gpgsync")
+            self.settings_path = os.path.expanduser("~/.config/gpgsync/settings.json")
 
         self.load()
 
