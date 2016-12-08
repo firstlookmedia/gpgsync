@@ -57,6 +57,9 @@ class Endpoint(object):
         self.error = None
         self.warning = None
 
+    def serialize(self):
+        return dict((k, v.decode() if type(v) is type(b'') else v) for k, v in self.__dict__.items())
+
     def fetch_public_key(self, gpg):
         # Retreive the signing key from the keyserver
         gpg.recv_key(self.keyserver, self.fingerprint, self.use_proxy, self.proxy_host, self.proxy_port)
