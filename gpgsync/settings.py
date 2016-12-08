@@ -18,8 +18,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import os, pickle, platform
+import os, json, platform
+import dateutil.parser as date_parser
 from . import common
+from . import version_migrations
+
+from .endpoint import Endpoint
 
 class Settings(object):
     def __init__(self):
@@ -27,25 +31,36 @@ class Settings(object):
         if system == 'Windows':
             appdata = os.environ['APPDATA']
             self.settings_path = '{0}\\gpgsync'.format(appdata)
-        else if system == 'Darwin':
-            self.settings_path = os.path.expanduser("~/Library/Application Support/GPG Sync/settings.json")
+        elif system == 'Darwin':
+            self.settings_path = os.path.expanduser("~/Library/Application Support/GPG Sync")
         else:
-            self.settings_path = os.path.expanduser("~/.config/gpgsync/settings.json")
+            self.settings_path = os.path.expanduser("~/.config/gpgsync")
 
         self.load()
 
     def load(self):
         load_settings = False
+        use_old = False
+
         if os.path.isfile(self.settings_path):
             try:
-                self.settings = pickle.load(open(self.settings_path, 'rb'))
+                self.settings = json.load(open(self.settings_path, 'rb'))
                 load_settings = True
             except:
                 print("Error loading settings file, starting from scratch")
+        else:
+            old_settings = version_migrations.update_settings_location()
+            if old_settings:
+                use_old = True
+                load_settings = True
+                self.settings = old_settings
 
         if load_settings:
             if 'endpoints' in self.settings:
-                self.endpoints = self.settings['endpoints']
+                if use_old:
+                    self.endpoints = self.settings['endpoints']
+                else:
+                    self.endpoints = [Endpoint().load(e) for e in self.settings['endpoints']]
             else:
                 self.endpoints = []
             if 'run_automatically' in self.settings:
@@ -57,7 +72,10 @@ class Settings(object):
             else:
                 self.run_autoupdate = True
             if 'last_update_check' in self.settings:
-                self.last_update_check = self.settings['last_update_check']
+                if use_old:
+                    self.last_update_check = self.settings['last_update_check']
+                else:
+                    self.last_update_check = date_parser.parse(self.settings['last_update_check'])
             else:
                 self.last_update_check = None
             if 'last_update_check_err' in self.settings:
@@ -65,7 +83,10 @@ class Settings(object):
             else:
                 self.last_update_check_err = False
             if 'update_interval_hours' in self.settings:
-                self.update_interval_hours = self.settings['update_interval_hours']
+                if use_old:
+                    self.update_interval_hours = self.settings['update_interval_hours']
+                else:
+                    self.update_interval_hours = str.encode(self.settings['update_interval_hours'])
             else:
                 self.update_interval_hours = b'12'
             if 'automatic_update_use_proxy' in self.settings:
@@ -73,11 +94,17 @@ class Settings(object):
             else:
                 self.automatic_update_use_proxy = False
             if 'automatic_update_proxy_host' in self.settings:
-                self.automatic_update_proxy_host = self.settings['automatic_update_proxy_host']
+                if use_old:
+                    self.automatic_update_proxy_host = self.settings['automatic_update_proxy_host']
+                else:
+                    self.automatic_update_proxy_host = str.encode(self.settings['automatic_update_proxy_host'])
             else:
                 self.automatic_update_proxy_host = b'127.0.0.1'
             if 'automatic_update_proxy_port' in self.settings:
-                self.automatic_update_proxy_port = self.settings['automatic_update_proxy_port']
+                if use_old:
+                    self.automatic_update_proxy_port = self.settings['automatic_update_proxy_port']
+                else:
+                    self.automatic_update_proxy_port = str.encode(self.settings['automatic_update_proxy_port'])
             else:
                 self.automatic_update_proxy_port = b'9050'
         else:
@@ -96,7 +123,7 @@ class Settings(object):
 
     def save(self):
         self.settings = {
-            'endpoints': self.endpoints,
+            'endpoints': [e.serialize() for e in self.endpoints],
             'run_automatically': self.run_automatically,
             'run_autoupdate': self.run_autoupdate,
             'last_update_check': self.last_update_check,
@@ -107,7 +134,12 @@ class Settings(object):
             'automatic_update_proxy_port': self.automatic_update_proxy_port
 
         }
-        pickle.dump(self.settings, open(self.settings_path, 'wb'))
+
+        if not os.path.exists(self.settings_path):
+            os.makedirs(self.settings_path)
+
+        with open(os.path.join(self.settings_path, 'settings.json'), 'w') as settings_file:
+            json.dump(self.settings, settings_file, default=common.serialize_settings, indent=4)
 
         self.configure_run_automatically()
         return True
