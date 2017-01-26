@@ -280,6 +280,10 @@ class Refresher(QtCore.QThread):
         update_interval = 60*60*(self.refresh_interval)
         run_refresher = False
 
+        # If there is no connection - skip
+        if not common.internet_available():
+            return
+
         if self.force:
             print('Forcing sync')
             run_refresher = True
