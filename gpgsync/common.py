@@ -47,8 +47,13 @@ def clean_keyserver(keyserver):
     return keyserver
 
 def get_resource_path(filename):
-    if platform.system() == 'Linux':
+    if getattr(sys, 'gpgsync_dev', False):
+        # Look for resources directory relative to python file
+        prefix = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))), 'share')
+
+    elif platform.system() == 'Linux':
         prefix = os.path.join(sys.prefix, 'share/gpgsync')
+
     elif platform.system() == 'Darwin':
         # Check if app is "frozen"
         # https://pythonhosted.org/PyInstaller/#run-time-information

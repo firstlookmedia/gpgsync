@@ -14,7 +14,13 @@ Now install some python dependencies with pip (note, there's issues building a .
 sudo pip3 install -r install/requirements.txt
 ```
 
-Now you're ready to build the actual app. Go to the `gpgsync` folder before and run this to build the app:
+Here's how you run GPG Sync, without having to build an app bundle:
+
+```sh
+./dev_scripts/gpgsync
+```
+
+Here's how you build an app bundle:
 
 ```sh
 install/build_osx.sh
