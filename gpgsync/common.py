@@ -98,7 +98,7 @@ def get_error_icon():
 
 def internet_available():
     try:
-        host = socket.gethostbyname("www.google.com")
+        host = socket.gethostbyname("www.example.com")
         s = socket.create_connection((host, 80), 2)
         return True
     except:
