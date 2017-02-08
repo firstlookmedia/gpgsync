@@ -18,7 +18,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import datetime, os, sys, re, platform, inspect
+import datetime, os, sys, re, platform, inspect, requests, socket
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 def alert(msg, details='', icon=QtWidgets.QMessageBox.Warning):
@@ -47,11 +47,16 @@ def clean_keyserver(keyserver):
     return keyserver
 
 def get_resource_path(filename):
-    if platform.system() == 'Linux':
+    if getattr(sys, 'gpgsync_dev', False):
+        # Look for resources directory relative to python file
+        prefix = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))), 'share')
+
+    elif platform.system() == 'Linux':
         prefix = os.path.join(sys.prefix, 'share/gpgsync')
+
     elif platform.system() == 'Darwin':
         # Check if app is "frozen"
-        # http://cx-freeze.readthedocs.io/en/latest/faq.html#using-data-files
+        # https://pythonhosted.org/PyInstaller/#run-time-information
         if getattr(sys, 'frozen', False):
             prefix = os.path.join(os.path.dirname(sys.executable), 'share')
         else:
@@ -59,6 +64,16 @@ def get_resource_path(filename):
 
     resource_path = os.path.join(prefix, filename)
     return resource_path
+
+def requests_get(url, proxies=None):
+    # When creating an OSX app bundle, the requests module can't seem to find
+    # the location of cacerts.pem. Here's a hack to let it know where it is.
+    # https://stackoverflow.com/questions/17158529/fixing-ssl-certificate-error-in-exe-compiled-with-py2exe-or-pyinstaller
+    if getattr(sys, 'frozen', False):
+        verify = os.path.join(os.path.dirname(sys.executable), 'requests/cacert.pem')
+        return requests.get(url, proxies=proxies, verify=verify)
+    else:
+        return requests.get(url, proxies=proxies)
 
 icon = None
 def get_icon():
@@ -86,3 +101,13 @@ def serialize_settings(o):
         return o.decode()
     if isinstance(o, datetime.datetime):
         return o.isoformat()
+
+def internet_available():
+    try:
+        host = socket.gethostbyname("www.example.com")
+        s = socket.create_connection((host, 80), 2)
+        return True
+    except:
+        pass
+
+    return False

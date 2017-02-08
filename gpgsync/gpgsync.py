@@ -459,9 +459,9 @@ class GPGSync(QtWidgets.QMainWindow):
                       'http': socks5_address
                     }
 
-                    r = requests.get(url, proxies=proxies)
+                    r = common.requests_get(url, proxies=proxies)
                 else:
-                    r = requests.get(url)
+                    r = common.requests_get(url)
 
                 release = r.json()
             except (requests.exceptions.RequestException, requests.exceptions.ConnectionError) as e:

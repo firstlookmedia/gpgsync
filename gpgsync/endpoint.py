@@ -18,7 +18,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import requests, socks, uuid, datetime
+import socks, uuid, datetime
 import dateutil.parser as date_parser
 from io import BytesIO
 from PyQt5 import QtCore, QtWidgets
@@ -114,9 +114,9 @@ class Endpoint(object):
                   'http': socks5_address
                 }
 
-                r = requests.get(url, proxies=proxies)
+                r = common.requests_get(url, proxies=proxies)
             else:
-                r = requests.get(url)
+                r = common.requests_get(url)
 
             r.close()
             msg_bytes = r.content
@@ -313,6 +313,10 @@ class Refresher(QtCore.QThread):
         # or if it's been longer than the configured refresh interval
         update_interval = 60*60*(self.refresh_interval)
         run_refresher = False
+
+        # If there is no connection - skip
+        if not common.internet_available():
+            return
 
         if self.force:
             print('Forcing sync')
