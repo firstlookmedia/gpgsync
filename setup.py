@@ -60,45 +60,5 @@ if p == 'Linux':
         ]
     )
 
-elif p == 'Darwin':
-    from cx_Freeze import setup, Executable
-    import tempfile
-
-    # Write the correct version into Info.plist
-    f = tempfile.NamedTemporaryFile(mode='w')
-    custom_info_plist = f.name
-    f.write(open('install/Info.plist').read().replace('{VERSION}', str(version)))
-    f.flush()
-
-    # Fix cx_Freeze requests bug
-    # https://stackoverflow.com/questions/15157502/requests-library-missing-file-after-cx-freeze
-    import requests.certs
-
-    setup(
-        name='GPG Sync', version=version,
-        description=description, long_description=long_description,
-        author=author, author_email=author_email,
-        url=url, license=license, keywords=keywords,
-        options={
-            'build_exe': {
-                'packages': ['requests'],
-                'excludes': [],
-                'include_files': [
-                    'share',
-                    (requests.certs.where(), 'cacert.pem')
-                ]
-            },
-            'bdist_mac': {
-                'iconfile': 'install/gpgsync.icns',
-                'bundle_name': 'GPG Sync',
-                'qt_menu_nib': '/usr/local/Cellar/qt5/5.6.1-1/plugins/platforms',
-                'custom_info_plist': custom_info_plist
-            }
-        },
-        executables=[
-            Executable('install/gpgsync')
-        ]
-    )
-
 else:
     print('Unsupported platform')

@@ -8,7 +8,7 @@ rm -rf $ROOT/build $ROOT/dist &>/dev/null 2>&1
 
 # Build the .app
 echo Building GPG Sync.app
-python3 setup.py bdist_mac
+pyinstaller install/pyinstaller-osx.spec --clean
 
 if [ "$1" = "--release" ]; then
   mkdir -p dist

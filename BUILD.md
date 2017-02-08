@@ -4,27 +4,23 @@
 
 Install Xcode from the Mac App Store. Once it's installed, run it for the first time to set it up.
 
-If you don't already have it installed, install [Homebrew](http://brew.sh/).
+Install Python 3.5.3 from https://www.python.org/downloads/release/python-353/. I downloaded `python-3.5.3-macosx10.6.pkg`. (Note that PyQt does not yet work with Python 3.6.)
 
-Install some dependencies using Homebrew:
+Install Qt 5.7.1 from https://www.qt.io/download-open-source/. I downloaded `qt-unified-mac-x64-2.0.4-online.dmg`. In the installer, you can skip making an account, and all you need is Qt 5.7 for macOS.
 
-```sh
-brew install python3 pyqt5 qt5
-```
-
-Install some dependencies using pip3:
+Now install some python dependencies with pip (note, there's issues building a .app if you install this in a virtualenv):
 
 ```sh
-sudo pip3 install requests requests[socks] packaging
+sudo pip3 install -r install/requirements.txt
 ```
 
-Install the latest development version of cx_Freeze:
+Here's how you run GPG Sync, without having to build an app bundle:
 
-* Download a [snapshot](https://bitbucket.org/anthony_tuininga/cx_freeze/downloads) of the latest development version of cx_Freeze, extract it, and cd into the folder you extracted it to
-* Build the package: `python3 setup.py bdist_wheel`
-* Install it with pip: `sudo pip3 install dist/cx_Freeze-5.0-cp35-cp35m-macosx_10_11_x86_64.whl`
+```sh
+./dev_scripts/gpgsync
+```
 
-Now you're ready to build the actual app. Go to the `gpgsync` folder before and run this to build the app:
+Here's how you build an app bundle:
 
 ```sh
 install/build_osx.sh
@@ -35,10 +31,10 @@ Now you should have `dist/GPG Sync.app`.
 To codesign and build a .pkg for distribution:
 
 ```sh
-install/build_osx.sh --sign
+install/build_osx.sh --release
 ```
 
-Now you should have `dist/GPG Sync.pkg`. NOTE: This isn't implemented yet.
+Now you should have `dist/GPG Sync.pkg`.
 
 ## Linux distributions
 
