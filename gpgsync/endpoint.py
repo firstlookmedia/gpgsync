@@ -18,7 +18,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import requests, socks, uuid, datetime
+import socks, uuid, datetime
 from io import BytesIO
 from PyQt5 import QtCore, QtWidgets
 
@@ -80,9 +80,9 @@ class Endpoint(object):
                   'http': socks5_address
                 }
 
-                r = requests.get(url, proxies=proxies)
+                r = common.requests_get(url, proxies=proxies)
             else:
-                r = requests.get(url)
+                r = common.requests_get(url)
 
             r.close()
             msg_bytes = r.content
