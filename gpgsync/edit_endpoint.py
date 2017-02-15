@@ -39,6 +39,7 @@ class EditEndpoint(QtWidgets.QVBoxLayout):
         # Fingerprints URL
         url_label = QtWidgets.QLabel("Fingerprints URL")
         self.url_edit = QtWidgets.QLineEdit()
+        self.url_edit.setPlaceholderText("https://")
 
         # Signature URL
         sig_url_label = QtWidgets.QLabel("Signature URL")
@@ -105,7 +106,8 @@ class EditEndpoint(QtWidgets.QVBoxLayout):
         self.endpoint = endpoint
 
         self.fingerprint_edit.setText(endpoint.fingerprint.decode())
-        self.url_edit.setText(endpoint.url.decode())
+        if endpoint.url.decode():
+            self.url_edit.setText(endpoint.url.decode())
         self.keyserver_edit.setText(endpoint.keyserver.decode())
 
         if endpoint.use_proxy:
