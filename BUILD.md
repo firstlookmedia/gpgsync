@@ -61,6 +61,13 @@ Install dependencies:
 sudo dnf install -y rpm-build python3-qt5 python3-requests python3-nose python3-packaging python3-dateutil gnupg2
 ```
 
+Make and install a .rpm:
+
+```sh
+./install/build_rpm.sh
+sudo dnf install dist/gpgsync_*.rpm
+```
+
 ## Run the tests
 
 From the `gpgsync` folder run:
