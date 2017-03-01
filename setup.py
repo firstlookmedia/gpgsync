@@ -38,6 +38,7 @@ keywords = 'gpgsync, pgp, openpgp, gpg, gnupg'
 if p == 'Linux':
     from setuptools import setup
     share_files = [
+        'share/gpgsync.desktop',
         'share/gpgsync.png',
         'share/syncing.png',
         'share/error.png',
