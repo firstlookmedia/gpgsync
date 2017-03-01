@@ -43,7 +43,7 @@ Now you should have `dist/GPG Sync.pkg`.
 Install dependencies:
 
 ```sh
-sudo apt-get install python3-pyqt5 python3-nose python3-stdeb python3-requests python3-socks python3-packaging gnupg2
+sudo apt install -y python3-pyqt5 python3-nose python3-stdeb python3-requests python3-socks python3-packaging python3-dateutil gnupg2
 ```
 
 Make and install a .deb:
@@ -51,6 +51,14 @@ Make and install a .deb:
 ```sh
 ./install/build_deb.sh
 sudo dpkg -i deb_dist/gpgsync_*.deb
+```
+
+*Fedora*
+
+Install dependencies:
+
+```sh
+sudo dnf install -y rpm-build python3-qt5 python3-requests python3-nose python3-packaging python3-dateutil gnupg2
 ```
 
 ## Run the tests
