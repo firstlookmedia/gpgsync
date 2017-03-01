@@ -54,7 +54,7 @@ if p == 'Linux':
         packages=['gpgsync'],
         scripts=['install/gpgsync'],
         data_files=[
-            (os.path.join(sys.prefix, 'share/applications'), ['install/gpgsync.desktop']),
+            (os.path.join(sys.prefix, 'share/applications'), ['share/gpgsync.desktop']),
             (os.path.join(sys.prefix, 'share/pixmaps'), ['share/gpgsync.png']),
             (os.path.join(sys.prefix, 'share/gpgsync/'), share_files + ['install/gpgsync.desktop'])
         ]
