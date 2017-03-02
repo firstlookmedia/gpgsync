@@ -73,10 +73,13 @@ class Settings(object):
             else:
                 self.run_autoupdate = True
             if 'last_update_check' in self.settings:
-                if use_old:
-                    self.last_update_check = self.settings['last_update_check']
-                else:
-                    self.last_update_check = date_parser.parse(self.settings['last_update_check'])
+                try:
+                    if use_old:
+                        self.last_update_check = self.settings['last_update_check']
+                    else:
+                        self.last_update_check = date_parser.parse(self.settings['last_update_check'])
+                except:
+                    self.last_update_check = None
             else:
                 self.last_update_check = None
             if 'last_update_check_err' in self.settings:
