@@ -46,7 +46,7 @@ class Endpoint(object):
     def __init__(self):
         self.verified = False
         self.fingerprint = b''
-        self.url = b'https://'
+        self.url = b''
         self.sig_url = b'https://.sig'
         self.keyserver = b'hkps://hkps.pool.sks-keyservers.net'
         self.use_proxy = False
