@@ -34,17 +34,12 @@ def test_fetch_url_valid_url_valid_proxy():
 def test_get_fingerprint_list_valid():
     # None of these should throw exceptions
     e = Endpoint()
-    e.get_fingerprint_list(get_endpoint_file_content('fingerprints.asc'))
-    e.get_fingerprint_list(get_endpoint_file_content('fingerprints_comments.asc'))
-    e.get_fingerprint_list(get_endpoint_file_content('fingerprints_no_whitespace.asc'))
-    e.get_fingerprint_list(get_endpoint_file_content('fingerprints_weird_whitespace.asc'))
+    e.get_fingerprint_list(get_endpoint_file_content('fingerprints.txt'))
+    e.get_fingerprint_list(get_endpoint_file_content('fingerprints_comments.txt'))
+    e.get_fingerprint_list(get_endpoint_file_content('fingerprints_no_whitespace.txt'))
+    e.get_fingerprint_list(get_endpoint_file_content('fingerprints_weird_whitespace.txt'))
 
 @raises(InvalidFingerprints)
 def test_get_fingerprint_list_invalid_fingerprints():
     e = Endpoint()
-    e.get_fingerprint_list(get_endpoint_file_content('invalid_fingerprints.asc'))
-
-@raises(FingerprintsListNotSigned)
-def test_get_fingerprint_list_invalid_not_signed():
-    e = Endpoint()
-    e.get_fingerprint_list(get_endpoint_file_content('invalid_not_signed'))
+    e.get_fingerprint_list(get_endpoint_file_content('invalid_fingerprints.txt'))
