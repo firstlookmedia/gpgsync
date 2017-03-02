@@ -39,9 +39,6 @@ class InvalidFingerprints(Exception):
     def __str__(self):
         return str([s.decode() for s in self.fingerprints])
 
-class FingerprintsListNotSigned(Exception):
-    pass
-
 class Endpoint(object):
     def __init__(self):
         self.verified = False
@@ -279,8 +276,6 @@ class Verifier(QtCore.QThread):
             e.get_fingerprint_list(msg_bytes)
         except InvalidFingerprints as e:
             self.alert_error.emit('Invalid fingerprints', str(e), '')
-        except FingerprintsListNotSigned:
-            self.alert_error.emit('Fingerprints list is not signed.', '')
         else:
             success = True
 
@@ -414,8 +409,6 @@ class Refresher(QtCore.QThread):
             fingerprints = self.e.get_fingerprint_list(msg_bytes)
         except InvalidFingerprints as e:
             err = 'Invalid fingerprints: {}'.format(e)
-        except FingerprintsListNotSigned:
-            err = 'Fingerprints list is not signed'
         else:
             success = True
 
