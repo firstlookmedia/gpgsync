@@ -7,7 +7,7 @@ from .test_helpers import *
 
 def test_fetch_url_valid_url():
     e = Endpoint()
-    e.fetch_url('https://raw.githubusercontent.com/firstlookmedia/gpgsync/master/fingerprints/fingerprints.txt')
+    e.fetch_url('http://www.example.com/')
 
 @raises(URLDownloadError)
 def test_fetch_url_invalid_url():
