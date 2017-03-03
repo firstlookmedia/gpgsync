@@ -204,7 +204,7 @@ class GnuPG(object):
 
         fp = common.clean_fp(fp)
 
-        out, err = self._gpg(['--keyid-format', '0xlong', '--list-keys'], fp)
+        out, err = self._gpg(['--keyid-format', '0xlong', '--list-keys', fp])
         if b'gpg: error reading key: No public key' in err:
             raise NotFoundInKeyring
 
