@@ -13,7 +13,7 @@ def test_gpg_is_available():
 def test_gpg_recv_key():
     gpg = GnuPG()
     gpg.recv_key(b'hkp://keys.gnupg.net', test_key_fp, False, None, None)
-    assert gpg.get_uid(test_key_fp) == 'GPG Sync Unit Test Key'
+    assert gpg.get_uid(test_key_fp) == 'GPG Sync Unit Test Key (not secure in any way)'
 
 @raises(InvalidKeyserver)
 def test_gpg_recv_key_invalid_keyserver():
