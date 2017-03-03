@@ -10,7 +10,7 @@ def setup_qt():
         qt_app = QtWidgets.QApplication(sys.argv)
 
 # GnuPG related test helpers
-test_key_fp = b'ABCFD99FA1617E55B8CDE5ADE36FD670777947EB'
+test_key_fp = b'3B72C32B49CBB5BBDD57440E1D07D43448FB8382'
 
 def get_gpg_file(filename):
     return os.path.join(os.path.abspath('test/gpg_files'), filename)
