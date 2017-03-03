@@ -37,6 +37,8 @@ class EndpointWidget(QtWidgets.QWidget):
         # User id and keyid of signing key
         self.uid_label = QtWidgets.QLabel()
         self.uid_label.setStyleSheet("QLabel { font-weight: bold; }")
+        if self.e.uid_label:
+            self.uid_label.setText(self.e.uid_label.decode())
         self.keyid_label = QtWidgets.QLabel()
         self.keyid_label.setStyleSheet("QLabel { font-style: italic; color: #333333; }")
 

@@ -43,6 +43,7 @@ class Endpoint(object):
     def __init__(self):
         self.verified = False
         self.fingerprint = b''
+        self.uid_label = b''
         self.url = b''
         self.sig_url = b'https://.sig'
         self.keyserver = b'hkps://hkps.pool.sks-keyservers.net'
@@ -60,6 +61,11 @@ class Endpoint(object):
     """
     def load(self, e):
         self.verified = e['verified']
+        if 'uid_label' in e:
+            try:
+                self.uid_label = str.encode(e['uid_label'])
+            except:
+                self.uid_label = b''
         self.fingerprint = str.encode(e['fingerprint'])
         self.url = str.encode(e['url'])
         self.sig_url = str.encode(e['sig_url'])
@@ -87,6 +93,9 @@ class Endpoint(object):
                 tmp[k] = v
 
         return tmp
+
+    def set_uid_label(self, label):
+        self.uid_label = label
 
     def fetch_public_key(self, gpg):
         # Retreive the signing key from the keyserver
@@ -330,7 +339,10 @@ class Refresher(QtCore.QThread):
         success = False
         reset_last_checked = True
         try:
-            self.q.add_message('Fetching public key {} {}'.format(common.fp_to_keyid(self.e.fingerprint).decode(), self.gpg.get_uid(self.e.fingerprint)))
+            uid = self.gpg.get_uid(self.e.fingerprint)
+            self.q.add_message('Fetching public key {} {}'.format(common.fp_to_keyid(self.e.fingerprint).decode(), uid))
+
+            self.e.set_uid_label(uid)
             self.e.fetch_public_key(self.gpg)
         except InvalidFingerprint:
             err = 'Invalid signing key fingerprint'
