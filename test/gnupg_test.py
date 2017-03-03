@@ -97,3 +97,15 @@ def test_gpg_verify_wrong_key():
     msg = open(get_gpg_file('signed_message-valid.txt'), 'rb').read()
     msg_sig = open(get_gpg_file('signed_message-valid.txt.sig'), 'rb').read()
     gpg.verify(msg_sig, msg, b'D86B4D4BB5DFDD378B58D4D3F121AC6230396C33')
+
+def test_gpg_list_all_keyids():
+    gpg = GnuPG()
+
+    import_key('gpgsync_test_pubkey.asc', gpg.homedir)
+    key1_fp = common.clean_fp(b'3B72C32B49CBB5BBDD57440E1D07D43448FB8382')
+
+    import_key('pgpsync_multiple_uids.asc', gpg.homedir)
+    key2_fp = common.clean_fp(b'D86B4D4BB5DFDD378B58D4D3F121AC6230396C33')
+
+    assert gpg.list_all_keyids(key1_fp) == [b'0x1D07D43448FB8382', b'0x1ED9906D2F8FC45D']
+    assert gpg.list_all_keyids(key2_fp) == [b'0xF121AC6230396C33', b'0x06D001C585800EF4']
