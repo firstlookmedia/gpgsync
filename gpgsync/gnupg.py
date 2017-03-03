@@ -63,13 +63,13 @@ class GnuPG(object):
         self.system = platform.system()
         self.creationflags = 0
         if self.system == 'Darwin':
-            self.gpg_path = '/usr/local/bin/gpg'
+            self.gpg_path = shutil.which('gpg')
         elif self.system == 'Linux':
-            self.gpg_path = '/usr/bin/gpg2'
+            self.gpg_path = shutil.which('gpg2')
         elif self.system == 'Windows':
             import win32process
             self.creationflags = win32process.CREATE_NO_WINDOW
-            self.gpg_path = '{0}\GNU\GnuPG\gpg2.exe'.format(os.environ['ProgramFiles(x86)'])
+            self.gpg_path = shutil.which('gpg2')
 
         # Remember uids that have already been queried
         self.uids = dict()
