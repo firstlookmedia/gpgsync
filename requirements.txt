@@ -8,6 +8,3 @@ PyInstaller==3.2.1
 PySocks==1.5.7
 requests==2.10.0
 six==1.10.0
-PyQT5
-packaging
-python-dateutil
