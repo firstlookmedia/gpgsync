@@ -250,6 +250,7 @@ class GPGSync(QtWidgets.QMainWindow):
     def edit_endpoint_save(self, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port):
         # Save the settings
         self.settings.endpoints[self.current_endpoint].verified = True
+        self.settings.endpoints[self.current_endpoint].uid_label = self.gpg.get_uid(fingerprint)
         self.settings.endpoints[self.current_endpoint].fingerprint = fingerprint
         self.settings.endpoints[self.current_endpoint].url = url
         self.settings.endpoints[self.current_endpoint].sig_url = url + b'.sig'
