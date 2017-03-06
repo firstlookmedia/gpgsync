@@ -94,6 +94,9 @@ class Endpoint(object):
 
         return tmp
 
+    def set_uid_label(self, label):
+        self.uid_label = label
+
     def fetch_public_key(self, gpg):
         # Retreive the signing key from the keyserver
         gpg.recv_key(self.keyserver, self.fingerprint, self.use_proxy, self.proxy_host, self.proxy_port)
