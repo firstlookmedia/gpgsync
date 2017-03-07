@@ -169,9 +169,10 @@ class EndpointList(QtWidgets.QListWidget):
 
     def delete_endpoint(self, endpoint):
         for item in self.iter_all_items():
-            if item.endpoint == endpoint:
-                self.removeItemWidget(item)
-                self.takeItem(self.row(item))
+            if item:
+                if item.endpoint == endpoint:
+                    self.removeItemWidget(item)
+                    self.takeItem(self.row(item))
 
 class EndpointSelection(QtWidgets.QVBoxLayout):
     add_endpoint_signal = QtCore.pyqtSignal()
