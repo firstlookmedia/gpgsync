@@ -7,5 +7,3 @@ PyInstaller==3.3.dev0+d25657e
 PySocks==1.5.7
 requests==2.10.0
 six==1.10.0
-
-
