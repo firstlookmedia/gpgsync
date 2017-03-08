@@ -23,6 +23,7 @@ def test_fetch_url_valid_url_invalid_proxy():
     e.proxy_port = b'9988'
     e.fetch_url('https://raw.githubusercontent.com/firstlookmedia/gpgsync/master/fingerprints/fingerprints.txt')
 
+@unittest.expectedFailure
 def test_fetch_url_valid_url_valid_proxy():
     # Assuming you have a system Tor installed listening on 127.0.0.1:9050
     e = Endpoint()
