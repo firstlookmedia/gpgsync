@@ -3,7 +3,8 @@ cryptography==1.4
 idna==2.1
 pyasn1==0.1.9
 pycparser==2.14
-PyInstaller==3.3.dev0+d25657e
+# PyInstaller==3.3.dev0+d25657e
+PyInstaller==3.2.1
 PySocks==1.5.7
 requests==2.10.0
 six==1.10.0
