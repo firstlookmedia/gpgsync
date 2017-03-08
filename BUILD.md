@@ -43,15 +43,7 @@ Now you should have `dist/GPG Sync.pkg`.
 Install dependencies:
 
 ```sh
-sudo apt install -y \
-    gnupg2 \
-    python3-dateutil \
-    python3-nose \
-    python3-pyqt5 \
-    python3-requests \
-    python3-socks \
-    python3-stdeb \
-    python3-packaging
+sudo apt install -y python3-pyqt5 python3-nose python3-stdeb python3-requests python3-socks python3-packaging python3-dateutil gnupg2
 ```
 
 Make and install a .deb:
