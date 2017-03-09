@@ -5,7 +5,7 @@ machine:
 
 dependencies:
   pre:
-    - sudo apt-get update ; sudo apt-get install gnupg2
+    - sudo apt-get update ; sudo apt-get install gnupg2 python3-pyqt5 tor
   override:
     - pip install -r ./install/requirements-circleci.txt
 
