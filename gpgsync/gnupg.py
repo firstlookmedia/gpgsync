@@ -129,7 +129,15 @@ class GnuPG(object):
         # Import key into default homedir
         self.import_to_default_homedir(fp)
 
+    def get_pubkey_filename_on_disk(self, fp):
+        fp = common.clean_fp(fp)
+        filename = fp.decode() + '.asc'
+        return os.path.join(self.appdata_path, filename)
+
     def export_pubkey_to_disk(self, fp):
+        fp = common.clean_fp(fp)
+        filename = self.get_pubkey_filename_on_disk(fp)
+
         if self.debug:
             print("[GnuPG] export_pubkey_to_disk: fp={}".format(fp))
 
@@ -138,9 +146,17 @@ class GnuPG(object):
                 print("appdata_path not set, skipping")
             return
 
-        # todo: implement
+        # Export public key from the temporary homedir
+        out,err = self._gpg(['--armor', '--export', fp])
+        pubkey = out
+
+        # Save to disk
+        open(filename, 'w').write(filename)
 
     def import_pubkey_from_disk(self, fp):
+        fp = common.clean_fp(fp)
+        filename = self.get_pubkey_filename_on_disk(fp)
+
         if self.debug:
             print("[GnuPG] import_pubkey_from_disk: fp={}".format(fp))
 
@@ -149,9 +165,17 @@ class GnuPG(object):
                 print("appdata_path not set, skipping")
             return
 
-        # todo: implement
+        # Import key
+        try:
+            out,err = self._gpg(['--import', filename])
+        except:
+            # If the key doesn't exist, ignore
+            pass
 
     def delete_pubkey_from_disk(self, fp):
+        fp = common.clean_fp(fp)
+        filename = self.get_pubkey_filename_on_disk(fp)
+
         if self.debug:
             print("[GnuPG] delete_pubkey_from_disk: fp={}".format(fp))
 
@@ -160,7 +184,8 @@ class GnuPG(object):
                 print("appdata_path not set, skipping")
             return
 
-        # todo: implement
+        # Delete the public key from disk
+        os.remove(filename)
 
     def test_key(self, fp):
         if self.debug:

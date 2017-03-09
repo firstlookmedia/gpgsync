@@ -116,19 +116,18 @@ def test_gpg_export_pubkey_to_disk():
     gpg = GnuPG(appdata_path=appdata.name)
 
     fp = b'3B72C32B49CBB5BBDD57440E1D07D43448FB8382'
-    filename = fp.decode() + '.asc'
-    abs_filename = os.path.join(appdata.name, filename)
+    filename = gpg.get_pubkey_filename_on_disk(fp)
 
     # The key should be imported
     import_key('gpgsync_test_pubkey.asc', gpg.homedir)
     assert gpg.get_uid(fp) == 'GPG Sync Unit Test Key (not secure in any way)'
 
     # The file shouldn't exist yet
-    assert os.path.isfile(abs_filename) == False
+    assert os.path.isfile(filename) == False
 
     # Export the key, now it should exist
     gpg.export_pubkey_to_disk(fp)
-    assert os.path.isfile(abs_filename) == True
+    assert os.path.isfile(filename) == True
 
     appdata.cleanup()
 
@@ -137,12 +136,11 @@ def test_gpg_import_pubkey_from_disk():
     gpg = GnuPG(appdata_path=appdata.name)
 
     fp = b'3B72C32B49CBB5BBDD57440E1D07D43448FB8382'
-    filename = fp.decode() + '.asc'
-    abs_filename = os.path.join(appdata.name, filename)
+    filename = gpg.get_pubkey_filename_on_disk(fp)
 
     # Copy the pubkey into appdata_path
     pubkey = open(get_gpg_file('gpgsync_test_pubkey.asc'), 'r').read()
-    open(abs_filename, 'w').write(pubkey)
+    open(filename, 'w').write(pubkey)
 
     # The key shouldn't be imported yet
     assert gpg.get_uid(fp) == ''
@@ -158,22 +156,21 @@ def test_gpg_delete_pubkey_from_disk():
     gpg = GnuPG(appdata_path=appdata.name)
 
     fp = b'3B72C32B49CBB5BBDD57440E1D07D43448FB8382'
-    filename = fp.decode() + '.asc'
-    abs_filename = os.path.join(appdata.name, filename)
+    filename = gpg.get_pubkey_filename_on_disk(fp)
 
     # The key should be imported
     import_key('gpgsync_test_pubkey.asc', gpg.homedir)
     assert gpg.get_uid(fp) == 'GPG Sync Unit Test Key (not secure in any way)'
 
     # The file shouldn't exist yet
-    assert os.path.isfile(abs_filename) == False
+    assert os.path.isfile(filename) == False
 
     # Export the key, now it should exist
     gpg.export_pubkey_to_disk(fp)
-    assert os.path.isfile(abs_filename) == True
+    assert os.path.isfile(filename) == True
 
     # Delete it, and it shouldn't exist again
     gpg.delete_pubkey_from_disk(fp)
-    assert os.path.isfile(abs_filename) == False
+    assert os.path.isfile(filename) == False
 
     appdata.cleanup()
