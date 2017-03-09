@@ -17,12 +17,12 @@ def test_gpg_recv_key():
 
 @raises(InvalidKeyserver)
 def test_gpg_recv_key_invalid_keyserver():
-    gpg = GnuPG()
+    gpg = GnuPG(debug=True)
     gpg.recv_key(b'hkp://fakekeyserver', test_key_fp, False, None, None)
 
 @raises(NotFoundOnKeyserver)
 def test_gpg_recv_key_not_found_on_keyserver():
-    gpg = GnuPG()
+    gpg = GnuPG(debug=True)
     gpg.recv_key(b'hkp://keys.gnupg.net', b'0000000000000000000000000000000000000000', False, None, None)
 
 @raises(InvalidFingerprint)
