@@ -53,7 +53,8 @@ class SignedWithWrongKey(Exception):
     pass
 
 class GnuPG(object):
-    def __init__(self, debug=False):
+    def __init__(self, appdata_path=None, debug=False):
+        self.appdata_path = appdata_path
         self.debug = debug
 
         self.homedir = tempfile.mkdtemp()
@@ -127,6 +128,39 @@ class GnuPG(object):
 
         # Import key into default homedir
         self.import_to_default_homedir(fp)
+
+    def export_pubkey_to_disk(self, fp):
+        if self.debug:
+            print("[GnuPG] export_pubkey_to_disk: fp={}".format(fp))
+
+        if not self.appdata_path:
+            if self.debug:
+                print("appdata_path not set, skipping")
+            return
+
+        # todo: implement
+
+    def import_pubkey_from_disk(self, fp):
+        if self.debug:
+            print("[GnuPG] import_pubkey_from_disk: fp={}".format(fp))
+
+        if not self.appdata_path:
+            if self.debug:
+                print("appdata_path not set, skipping")
+            return
+
+        # todo: implement
+
+    def delete_pubkey_from_disk(self, fp):
+        if self.debug:
+            print("[GnuPG] delete_pubkey_from_disk: fp={}".format(fp))
+
+        if not self.appdata_path:
+            if self.debug:
+                print("appdata_path not set, skipping")
+            return
+
+        # todo: implement
 
     def test_key(self, fp):
         if self.debug:

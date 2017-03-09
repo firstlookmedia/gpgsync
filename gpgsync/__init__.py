@@ -55,8 +55,11 @@ class GPGSync(QtWidgets.QMainWindow):
         self.saved_update_version = self.version
         self.unconfigured_endpoint = None
 
+        # Load settings
+        self.settings = Settings()
+
         # Initialize gpg
-        self.gpg = GnuPG(debug=debug)
+        self.gpg = GnuPG(appdata_path=settings.get_appdata_path(), debug=debug)
         if not self.gpg.is_gpg_available():
             if self.system == 'Linux':
                 common.alert('GnuPG 2.x doesn\'t seem to be installed. Install your operating system\'s gnupg2 package.')
@@ -66,8 +69,7 @@ class GPGSync(QtWidgets.QMainWindow):
                 common.alert('GnuPG doesn\'t seem to be installed. Install <a href="http://gpg4win.org/">Gpg4win</a>.')
             sys.exit()
 
-        # Load settings
-        self.settings = Settings()
+        # Initialize endpoints
         self.current_endpoint = None
         try:
             for e in self.settings.endpoints:

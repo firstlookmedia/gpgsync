@@ -30,18 +30,21 @@ class Settings(object):
         system = platform.system()
         if system == 'Windows':
             appdata = os.environ['APPDATA']
-            self.settings_path = '{0}\\gpgsync'.format(appdata)
+            self.appdata_path = '{0}\\gpgsync'.format(appdata)
         elif system == 'Darwin':
-            self.settings_path = os.path.expanduser("~/Library/Application Support/GPG Sync")
+            self.appdata_path = os.path.expanduser("~/Library/Application Support/GPG Sync")
         else:
-            self.settings_path = os.path.expanduser("~/.config/gpgsync")
+            self.appdata_path = os.path.expanduser("~/.config/gpgsync")
 
         self.load()
+
+    def get_appdata_path(self):
+        return self.appdata_path
 
     def load(self):
         load_settings = False
         use_old = False
-        settings_file = os.path.join(self.settings_path, 'settings.json')
+        settings_file = os.path.join(self.appdata_path, 'settings.json')
 
         if os.path.isfile(settings_file):
             try:
@@ -142,10 +145,10 @@ class Settings(object):
 
         }
 
-        if not os.path.exists(self.settings_path):
-            os.makedirs(self.settings_path)
+        if not os.path.exists(self.appdata_path):
+            os.makedirs(self.appdata_path)
 
-        with open(os.path.join(self.settings_path, 'settings.json'), 'w') as settings_file:
+        with open(os.path.join(self.appdata_path, 'settings.json'), 'w') as settings_file:
             json.dump(self.settings, settings_file, default=common.serialize_settings, indent=4)
 
         self.configure_run_automatically()

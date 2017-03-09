@@ -109,3 +109,12 @@ def test_gpg_list_all_keyids():
 
     assert gpg.list_all_keyids(key1_fp) == [b'0x1D07D43448FB8382', b'0x1ED9906D2F8FC45D']
     assert gpg.list_all_keyids(key2_fp) == [b'0xF121AC6230396C33', b'0x06D001C585800EF4']
+
+def test_gpg_export_pubkey_to_disk():
+    pass
+
+def test_gpg_import_pubkey_from_disk():
+    pass
+
+def test_gpg_delete_pubkey_from_disk():
+    pass
