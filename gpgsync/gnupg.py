@@ -58,7 +58,7 @@ class GnuPG(object):
 
         self.homedir = tempfile.mkdtemp()
         if self.debug:
-            print('gpg homedir created: {}'.format(self.homedir))
+            print('[GnuPG] __init__: created homedir: {}'.format(self.homedir))
 
         self.system = platform.system()
         self.creationflags = 0
@@ -78,7 +78,7 @@ class GnuPG(object):
         # Delete the temporary homedir
         shutil.rmtree(self.homedir, ignore_errors=True)
         if self.debug:
-            print('gpg homedir deleted: {}'.format(self.homedir))
+            print('[GnuPG] __del__: deleted homedir: {}'.format(self.homedir))
 
     def is_gpg_available(self):
         if self.system == 'Windows':
@@ -87,6 +87,9 @@ class GnuPG(object):
             return os.path.isfile(self.gpg_path) and os.access(self.gpg_path, os.X_OK)
 
     def recv_key(self, keyserver, fp, use_proxy, proxy_host, proxy_port):
+        if self.debug:
+            print("[GnuPG] recv_key: keyserver={}, fp={}, use_proxy={}, proxy_host={}, proxy_port={}".format(keyserver, fp, use_proxy, proxy_host, proxy_port))
+
         if not common.valid_fp(fp):
             raise InvalidFingerprint(fp)
 
@@ -126,6 +129,9 @@ class GnuPG(object):
         self.import_to_default_homedir(fp)
 
     def test_key(self, fp):
+        if self.debug:
+            print("[GnuPG] test_key: fp={}".format(fp))
+
         if not common.valid_fp(fp):
             raise InvalidFingerprint(fp)
 
@@ -144,6 +150,9 @@ class GnuPG(object):
                     raise ExpiredKey(fp)
 
     def get_uid(self, fp):
+        if self.debug:
+            print("[GnuPG] get_uid: fp={}".format(fp))
+
         if not common.valid_fp(fp):
             raise InvalidFingerprint(fp)
 
@@ -163,6 +172,9 @@ class GnuPG(object):
         return ''
 
     def verify(self, msg_sig, msg, fp):
+        if self.debug:
+            print("[GnuPG] verify: (not displaying msg_sig, msg), fp={}".format(fp))
+
         if not common.valid_fp(fp):
             raise InvalidFingerprint(fp)
 
@@ -199,6 +211,9 @@ class GnuPG(object):
                 break
 
     def list_all_keyids(self, fp):
+        if self.debug:
+            print("[GnuPG] list_all_keyids: fp={}".format(fp))
+
         if not common.valid_fp(fp):
             raise InvalidFingerprint(fp)
 
@@ -211,6 +226,9 @@ class GnuPG(object):
         return re.findall(b'0x[A-F\d]{16}', out)
 
     def import_to_default_homedir(self, fp):
+        if self.debug:
+            print("[GnuPG] import_to_default_homedir: fp={}".format(fp))
+
         # Export public key from the temporary homedir
         out,err = self._gpg(['--armor', '--export', fp])
         pubkey = out
@@ -222,7 +240,6 @@ class GnuPG(object):
             (out, err) = p.communicate(pubkey)
 
             if self.debug:
-                print('importing keys into default homedir')
                 if out != '':
                     print('stdout', out)
                 if err != '':
