@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import tempfile, os
 from nose import with_setup
 from nose.tools import raises
 from gpgsync import *
@@ -111,10 +112,68 @@ def test_gpg_list_all_keyids():
     assert gpg.list_all_keyids(key2_fp) == [b'0xF121AC6230396C33', b'0x06D001C585800EF4']
 
 def test_gpg_export_pubkey_to_disk():
-    pass
+    appdata = tempfile.TemporaryDirectory()
+    gpg = GnuPG(appdata_path=appdata.name)
+
+    fp = b'3B72C32B49CBB5BBDD57440E1D07D43448FB8382'
+    filename = fp.decode() + '.asc'
+    abs_filename = os.path.join(appdata.name, filename)
+
+    # The key should be imported
+    import_key('gpgsync_test_pubkey.asc', gpg.homedir)
+    assert gpg.get_uid(fp) == 'GPG Sync Unit Test Key (not secure in any way)'
+
+    # The file shouldn't exist yet
+    assert os.path.isfile(abs_filename) == False
+
+    # Export the key, now it should exist
+    gpg.export_pubkey_to_disk(fp)
+    assert os.path.isfile(abs_filename) == True
+
+    appdata.cleanup()
 
 def test_gpg_import_pubkey_from_disk():
-    pass
+    appdata = tempfile.TemporaryDirectory()
+    gpg = GnuPG(appdata_path=appdata.name)
+
+    fp = b'3B72C32B49CBB5BBDD57440E1D07D43448FB8382'
+    filename = fp.decode() + '.asc'
+    abs_filename = os.path.join(appdata.name, filename)
+
+    # Copy the pubkey into appdata_path
+    pubkey = open(get_gpg_file('gpgsync_test_pubkey.asc'), 'r').read()
+    open(abs_filename, 'w').write(pubkey)
+
+    # The key shouldn't be imported yet
+    assert gpg.get_uid(fp) == ''
+
+    # Import the key, and now it should be there
+    gpg.import_pubkey_from_disk(fp)
+    assert gpg.get_uid(fp) == 'GPG Sync Unit Test Key (not secure in any way)'
+
+    appdata.cleanup()
 
 def test_gpg_delete_pubkey_from_disk():
-    pass
+    appdata = tempfile.TemporaryDirectory()
+    gpg = GnuPG(appdata_path=appdata.name)
+
+    fp = b'3B72C32B49CBB5BBDD57440E1D07D43448FB8382'
+    filename = fp.decode() + '.asc'
+    abs_filename = os.path.join(appdata.name, filename)
+
+    # The key should be imported
+    import_key('gpgsync_test_pubkey.asc', gpg.homedir)
+    assert gpg.get_uid(fp) == 'GPG Sync Unit Test Key (not secure in any way)'
+
+    # The file shouldn't exist yet
+    assert os.path.isfile(abs_filename) == False
+
+    # Export the key, now it should exist
+    gpg.export_pubkey_to_disk(fp)
+    assert os.path.isfile(abs_filename) == True
+
+    # Delete it, and it shouldn't exist again
+    gpg.delete_pubkey_from_disk(fp)
+    assert os.path.isfile(abs_filename) == False
+
+    appdata.cleanup()
