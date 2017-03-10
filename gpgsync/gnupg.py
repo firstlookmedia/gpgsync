@@ -184,8 +184,15 @@ class GnuPG(object):
                 print("appdata_path not set, skipping")
             return
 
+        # Skip if the fingerprint is blank
+        if fp == b"":
+            return
+
         # Delete the public key from disk
-        os.remove(filename)
+        try:
+            os.remove(filename)
+        except:
+            pass
 
     def test_key(self, fp):
         if self.debug:
