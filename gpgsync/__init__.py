@@ -18,7 +18,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import os, sys, platform, queue, datetime, requests
+import os, sys, platform, queue, datetime, requests, time
 from packaging.version import parse
 from urllib.parse import urlparse
 from PyQt5 import QtCore, QtWidgets
@@ -55,6 +55,8 @@ class GPGSync(QtWidgets.QMainWindow):
         self.saved_update_version = self.version
         self.unconfigured_endpoint = None
 
+        self.threads = []
+
         # Load settings
         self.settings = Settings()
 
@@ -89,7 +91,7 @@ class GPGSync(QtWidgets.QMainWindow):
         if self.system != 'Linux':
             self.checking_for_updates = False
             self.systray.check_updates_now_signal.connect(self.force_check_for_updates)
-        self.systray.quit_signal.connect(self.app.quit)
+        self.systray.quit_signal.connect(self.quit)
         self.systray.show_settings_window_signal.connect(self.open_settings_window)
         self.systray.clicked_applet_signal.connect(self.clicked_applet)
 
@@ -120,7 +122,7 @@ class GPGSync(QtWidgets.QMainWindow):
         self.buttons = Buttons(self.settings)
         self.buttons.sync_now_signal.connect(self.sync_all_endpoints)
         self.buttons.autoupdate_signal.connect(self.configure_autoupdate)
-        self.buttons.quit_signal.connect(self.app.quit)
+        self.buttons.quit_signal.connect(self.quit)
         self.sync_msg = None
 
         # Layout
@@ -305,8 +307,11 @@ class GPGSync(QtWidgets.QMainWindow):
 
         # Run the verifier inside a new thread
         self.verifier = Verifier(self.gpg, self.status_q, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
+        self.threads.append(self.verifier)
+        print("[GPGSync] save_endpoint, adding Verifier thread ({} threads right now)".format(len(self.threads)))
         self.verifier.alert_error.connect(self.edit_endpoint_alert_error)
         self.verifier.success.connect(self.edit_endpoint_save)
+        self.verifier.finished.connect(self.clean_threads)
         self.verifier.start()
 
     def delete_endpoint(self):
@@ -339,6 +344,8 @@ class GPGSync(QtWidgets.QMainWindow):
             self.edit_endpoint_wrapper.show()
 
     def refresher_finished(self):
+        self.clean_threads()
+
         if len(self.waiting_refreshers) > 0:
             r = self.waiting_refreshers.pop()
             self.active_refreshers.append(r)
@@ -378,6 +385,21 @@ class GPGSync(QtWidgets.QMainWindow):
         self.endpoint_selection.reload_endpoint(e)
         self.settings.save()
 
+    def clean_threads(self):
+        if self.debug:
+            print("[GPGSync] clean_threads ({} threads right now)".format(len(self.threads)))
+
+        # Remove all threads from self.threads that are finished
+        done_removing = False
+        while not done_removing:
+            for t in self.threads:
+                if t.isFinished():
+                    self.threads.remove(t)
+                    if self.debug:
+                        print("[GPGSync] removing a thread".format(len(self.threads)))
+                    break
+            done_removing = True
+
     def sync_all_endpoints(self, force=False):
         # Skip if a sync is currently in progress
         if self.currently_syncing:
@@ -392,6 +414,8 @@ class GPGSync(QtWidgets.QMainWindow):
         for e in self.settings.endpoints:
             if e.verified:
                 refresher = Refresher(self.gpg, self.settings.update_interval_hours, self.status_q, e, force)
+                self.threads.append(refresher)
+                print("[GPGSync] sync_all_endpoints, adding Refresher thread ({} threads right now)".format(len(self.threads)))
                 refresher.finished.connect(self.refresher_finished)
                 refresher.success.connect(self.refresher_success)
                 refresher.error.connect(self.refresher_error)
@@ -504,6 +528,20 @@ class GPGSync(QtWidgets.QMainWindow):
     def configure_autoupdate(self, state):
         if state:
             self.force_check_for_updates()
+
+    def quit(self):
+        if self.debug:
+            print("[GPGSync] quit ({} threads)".format(len(self.threads)))
+
+        # Tell all the threads to quit
+        for t in self.threads:
+            if self.debug:
+                print("[GPGSync] terminating thread {}".format(type(t)))
+
+            t.terminate()
+            t.wait()
+
+        self.app.quit()
 
 def main():
     # https://stackoverflow.com/questions/15157502/requests-library-missing-file-after-cx-freeze
