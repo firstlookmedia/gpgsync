@@ -306,7 +306,7 @@ class GPGSync(QtWidgets.QMainWindow):
         self.toggle_input(False)
 
         # Run the verifier inside a new thread
-        self.verifier = Verifier(self.gpg, self.status_q, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
+        self.verifier = Verifier(self.debug, self.gpg, self.status_q, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
         self.threads.append(self.verifier)
         print("[GPGSync] save_endpoint, adding Verifier thread ({} threads right now)".format(len(self.threads)))
         self.verifier.alert_error.connect(self.edit_endpoint_alert_error)
@@ -413,7 +413,7 @@ class GPGSync(QtWidgets.QMainWindow):
         self.active_refreshers = []
         for e in self.settings.endpoints:
             if e.verified:
-                refresher = Refresher(self.gpg, self.settings.update_interval_hours, self.status_q, e, force)
+                refresher = Refresher(self.debug, self.gpg, self.settings.update_interval_hours, self.status_q, e, force)
                 self.threads.append(refresher)
                 print("[GPGSync] sync_all_endpoints, adding Refresher thread ({} threads right now)".format(len(self.threads)))
                 refresher.finished.connect(self.refresher_finished)
