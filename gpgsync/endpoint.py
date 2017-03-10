@@ -39,8 +39,12 @@ class InvalidFingerprints(Exception):
     def __str__(self):
         return str([s.decode() for s in self.fingerprints])
 
-class Endpoint(object):
+class Endpoint(QtCore.QObject):
+    fetched_public_key_signal = QtCore.pyqtSignal()
+
     def __init__(self):
+        super(Endpoint, self).__init__()
+
         self.verified = False
         self.fingerprint = b''
         self.url = b''
@@ -97,6 +101,8 @@ class Endpoint(object):
 
         # Save it to disk
         gpg.export_pubkey_to_disk(self.fingerprint)
+
+        self.fetched_public_key_signal.emit()
 
     def fetch_msg_url(self):
         return self.fetch_url(self.url)

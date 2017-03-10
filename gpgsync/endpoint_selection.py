@@ -30,6 +30,8 @@ class EndpointWidget(QtWidgets.QWidget):
         self.e = endpoint
         self.gpg = gpg
 
+        self.uid = ""
+
         # If the endpoint isn't configured yet
         self.not_configured_label = QtWidgets.QLabel('Not configured')
         self.not_configured_label.setStyleSheet("QLabel { color: #CC0000; }")
@@ -60,7 +62,16 @@ class EndpointWidget(QtWidgets.QWidget):
         layout.addWidget(self.error_label)
         self.setLayout(layout)
 
+        if common.valid_fp(self.e.fingerprint):
+            self.refresh_signing_key_label()
         self.update()
+
+    def refresh_signing_key_label(self):
+        # User id and keyid of signing key
+        uid = self.gpg.get_uid(self.e.fingerprint)
+        self.uid_label.setText(uid)
+        keyid = common.fp_to_keyid(self.e.fingerprint).decode()
+        self.keyid_label.setText(keyid)
 
     def update(self):
         # If the endpoint isn't configured yet
@@ -79,12 +90,6 @@ class EndpointWidget(QtWidgets.QWidget):
         self.uid_label.show()
         self.keyid_label.show()
         self.last_checked_label.show()
-
-        # User id and keyid of signing key
-        uid = self.gpg.get_uid(self.e.fingerprint)
-        self.uid_label.setText(uid)
-        keyid = common.fp_to_keyid(self.e.fingerprint).decode()
-        self.keyid_label.setText(keyid)
 
         # Last updated
         if self.e.last_checked:
@@ -148,8 +153,14 @@ class EndpointList(QtWidgets.QListWidget):
     def add_endpoint(self, e):
         item = QtWidgets.QListWidgetItem()
         item.endpoint = e
+        widget = EndpointWidget(item, e, self.gpg)
+
+        # Whenever the endpoint finishes fetching the signing key from the keyserver,
+        # refresh the signing key label
+        e.fetched_public_key_signal.connect(widget.refresh_signing_key_label)
+
         self.addItem(item)
-        self.setItemWidget(item, EndpointWidget(item, e, self.gpg))
+        self.setItemWidget(item, widget)
 
     def load_endpoints(self, endpoints):
         self.clear()
