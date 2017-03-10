@@ -166,6 +166,7 @@ class EndpointList(QtWidgets.QListWidget):
             self.itemWidget(item).update()
 
     def delete_endpoint(self, endpoint):
+        self.gpg.delete_pubkey_from_disk(endpoint.fingerprint)
         for item in self.iter_all_items():
             if item.endpoint == endpoint:
                 self.removeItemWidget(item)

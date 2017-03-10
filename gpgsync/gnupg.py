@@ -151,7 +151,7 @@ class GnuPG(object):
         pubkey = out
 
         # Save to disk
-        open(filename, 'w').write(filename)
+        open(filename, 'w').write(pubkey.decode())
 
     def import_pubkey_from_disk(self, fp):
         fp = common.clean_fp(fp)

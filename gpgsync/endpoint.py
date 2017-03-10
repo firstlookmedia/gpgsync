@@ -95,6 +95,9 @@ class Endpoint(object):
         # Test the key for issues
         gpg.test_key(self.fingerprint)
 
+        # Save it to disk
+        gpg.export_pubkey_to_disk(self.fingerprint)
+
     def fetch_msg_url(self):
         return self.fetch_url(self.url)
 

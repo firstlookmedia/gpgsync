@@ -59,7 +59,7 @@ class GPGSync(QtWidgets.QMainWindow):
         self.settings = Settings()
 
         # Initialize gpg
-        self.gpg = GnuPG(appdata_path=settings.get_appdata_path(), debug=debug)
+        self.gpg = GnuPG(appdata_path=self.settings.get_appdata_path(), debug=debug)
         if not self.gpg.is_gpg_available():
             if self.system == 'Linux':
                 common.alert('GnuPG 2.x doesn\'t seem to be installed. Install your operating system\'s gnupg2 package.')
@@ -74,7 +74,7 @@ class GPGSync(QtWidgets.QMainWindow):
         try:
             for e in self.settings.endpoints:
                 if e.verified:
-                    e.fetch_public_key(self.gpg)
+                    self.gpg.import_pubkey_from_disk(e.fingerprint)
                 else:
                     self.unconfigured_endpoint = e
         except:
