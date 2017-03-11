@@ -12,7 +12,7 @@ pyinstaller install/pyinstaller-osx.spec --clean
 
 if [ "$1" = "--release" ]; then
   mkdir -p dist
-  APP_PATH="build/GPG Sync.app"
+  APP_PATH="dist/GPG Sync.app"
   PKG_PATH="dist/GPGSync.pkg"
   IDENTITY_NAME_APPLICATION="Developer ID Application: FIRST LOOK PRODUCTIONS, INC."
   IDENTITY_NAME_INSTALLER="Developer ID Installer: FIRST LOOK PRODUCTIONS, INC."
