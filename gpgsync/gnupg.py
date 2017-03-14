@@ -64,7 +64,8 @@ class GnuPG(object):
         self.system = platform.system()
         self.creationflags = 0
         if self.system == 'Darwin':
-            self.gpg_path = shutil.which('gpg')
+            os.environ['PATH'] = '/bin:/usr/bin:/usr/local/bin'
+            self.gpg_path = shutil.which('gpg_nope_fake')
         elif self.system == 'Linux':
             self.gpg_path = shutil.which('gpg2')
         elif self.system == 'Windows':
@@ -85,7 +86,10 @@ class GnuPG(object):
         if self.system == 'Windows':
             return os.path.isfile(self.gpg_path)
         else:
-            return os.path.isfile(self.gpg_path) and os.access(self.gpg_path, os.X_OK)
+            try:
+                return os.path.isfile(self.gpg_path) and os.access(self.gpg_path, os.X_OK)
+            except:
+                return False
 
     def recv_key(self, keyserver, fp, use_proxy, proxy_host, proxy_port):
         if self.debug:
