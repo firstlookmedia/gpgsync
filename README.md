@@ -1,4 +1,4 @@
-![GPG Sync](/logo/logo.png)
+![GPG Sync](./logo/logo.png)
 
 # GPG Sync
 
@@ -8,8 +8,20 @@ If you're part of an organization that uses GPG internally you might notice that
 
 GPG Sync solves this problem by offloading the complexity of GPG to a single trusted person in your organization (referred to here as the "techie"). As a member of an organization, you install GPG Sync on your computer, configure it with a few settings that the techie gives you, and then you forget about it. GPG Sync takes care of everything else.
 
-**To learn how GPG Sync works and how to use it, check out the [Wiki](https://github.com/firstlookmedia/gpgsync/wiki).**
+## Learn More
 
-**Download Mac OS X binaries from the [Releases](https://github.com/firstlookmedia/gpgsync/releases) page. For now, Linux users should follow these [simple instructions](https://github.com/firstlookmedia/gpgsync/blob/master/BUILD.md#linux-distributions) to build GPG Sync from source.**
+To learn how GPG Sync works and how to use it, check out the [Wiki](https://github.com/firstlookmedia/gpgsync/wiki).
 
-![Screenshot](/logo/screenshot.png)
+## Getting GPG Sync
+
+Download Mac OS X binaries from the [Releases](https://github.com/firstlookmedia/gpgsync/releases) page.
+
+Linux users should follow these [simple instructions](https://github.com/firstlookmedia/gpgsync/blob/master/BUILD.md#linux-distributions) to build GPG Sync from source.
+
+A Windows port is being tracked here: [Issue #79](https://github.com/firstlookmedia/gpgsync/issues/79)
+
+## Test Status
+
+[![CircleCI](https://circleci.com/gh/firstlookmedia/gpgsync.svg?style=shield&circle-token=8c35e705699711e0aff4934b4adef5b9e02e738d)](https://circleci.com/gh/firstlookmedia/gpgsync)
+
+![Screenshot](./logo/screenshot.png)
