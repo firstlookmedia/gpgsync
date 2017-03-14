@@ -65,7 +65,7 @@ class GnuPG(object):
         self.creationflags = 0
         if self.system == 'Darwin':
             os.environ['PATH'] = '/bin:/usr/bin:/usr/local/bin'
-            self.gpg_path = shutil.which('gpg_nope_fake')
+            self.gpg_path = shutil.which('gpg')
         elif self.system == 'Linux':
             self.gpg_path = shutil.which('gpg2')
         elif self.system == 'Windows':
