@@ -58,8 +58,7 @@ class GnuPG(object):
         self.debug = debug
 
         self.homedir = tempfile.mkdtemp()
-        if self.debug:
-            print('[GnuPG] __init__: created homedir: {}'.format(self.homedir))
+        self.log('[GnuPG] __init__: created homedir: {}'.format(self.homedir))
 
         self.system = platform.system()
         self.creationflags = 0
@@ -76,11 +75,14 @@ class GnuPG(object):
         # Remember uids that have already been queried
         self.uids = dict()
 
+    def log(self, msg):
+        if self.debug:
+            print("[GnuPG] {}".format(msg))
+
     def __del__(self):
         # Delete the temporary homedir
         shutil.rmtree(self.homedir, ignore_errors=True)
-        if self.debug:
-            print('[GnuPG] __del__: deleted homedir: {}'.format(self.homedir))
+        self.log('[GnuPG] __del__: deleted homedir: {}'.format(self.homedir))
 
     def is_gpg_available(self):
         if self.system == 'Windows':
@@ -92,8 +94,7 @@ class GnuPG(object):
                 return False
 
     def recv_key(self, keyserver, fp, use_proxy, proxy_host, proxy_port):
-        if self.debug:
-            print("[GnuPG] recv_key: keyserver={}, fp={}, use_proxy={}, proxy_host={}, proxy_port={}".format(keyserver, fp, use_proxy, proxy_host, proxy_port))
+        self.log("recv_key: keyserver={}, fp={}, use_proxy={}, proxy_host={}, proxy_port={}".format(keyserver, fp, use_proxy, proxy_host, proxy_port))
 
         if not common.valid_fp(fp):
             raise InvalidFingerprint(fp)
@@ -142,12 +143,10 @@ class GnuPG(object):
         fp = common.clean_fp(fp)
         filename = self.get_pubkey_filename_on_disk(fp)
 
-        if self.debug:
-            print("[GnuPG] export_pubkey_to_disk: fp={}".format(fp))
+        self.log("export_pubkey_to_disk: fp={}".format(fp))
 
         if not self.appdata_path:
-            if self.debug:
-                print("appdata_path not set, skipping")
+            self.log("export_pubkey_to_disk: appdata_path not set, skipping")
             return
 
         # Export public key from the temporary homedir
@@ -161,12 +160,10 @@ class GnuPG(object):
         fp = common.clean_fp(fp)
         filename = self.get_pubkey_filename_on_disk(fp)
 
-        if self.debug:
-            print("[GnuPG] import_pubkey_from_disk: fp={}".format(fp))
+        self.log("import_pubkey_from_disk: fp={}".format(fp))
 
         if not self.appdata_path:
-            if self.debug:
-                print("appdata_path not set, skipping")
+            self.log("import_pubkey_from_disk: appdata_path not set, skipping")
             return
 
         # Import key
@@ -180,12 +177,10 @@ class GnuPG(object):
         fp = common.clean_fp(fp)
         filename = self.get_pubkey_filename_on_disk(fp)
 
-        if self.debug:
-            print("[GnuPG] delete_pubkey_from_disk: fp={}".format(fp))
+        self.log("delete_pubkey_from_disk: fp={}".format(fp))
 
         if not self.appdata_path:
-            if self.debug:
-                print("appdata_path not set, skipping")
+            self.log("delete_pubkey_from_disk: appdata_path not set, skipping")
             return
 
         # Skip if the fingerprint is blank
@@ -199,8 +194,7 @@ class GnuPG(object):
             pass
 
     def test_key(self, fp):
-        if self.debug:
-            print("[GnuPG] test_key: fp={}".format(fp))
+        self.log("test_key: fp={}".format(fp))
 
         if not common.valid_fp(fp):
             raise InvalidFingerprint(fp)
@@ -220,8 +214,7 @@ class GnuPG(object):
                     raise ExpiredKey(fp)
 
     def get_uid(self, fp):
-        if self.debug:
-            print("[GnuPG] get_uid: fp={}".format(fp))
+        self.log("get_uid: fp={}".format(fp))
 
         if not common.valid_fp(fp):
             raise InvalidFingerprint(fp)
@@ -242,8 +235,7 @@ class GnuPG(object):
         return ''
 
     def verify(self, msg_sig, msg, fp):
-        if self.debug:
-            print("[GnuPG] verify: (not displaying msg_sig, msg), fp={}".format(fp))
+        self.log("verify: (not displaying msg_sig, msg), fp={}".format(fp))
 
         if not common.valid_fp(fp):
             raise InvalidFingerprint(fp)
@@ -281,8 +273,7 @@ class GnuPG(object):
                 break
 
     def list_all_keyids(self, fp):
-        if self.debug:
-            print("[GnuPG] list_all_keyids: fp={}".format(fp))
+        self.log("list_all_keyids: fp={}".format(fp))
 
         if not common.valid_fp(fp):
             raise InvalidFingerprint(fp)
@@ -296,8 +287,7 @@ class GnuPG(object):
         return re.findall(b'0x[A-F\d]{16}', out)
 
     def import_to_default_homedir(self, fp):
-        if self.debug:
-            print("[GnuPG] import_to_default_homedir: fp={}".format(fp))
+        self.log("import_to_default_homedir: fp={}".format(fp))
 
         # Export public key from the temporary homedir
         out,err = self._gpg(['--armor', '--export', fp])
@@ -309,25 +299,22 @@ class GnuPG(object):
                 stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
             (out, err) = p.communicate(pubkey)
 
-            if self.debug:
-                if out != '':
-                    print('stdout', out)
-                if err != '':
-                    print('stderr', err)
+            if out != '':
+                self.log('import_to_default_homedir: stdout', out)
+            if err != '':
+                self.log('import_to_default_homedir: stderr', err)
 
     def _gpg(self, args, input=None):
         default_args = [self.gpg_path, '--batch', '--no-tty', '--homedir', self.homedir]
 
-        if self.debug:
-            print('gpg args', default_args + args)
+        self.log('_gpg: args: {}'.format(default_args + args))
 
         p = subprocess.Popen(default_args + args,
             stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         (out, err) = p.communicate(input)
 
-        if self.debug:
-            if out != '':
-                print('stdout', out)
-            if err != '':
-                print('stderr', err)
+        if out != '':
+            self.log('_gpg: stdout', out)
+        if err != '':
+            self.log('_gpg: tderr', err)
         return out, err

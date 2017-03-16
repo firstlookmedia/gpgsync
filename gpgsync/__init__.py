@@ -167,6 +167,10 @@ class GPGSync(QtWidgets.QMainWindow):
         self.first_state_change_ignored = False
         self.app.applicationStateChanged.connect(self.application_state_change)
 
+    def log(self, msg):
+        if self.debug:
+            print("[GPGSync] {}".format(msg))
+
     def run_interval_tasks(self):
         self.sync_all_endpoints(False)
 
@@ -308,7 +312,7 @@ class GPGSync(QtWidgets.QMainWindow):
         # Run the verifier inside a new thread
         self.verifier = Verifier(self.debug, self.gpg, self.status_q, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
         self.threads.append(self.verifier)
-        print("[GPGSync] save_endpoint, adding Verifier thread ({} threads right now)".format(len(self.threads)))
+        self.log("save_endpoint, adding Verifier thread ({} threads right now)".format(len(self.threads)))
         self.verifier.alert_error.connect(self.edit_endpoint_alert_error)
         self.verifier.success.connect(self.edit_endpoint_save)
         self.verifier.finished.connect(self.clean_threads)
@@ -386,8 +390,7 @@ class GPGSync(QtWidgets.QMainWindow):
         self.settings.save()
 
     def clean_threads(self):
-        if self.debug:
-            print("[GPGSync] clean_threads ({} threads right now)".format(len(self.threads)))
+        self.log("clean_threads ({} threads right now)".format(len(self.threads)))
 
         # Remove all threads from self.threads that are finished
         done_removing = False
@@ -395,8 +398,7 @@ class GPGSync(QtWidgets.QMainWindow):
             for t in self.threads:
                 if t.isFinished():
                     self.threads.remove(t)
-                    if self.debug:
-                        print("[GPGSync] removing a thread".format(len(self.threads)))
+                    self.log("removing a thread".format(len(self.threads)))
                     break
             done_removing = True
 
@@ -415,7 +417,7 @@ class GPGSync(QtWidgets.QMainWindow):
             if e.verified:
                 refresher = Refresher(self.debug, self.gpg, self.settings.update_interval_hours, self.status_q, e, force)
                 self.threads.append(refresher)
-                print("[GPGSync] sync_all_endpoints, adding Refresher thread ({} threads right now)".format(len(self.threads)))
+                self.log("sync_all_endpoints, adding Refresher thread ({} threads right now)".format(len(self.threads)))
                 refresher.finished.connect(self.refresher_finished)
                 refresher.success.connect(self.refresher_success)
                 refresher.error.connect(self.refresher_error)
@@ -530,13 +532,11 @@ class GPGSync(QtWidgets.QMainWindow):
             self.force_check_for_updates()
 
     def quit(self):
-        if self.debug:
-            print("[GPGSync] quit ({} threads)".format(len(self.threads)))
+        self.log("quit ({} threads)".format(len(self.threads)))
 
         # Tell all the threads to quit
         for t in self.threads:
-            if self.debug:
-                print("[GPGSync] terminating thread {}".format(type(t)))
+            self.log("terminating thread {}".format(type(t)))
 
             t.terminate()
             t.wait()
