@@ -122,7 +122,7 @@ class GnuPG(object):
         args = ['--recv-keys', fp]
         out,err = self._gpg(args)
 
-        if b"No keyserver available" in err or b"gpgkeys: HTTP fetch error" in out:
+        if b"No keyserver available" in err or b"gpg: keyserver communications error: General error" in err or b"gpgkeys: HTTP fetch error" in out:
             raise InvalidKeyserver(keyserver)
 
         if b"not found on keyserver" in err or b"keyserver receive failed: No data" in err or b"no valid OpenPGP data found" in err:
