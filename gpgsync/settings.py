@@ -18,15 +18,16 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import os, json, platform
+import os, json, pickle, platform
 import dateutil.parser as date_parser
 from . import common
-from . import version_migrations
 
 from .endpoint import Endpoint
 
 class Settings(object):
-    def __init__(self):
+    def __init__(self, debug):
+        self.debug = debug
+
         system = platform.system()
         if system == 'Windows':
             appdata = os.environ['APPDATA']
@@ -36,86 +37,87 @@ class Settings(object):
         else:
             self.appdata_path = os.path.expanduser("~/.config/gpgsync")
 
+        self.log("appdata_path: {}".format(self.appdata_path))
+
         self.load()
+
+    def log(self, msg):
+        if self.debug:
+            print("[Settings] {}".format(msg))
 
     def get_appdata_path(self):
         return self.appdata_path
 
     def load(self):
-        load_settings = False
-        use_old = False
+        start_new_settings = False
         settings_file = os.path.join(self.appdata_path, 'settings.json')
 
+        # If the settings file exists, load it
         if os.path.isfile(settings_file):
             try:
+                # Parse the json file
                 self.settings = json.load(open(settings_file, 'r'))
                 load_settings = True
-            except:
-                print("Error loading settings file, starting from scratch")
-        else:
-            old_settings = version_migrations.update_settings_location()
-            if old_settings:
-                use_old = True
-                load_settings = True
-                self.settings = old_settings
+                self.log("load: settings loaded from {}".format(settings_file))
 
-        if load_settings:
-            if 'endpoints' in self.settings:
-                if use_old:
-                    self.endpoints = self.settings['endpoints']
-                else:
+                # Copy json settings into self
+                if 'endpoints' in self.settings:
                     self.endpoints = [Endpoint().load(e) for e in self.settings['endpoints']]
-            else:
-                self.endpoints = []
-            if 'run_automatically' in self.settings:
-                self.run_automatically = self.settings['run_automatically']
-            else:
-                self.run_automatically = True
-            if 'run_autoupdate' in self.settings:
-                self.run_autoupdate = self.settings['run_autoupdate']
-            else:
-                self.run_autoupdate = True
-            if 'last_update_check' in self.settings:
-                try:
-                    if use_old:
-                        self.last_update_check = self.settings['last_update_check']
-                    else:
+                else:
+                    self.endpoints = []
+                if 'run_automatically' in self.settings:
+                    self.run_automatically = self.settings['run_automatically']
+                else:
+                    self.run_automatically = True
+                if 'run_autoupdate' in self.settings:
+                    self.run_autoupdate = self.settings['run_autoupdate']
+                else:
+                    self.run_autoupdate = True
+                if 'last_update_check' in self.settings:
+                    try:
                         self.last_update_check = date_parser.parse(self.settings['last_update_check'])
-                except:
+                    except:
+                        self.last_update_check = None
+                else:
                     self.last_update_check = None
-            else:
-                self.last_update_check = None
-            if 'last_update_check_err' in self.settings:
-                self.last_update_check_err = self.settings['last_update_check_err']
-            else:
-                self.last_update_check_err = False
-            if 'update_interval_hours' in self.settings:
-                if use_old:
-                    self.update_interval_hours = self.settings['update_interval_hours']
+                if 'last_update_check_err' in self.settings:
+                    self.last_update_check_err = self.settings['last_update_check_err']
                 else:
+                    self.last_update_check_err = False
+                if 'update_interval_hours' in self.settings:
                     self.update_interval_hours = str.encode(self.settings['update_interval_hours'])
-            else:
-                self.update_interval_hours = b'12'
-            if 'automatic_update_use_proxy' in self.settings:
-                self.automatic_update_use_proxy = self.settings['automatic_update_use_proxy']
-            else:
-                self.automatic_update_use_proxy = False
-            if 'automatic_update_proxy_host' in self.settings:
-                if use_old:
-                    self.automatic_update_proxy_host = self.settings['automatic_update_proxy_host']
                 else:
+                    self.update_interval_hours = b'12'
+                if 'automatic_update_use_proxy' in self.settings:
+                    self.automatic_update_use_proxy = self.settings['automatic_update_use_proxy']
+                else:
+                    self.automatic_update_use_proxy = False
+                if 'automatic_update_proxy_host' in self.settings:
                     self.automatic_update_proxy_host = str.encode(self.settings['automatic_update_proxy_host'])
-            else:
-                self.automatic_update_proxy_host = b'127.0.0.1'
-            if 'automatic_update_proxy_port' in self.settings:
-                if use_old:
-                    self.automatic_update_proxy_port = self.settings['automatic_update_proxy_port']
                 else:
+                    self.automatic_update_proxy_host = b'127.0.0.1'
+                if 'automatic_update_proxy_port' in self.settings:
                     self.automatic_update_proxy_port = str.encode(self.settings['automatic_update_proxy_port'])
-            else:
-                self.automatic_update_proxy_port = b'9050'
+                else:
+                    self.automatic_update_proxy_port = b'9050'
+
+                self.configure_run_automatically()
+
+            except:
+                self.log("load: error loading settings file, starting from scratch")
+                print("Error loading settings file, starting from scratch")
+                start_new_settings = True
+
         else:
-            # default settings
+            self.log("load: settings file doesn't exist")
+
+            # Try migrating from old settings
+            if not self.migrate_settings_010_011():
+                # Nothing to migrate, so start over
+                start_new_settings = True
+
+        # Default settings
+        if start_new_settings:
             self.endpoints = []
             self.run_automatically = True
             self.run_autoupdate = True
@@ -125,13 +127,11 @@ class Settings(object):
             self.automatic_update_use_proxy = False
             self.automatic_update_proxy_host = b'127.0.0.1'
             self.automatic_update_proxy_port = b'9050'
-
-        if use_old:
             self.save()
-
-        self.configure_run_automatically()
+            self.configure_run_automatically()
 
     def save(self):
+        self.log("save")
         self.settings = {
             'endpoints': [e.serialize() for e in self.endpoints],
             'run_automatically': self.run_automatically,
@@ -155,6 +155,8 @@ class Settings(object):
         return True
 
     def configure_run_automatically(self):
+        self.log("configure_run_automatically")
+
         if platform.system() == 'Darwin':
             share_filename = 'org.firstlook.gpgsync.plist'
             autorun_dir = os.path.expanduser("~/Library/LaunchAgents")
@@ -173,3 +175,109 @@ class Settings(object):
         else:
             if os.path.exists(autorun_filename):
                 os.remove(autorun_filename)
+
+
+    """
+    If necessary, migrate settings from 0.1.0 (in an old location and in pickle
+    format) to 0.1.1 (in a new location and in json format). Should only run
+    once per user.
+    """
+    def migrate_settings_010_011(self):
+        old_settings_path = os.path.expanduser("~/.gpgsync")
+        if os.path.isfile(old_settings_path):
+            self.log("migrate_settings_010_011: there is an old settings file, converting it to a new one")
+
+            # Open it, and modify it to use a different Endpoint object
+            # See https://github.com/firstlookmedia/gpgsync/issues/104
+            pickle_data = open(old_settings_path, 'rb').read()
+            pickle_data = pickle_data.replace(b'gpgsync.endpoint\nEndpoint\n', b'gpgsync.settings\nOldEndpoint\n')
+
+            try:
+                # Unpickle the old settings data
+                settings = pickle.loads(pickle_data)
+                self.log("migrate_settings_010_011: settings loaded from {}".format(old_settings_path))
+
+                # Copy pickle settings into self
+                if 'endpoints' in settings:
+                    self.endpoints = []
+                    for old_e in settings['endpoints']:
+                        e = Endpoint()
+                        e.verified = old_e.verified
+                        e.fingerprint = old_e.fingerprint
+                        e.url = old_e.url
+                        e.sig_url = old_e.sig_url
+                        e.keyserver = old_e.keyserver
+                        e.use_proxy = old_e.use_proxy
+                        e.proxy_host = old_e.proxy_host
+                        e.proxy_port = old_e.proxy_port
+                        e.last_checked = old_e.last_checked
+                        e.last_synced = old_e.last_synced
+                        e.last_failed = old_e.last_failed
+                        e.error = old_e.error
+                        e.warning = old_e.warning
+                        self.endpoints.append(e)
+                else:
+                    self.endpoints = []
+                if 'run_automatically' in settings:
+                    self.run_automatically = settings['run_automatically']
+                else:
+                    self.run_automatically = True
+                if 'run_autoupdate' in settings:
+                    self.run_autoupdate = settings['run_autoupdate']
+                else:
+                    self.run_autoupdate = True
+                if 'last_update_check' in settings:
+                    self.last_update_check = settings['last_update_check']
+                else:
+                    self.last_update_check = None
+                if 'last_update_check_err' in settings:
+                    self.last_update_check_err = settings['last_update_check_err']
+                else:
+                    self.last_update_check_err = False
+                if 'update_interval_hours' in settings:
+                    self.update_interval_hours = settings['update_interval_hours']
+                else:
+                    self.update_interval_hours = b'12'
+                if 'automatic_update_use_proxy' in settings:
+                    self.automatic_update_use_proxy = settings['automatic_update_use_proxy']
+                else:
+                    self.automatic_update_use_proxy = False
+                if 'automatic_update_proxy_host' in settings:
+                    self.automatic_update_proxy_host = settings['automatic_update_proxy_host']
+                else:
+                    self.automatic_update_proxy_host = b'127.0.0.1'
+                if 'automatic_update_proxy_port' in settings:
+                    self.automatic_update_proxy_port = settings['automatic_update_proxy_port']
+                else:
+                    self.automatic_update_proxy_port = b'9050'
+
+                # Save the settings into new location, and delete the old settings file
+                self.save()
+                os.remove(old_settings_path)
+                return True
+            except:
+                self.log("migrate_settings_010_011: exception thrown, just start over with settings")
+                return False
+
+        return False
+
+"""
+This object is never actually used. It's here as a hack to make opening old
+GPG Sync settings files, that are in python's pickle format, actually work.
+See more: https://github.com/firstlookmedia/gpgsync/issues/104
+"""
+class OldEndpoint(object):
+    def __init__(self):
+        self.verified = False
+        self.fingerprint = b''
+        self.url = b'https://'
+        self.sig_url = b'https://.sig'
+        self.keyserver = b'hkps://hkps.pool.sks-keyservers.net'
+        self.use_proxy = False
+        self.proxy_host = b'127.0.0.1'
+        self.proxy_port = b'9050'
+        self.last_checked = None
+        self.last_synced = None
+        self.last_failed = None
+        self.error = None
+        self.warning = None

@@ -58,7 +58,7 @@ class GPGSync(QtWidgets.QMainWindow):
         self.threads = []
 
         # Load settings
-        self.settings = Settings()
+        self.settings = Settings(self.debug)
 
         # Initialize gpg
         self.gpg = GnuPG(appdata_path=self.settings.get_appdata_path(), debug=debug)
