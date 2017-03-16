@@ -300,9 +300,9 @@ class GnuPG(object):
             (out, err) = p.communicate(pubkey)
 
             if out != '':
-                self.log('import_to_default_homedir: stdout', out)
+                self.log('import_to_default_homedir: stdout: {}'.format(out))
             if err != '':
-                self.log('import_to_default_homedir: stderr', err)
+                self.log('import_to_default_homedir: stderr: {}'.format(err))
 
     def _gpg(self, args, input=None):
         default_args = [self.gpg_path, '--batch', '--no-tty', '--homedir', self.homedir]
@@ -314,7 +314,7 @@ class GnuPG(object):
         (out, err) = p.communicate(input)
 
         if out != '':
-            self.log('_gpg: stdout', out)
+            self.log('_gpg: stdout: {})'.format(out))
         if err != '':
-            self.log('_gpg: tderr', err)
+            self.log('_gpg: stderr: {}'.format(err))
         return out, err
