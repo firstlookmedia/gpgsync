@@ -312,14 +312,30 @@ class GPGSync(QtWidgets.QMainWindow):
         self.verifier.start()
 
     def delete_endpoint(self):
-        self.edit_endpoint_wrapper.hide()
-        if self.settings.endpoints[self.current_endpoint] is self.unconfigured_endpoint:
-            self.unconfigured_endpoint = None
-            self.endpoint_selection.add_btn.setEnabled(True)
-        self.endpoint_selection.delete_endpoint(self.settings.endpoints[self.current_endpoint])
-        self.settings.endpoints.remove(self.settings.endpoints[self.current_endpoint])
-        self.current_endpoint = None
-        self.settings.save()
+        self.log("delete_endpoint, asking for confirmation")
+
+        # Ask if you really want to delete
+        d = QtWidgets.QMessageBox()
+        d.setWindowTitle('GPG Sync')
+        d.setText("Are you sure you want to delete this endpoint?")
+        d.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
+        d.setIcon(QtWidgets.QMessageBox.Warning)
+        d.exec_()
+
+        if d.standardButton(d.clickedButton()) == QtWidgets.QMessageBox.Ok:
+            self.log("delete_endpoint, user clicked Ok, deleting")
+
+            self.edit_endpoint_wrapper.hide()
+            if self.settings.endpoints[self.current_endpoint] is self.unconfigured_endpoint:
+                self.unconfigured_endpoint = None
+                self.endpoint_selection.add_btn.setEnabled(True)
+            self.endpoint_selection.delete_endpoint(self.settings.endpoints[self.current_endpoint])
+            self.settings.endpoints.remove(self.settings.endpoints[self.current_endpoint])
+            self.current_endpoint = None
+            self.settings.save()
+
+        else:
+            self.log("delete_endpoint, user clicked Cancel")
 
     def endpoint_clicked(self, item):
         try:
