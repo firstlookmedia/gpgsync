@@ -524,8 +524,8 @@ class GPGSync(QtWidgets.QMainWindow):
         if state:
             self.force_check_for_updates()
 
-    def quit(self):
-        self.log("quit ({} threads)".format(len(self.threads)))
+    def shutdown(self):
+        self.log("shutdown ({} threads)".format(len(self.threads)))
 
         # Tell all the threads to quit
         for t in self.threads:
@@ -534,4 +534,6 @@ class GPGSync(QtWidgets.QMainWindow):
             t.terminate()
             t.wait()
 
+    def quit(self):
+        self.log("quitting GPGSync")
         self.app.quit()

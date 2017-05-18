@@ -41,6 +41,11 @@ def main():
     app = Application()
     gui = GPGSync(app, debug)
 
+    # Clean up when app quits
+    def shutdown():
+        gui.shutdown()
+    app.aboutToQuit.connect(shutdown)
+
     sys.exit(app.exec_())
 
 if __name__ == '__main__':
