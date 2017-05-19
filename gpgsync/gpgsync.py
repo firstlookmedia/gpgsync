@@ -446,10 +446,10 @@ class GPGSync(QtWidgets.QMainWindow):
         # Show/hide loading graphic
         if enabled:
             self.status_bar.hide_loading()
-            self.systray.setIcon(common.icon)
+            self.systray.setIcon(common.get_systray_icon())
         else:
             self.status_bar.show_loading()
-            self.systray.setIcon(common.get_syncing_icon())
+            self.systray.setIcon(common.get_systray_syncing_icon())
 
         # Disable/enable all input
         if self.unconfigured_endpoint is not None:
@@ -468,7 +468,7 @@ class GPGSync(QtWidgets.QMainWindow):
             self.sync_msg = sync_msg
 
         if len(self.syncing_errors) > 0:
-            self.systray.setIcon(common.get_error_icon())
+            self.systray.setIcon(common.get_systray_error_icon())
 
     def check_for_updates(self, force=False):
         one_day = 60*60*24 # One day

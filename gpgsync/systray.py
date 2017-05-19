@@ -32,7 +32,7 @@ class SysTray(QtWidgets.QSystemTrayIcon):
     clicked_applet_signal = QtCore.pyqtSignal()
 
     def __init__(self, version):
-        super(SysTray, self).__init__(common.get_icon())
+        super(SysTray, self).__init__(common.get_systray_icon())
         self.show_text = 'Show GPG Sync'
         self.hide_text = 'Hide GPG Sync'
 

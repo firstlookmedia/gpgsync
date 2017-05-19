@@ -82,19 +82,35 @@ def get_icon():
         icon = QtGui.QIcon(get_resource_path('gpgsync.png'))
     return icon
 
-syncing_icon = None
-def get_syncing_icon():
-    global syncing_icon
-    if not syncing_icon:
-        syncing_icon = QtGui.QIcon(get_resource_path('syncing.png'))
-    return syncing_icon
+systray_icon = None
+def get_systray_icon():
+    global systray_icon
+    if not systray_icon:
+        if platform.system() == 'Darwin':
+            systray_icon = QtGui.QIcon(get_resource_path('gpgsync-bw.png'))
+        else:
+            systray_icon = QtGui.QIcon(get_resource_path('gpgsync.png'))
+    return systray_icon
 
-error_icon = None
-def get_error_icon():
-    global error_icon
-    if not error_icon:
-        error_icon = QtGui.QIcon(get_resource_path('error.png'))
-    return error_icon
+systray_syncing_icon = None
+def get_systray_syncing_icon():
+    global systray_syncing_icon
+    if not systray_syncing_icon:
+        if platform.system() == 'Darwin':
+            systray_syncing_icon = QtGui.QIcon(get_resource_path('syncing-bw.png'))
+        else:
+            systray_syncing_icon = QtGui.QIcon(get_resource_path('syncing.png'))
+    return systray_syncing_icon
+
+systray_error_icon = None
+def get_systray_error_icon():
+    global systray_error_icon
+    if not systray_error_icon:
+        if platform.system() == 'Darwin':
+            systray_error_icon = QtGui.QIcon(get_resource_path('error-bw.png'))
+        else:
+            systray_error_icon = QtGui.QIcon(get_resource_path('error.png'))
+    return systray_error_icon
 
 def serialize_settings(o):
     if isinstance(o, bytes):
