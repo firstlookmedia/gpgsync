@@ -157,6 +157,10 @@ class Settings(object):
     def configure_run_automatically(self):
         self.log("configure_run_automatically")
 
+        if platform.system() == 'Windows':
+            # TODO create shortcut to executable and add to startup folder
+            return
+
         if platform.system() == 'Darwin':
             share_filename = 'org.firstlook.gpgsync.plist'
             autorun_dir = os.path.expanduser("~/Library/LaunchAgents")
