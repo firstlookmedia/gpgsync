@@ -513,11 +513,11 @@ class GPGSync(QtWidgets.QMainWindow):
                     if self.saved_update_version < latest_version or force:
                         self.show_main_window()
 
-                        common.alert('A new version of GPG Sync is available.<span style="font-weight:normal;"><br><br>Current: {}<br>Latest: &nbsp;&nbsp;{}<br><br>Please download the <a href="{}">latest</a> version.</span>'.format(self.version, latest_version, release['html_url']))
+                        common.update_alert(self.version, latest_version, release['html_url'])
                         self.saved_update_version = latest_version
                 elif self.version == latest_version and force:
                     self.show_main_window()
-                    common.alert('No updates available.')
+                    common.alert('No updates available.<br><br><span style="font-weight:normal;">Version {} is the latest version.</span>'.format(latest_version))
                 self.settings.last_update_check_err = False
             elif release and 'tag_name' not in release:
                 if not self.settings.last_update_check_err or force:

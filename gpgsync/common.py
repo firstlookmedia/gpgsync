@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import datetime, os, sys, re, platform, inspect, requests, socket
 from PyQt5 import QtCore, QtWidgets, QtGui
+import webbrowser
 
 def alert(msg, details='', icon=QtWidgets.QMessageBox.Warning):
     d = QtWidgets.QMessageBox()
@@ -31,6 +32,22 @@ def alert(msg, details='', icon=QtWidgets.QMessageBox.Warning):
 
     d.setIcon(icon)
     d.exec_()
+
+def update_alert(curr_version, latest_version, url):
+    d = QtWidgets.QMessageBox()
+    d.setWindowTitle('GPG Sync')
+    d.setText('GPG Sync v{} is now available.<span style="font-weight:normal;">' \
+              '<br><br>You are currently running v{}. Click Update to' \
+              ' download the latest version </span>'.format(latest_version, curr_version))
+
+    d.addButton(QtWidgets.QPushButton('Cancel'), QtWidgets.QMessageBox.NoRole)
+    d.addButton(QtWidgets.QPushButton('Update'), QtWidgets.QMessageBox.YesRole)
+
+    d.setIconPixmap(QtGui.QPixmap(get_resource_path('gpgsync.png')))
+    res = d.exec_()
+
+    if res == 1:
+        webbrowser.open(url)
 
 def valid_fp(fp):
     return re.match(b'^[A-F\d]{40}$', clean_fp(fp))
