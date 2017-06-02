@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import datetime, os, sys, re, platform, inspect, requests, socket
 from PyQt5 import QtCore, QtWidgets, QtGui
-import webbrowser
 
 def alert(msg, details='', icon=QtWidgets.QMessageBox.Warning):
     d = QtWidgets.QMessageBox()
@@ -47,7 +46,7 @@ def update_alert(curr_version, latest_version, url):
     res = d.exec_()
 
     if res == 1:
-        webbrowser.open(url)
+        QtGui.QDesktopServices.openUrl(QtCore.QUrl(url))
 
 def valid_fp(fp):
     return re.match(b'^[A-F\d]{40}$', clean_fp(fp))
