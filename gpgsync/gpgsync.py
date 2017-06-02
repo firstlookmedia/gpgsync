@@ -471,6 +471,8 @@ class GPGSync(QtWidgets.QMainWindow):
             self.systray.setIcon(common.get_systray_error_icon())
 
     def check_for_updates(self, force=False):
+        self.log("check_for_updates, force={}".format(force))
+
         one_day = 60*60*24 # One day
         run_update = False
         if self.settings.last_update_check is None:
@@ -489,6 +491,7 @@ class GPGSync(QtWidgets.QMainWindow):
             try:
                 url = 'https://api.github.com/repos/firstlookmedia/gpgsync/releases/latest'
 
+                self.log("check_for_updates, loading {}".format(url))
                 if self.settings.automatic_update_use_proxy:
                     socks5_address = 'socks5://{}:{}'.format(self.settings.automatic_update_proxy_host.decode(), self.settings.automatic_update_proxy_port.decode())
 
@@ -503,11 +506,13 @@ class GPGSync(QtWidgets.QMainWindow):
 
                 release = r.json()
             except (requests.exceptions.RequestException, requests.exceptions.ConnectionError) as e:
+                self.log("check_for_updates, exception making http request: {}".format(e))
                 self.checking_for_updates = False
                 return
 
             if release and 'tag_name' in release:
                 latest_version = parse(release['tag_name'])
+                self.log('check_for_updates, latest version = {}'.format(latest_version))
 
                 if self.version < latest_version:
                     if self.saved_update_version < latest_version or force:
@@ -515,7 +520,7 @@ class GPGSync(QtWidgets.QMainWindow):
 
                         common.update_alert(self.version, latest_version, release['html_url'])
                         self.saved_update_version = latest_version
-                elif self.version == latest_version and force:
+                elif self.version >= latest_version and force:
                     self.show_main_window()
                     common.alert('No updates available.<br><br><span style="font-weight:normal;">Version {} is the latest version.</span>'.format(latest_version))
                 self.settings.last_update_check_err = False
