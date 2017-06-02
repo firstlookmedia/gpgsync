@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from nose import with_setup
 from nose.tools import raises
-from gpgsync import *
+from gpgsync.endpoint import *
 
 from .test_helpers import *
 

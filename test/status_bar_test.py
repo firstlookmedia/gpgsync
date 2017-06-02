@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from nose import with_setup
-from gpgsync import StatusBar, MessageQueue
+from gpgsync.status_bar import StatusBar, MessageQueue import StatusBar, MessageQueue
 
 def test_status_bar_show_loading_animation():
     status_bar = StatusBar()
