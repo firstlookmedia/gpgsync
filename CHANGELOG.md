@@ -6,6 +6,7 @@
 * Asks users to confirm before deleting endpoints
 * Made system tray icon black and white in macOS
 * Improve update alert user interface
+* Fix "Valid signature, but signed with wrong signing key" bug with newer versions of gpg2
 
 ## 0.1.1
 
