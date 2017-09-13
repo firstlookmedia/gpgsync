@@ -268,7 +268,9 @@ class GnuPG(object):
         lines = err.split(b'\n')
         for i in range(len(lines)):
             if lines[i].startswith(b'gpg: Signature made'):
-                if lines[i+1].split()[-1] not in self.list_all_keyids(fp):
+                signing_fp = lines[i+1].split()[-1]
+                signing_keyid = self.fp_to_long_keyid(fp)
+                if signing_keyid not in self.list_all_keyids(fp):
                     raise SignedWithWrongKey
                 break
 
@@ -285,6 +287,11 @@ class GnuPG(object):
             raise NotFoundInKeyring
 
         return re.findall(b'0x[A-F\d]{16}', out)
+
+    def fp_to_long_keyid(self, fp):
+        if re.match(b'0x[A-F\d]{16}', fp):
+            return fp
+        return b'0x' + fp[-16:]
 
     def import_to_default_homedir(self, fp):
         self.log("import_to_default_homedir: fp={}".format(fp))
