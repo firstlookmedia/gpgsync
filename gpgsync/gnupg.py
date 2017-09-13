@@ -269,7 +269,7 @@ class GnuPG(object):
         for i in range(len(lines)):
             if lines[i].startswith(b'gpg: Signature made'):
                 signing_fp = lines[i+1].split()[-1]
-                signing_keyid = self.fp_to_long_keyid(fp)
+                signing_keyid = self.fp_to_long_keyid(signing_fp)
                 if signing_keyid not in self.list_all_keyids(fp):
                     raise SignedWithWrongKey
                 break
