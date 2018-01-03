@@ -68,6 +68,21 @@ Make and install a .rpm:
 sudo dnf install dist/gpgsync_*.rpm
 ```
 
+## Alternatively utilize Docker to build the relevant debian/rpm
+
+There are `make` commands to build for the latest stable of debian (`stretch`)
+and fedora (`27`):
+
+```sh
+make build-fedora27-rpm
+```
+
+or
+
+```sh
+build-debianstretch-deb
+```
+
 ## Run the tests
 
 From the `gpgsync` folder run:
