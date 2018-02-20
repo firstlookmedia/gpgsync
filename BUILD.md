@@ -80,7 +80,7 @@ make build-fedora27-rpm
 or
 
 ```sh
-build-debianstretch-deb
+make build-debianstretch-deb
 ```
 
 ## Run the tests
