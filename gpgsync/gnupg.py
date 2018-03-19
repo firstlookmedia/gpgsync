@@ -69,6 +69,8 @@ class GnuPG(object):
             self.gpg_path = shutil.which('gpg2')
         elif self.system == 'Windows':
             import win32process
+            # setting the PATH like this seems just as bad as hardcoding from before
+            os.environ['PATH'] = 'C:\Program Files\GNU\GnuPG\pub;C:\Program Files (x86)\GNU\GnuPG\pub'
             self.creationflags = win32process.CREATE_NO_WINDOW
             self.gpg_path = shutil.which('gpg2')
 
@@ -86,7 +88,10 @@ class GnuPG(object):
 
     def is_gpg_available(self):
         if self.system == 'Windows':
-            return os.path.isfile(self.gpg_path)
+            try:
+                return os.path.isfile(self.gpg_path)
+            except:
+                return False
         else:
             try:
                 return os.path.isfile(self.gpg_path) and os.access(self.gpg_path, os.X_OK)
