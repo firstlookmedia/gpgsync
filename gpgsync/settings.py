@@ -18,14 +18,18 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import os, json, pickle, platform
+import os
+import json
+import pickle
+import platform
 import dateutil.parser as date_parser
-from . import common
 
 from .endpoint import Endpoint
 
+
 class Settings(object):
-    def __init__(self, debug):
+    def __init__(self, common, debug):
+        self.common = common
         self.debug = debug
 
         system = platform.system()
@@ -149,7 +153,7 @@ class Settings(object):
             os.makedirs(self.appdata_path)
 
         with open(os.path.join(self.appdata_path, 'settings.json'), 'w') as settings_file:
-            json.dump(self.settings, settings_file, default=common.serialize_settings, indent=4)
+            json.dump(self.settings, settings_file, default=self.common.serialize_settings, indent=4)
 
         self.configure_run_automatically()
         return True
@@ -170,7 +174,7 @@ class Settings(object):
         autorun_filename = os.path.join(autorun_dir, share_filename)
 
         if self.run_automatically:
-            buf = open(common.get_resource_path(share_filename)).read()
+            buf = open(self.common.get_resource_path(share_filename)).read()
             open(autorun_filename, 'w').write(buf)
         else:
             if os.path.exists(autorun_filename):

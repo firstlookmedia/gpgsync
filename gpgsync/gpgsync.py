@@ -22,46 +22,43 @@ import sys, platform, queue, datetime, requests
 from packaging.version import parse
 from PyQt5 import QtCore, QtWidgets
 
-from . import common
-
 from .gnupg import GnuPG
 from .settings import Settings
 
-from .endpoint_selection import EndpointSelection
-from .edit_endpoint import EditEndpoint
 from .endpoint import Endpoint, Verifier, Refresher, URLDownloadError, ProxyURLDownloadError, InvalidFingerprints
-from .buttons import Buttons
 from .status_bar import StatusBar, MessageQueue
 from .systray import SysTray
 from .settings_window import SettingsWindow
 
 class GPGSync(QtWidgets.QMainWindow):
-    def __init__(self, app, debug=False):
+    def __init__(self, app, common, debug=False):
         super(GPGSync, self).__init__()
         self.app = app
+        self.common = common
+
         self.debug = debug
+        self.log("__init__")
+
         self.system = platform.system()
-        self.setWindowTitle('GPG Sync')
-        self.setWindowIcon(common.get_icon())
-        version_file = common.get_resource_path('version')
-        self.version = parse(open(version_file).read().strip())
-        self.saved_update_version = self.version
         self.unconfigured_endpoint = None
 
-        self.threads = []
+        version_file = self.common.get_resource_path('version')
+        self.version = parse(open(version_file).read().strip())
+        self.saved_update_version = self.version
 
         # Load settings
-        self.settings = Settings(self.debug)
+        self.settings = Settings(self.common, self.debug)
+        self.settings_window = SettingsWindow(self.common, self.settings)
 
         # Initialize gpg
         self.gpg = GnuPG(appdata_path=self.settings.get_appdata_path(), debug=debug)
         if not self.gpg.is_gpg_available():
             if self.system == 'Linux':
-                common.alert('GnuPG 2.x doesn\'t seem to be installed. Install your operating system\'s gnupg2 package.')
+                self.common.alert('GnuPG 2.x doesn\'t seem to be installed. Install your operating system\'s gnupg2 package.')
             if self.system == 'Darwin':
-                common.alert('GnuPG doesn\'t seem to be installed. Install <a href="https://gpgtools.org/">GPGTools</a>.')
+                self.common.alert('GnuPG doesn\'t seem to be installed. Install <a href="https://gpgtools.org/">GPGTools</a>.')
             if self.system == 'Windows':
-                common.alert('GnuPG doesn\'t seem to be installed. Install <a href="http://gpg4win.org/">Gpg4win</a>.')
+                self.common.alert('GnuPG doesn\'t seem to be installed. Install <a href="http://gpg4win.org/">Gpg4win</a>.')
             sys.exit()
 
         # Initialize endpoints
@@ -75,10 +72,8 @@ class GPGSync(QtWidgets.QMainWindow):
         except:
             pass
 
-        self.settings_window = SettingsWindow(self.settings)
-
         # Initialize the system tray icon
-        self.systray = SysTray(self.version)
+        self.systray = SysTray(self.common, self.version)
         self.systray.show_signal.connect(self.toggle_show_window)
         self.systray.sync_now_signal.connect(self.sync_all_endpoints)
         if self.system != 'Linux':
@@ -88,6 +83,19 @@ class GPGSync(QtWidgets.QMainWindow):
         self.systray.show_settings_window_signal.connect(self.open_settings_window)
         self.systray.clicked_applet_signal.connect(self.clicked_applet)
 
+        # Initialize the window
+        self.setWindowTitle('GPG Sync')
+        self.setWindowIcon(self.common.icon)
+
+        # Logo
+
+        # Endpoints list
+
+        # Add button
+
+        # Layout
+
+        """
         # Endpoint selection GUI
         self.endpoint_selection = EndpointSelection(self.gpg)
         self.endpoint_selection.load_endpoints(self.settings.endpoints)
@@ -132,6 +140,7 @@ class GPGSync(QtWidgets.QMainWindow):
         # Status bar
         self.status_bar = StatusBar()
         self.setStatusBar(self.status_bar)
+        """
 
         # Check for status bar messages from other threads
         # Also, reload endpoint display
@@ -212,7 +221,13 @@ class GPGSync(QtWidgets.QMainWindow):
             self.showNormal()
             self.activateWindow()
 
+    def open_settings_window(self):
+        self.show_main_window()
+        self.settings_window.show()
+
     def update_ui(self):
+        pass
+        """
         # Print events, and update status bar
         events = []
         done = False
@@ -244,7 +259,9 @@ class GPGSync(QtWidgets.QMainWindow):
             self.buttons.update_sync_label(self.sync_msg)
         else:
             self.buttons.update_sync_label()
+        """
 
+    """
     def edit_endpoint_alert_error(self, msg, details='', icon=QtWidgets.QMessageBox.Warning):
         common.alert(msg, details, icon)
         self.toggle_input(True)
@@ -273,10 +290,6 @@ class GPGSync(QtWidgets.QMainWindow):
 
         self.sync_all_endpoints(True)
 
-    def open_settings_window(self):
-        self.show_main_window()
-        self.settings_window.show()
-
     def add_endpoint(self):
         e = Endpoint()
         self.settings.endpoints.append(e)
@@ -304,11 +317,8 @@ class GPGSync(QtWidgets.QMainWindow):
 
         # Run the verifier inside a new thread
         self.verifier = Verifier(self.debug, self.gpg, self.status_q, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
-        self.threads.append(self.verifier)
-        self.log("save_endpoint, adding Verifier thread ({} threads right now)".format(len(self.threads)))
         self.verifier.alert_error.connect(self.edit_endpoint_alert_error)
         self.verifier.success.connect(self.edit_endpoint_save)
-        self.verifier.finished.connect(self.clean_threads)
         self.verifier.start()
 
     def delete_endpoint(self):
@@ -357,8 +367,6 @@ class GPGSync(QtWidgets.QMainWindow):
             self.edit_endpoint_wrapper.show()
 
     def refresher_finished(self):
-        self.clean_threads()
-
         if len(self.waiting_refreshers) > 0:
             r = self.waiting_refreshers.pop()
             self.active_refreshers.append(r)
@@ -397,21 +405,12 @@ class GPGSync(QtWidgets.QMainWindow):
 
         self.endpoint_selection.reload_endpoint(e)
         self.settings.save()
-
-    def clean_threads(self):
-        self.log("clean_threads ({} threads right now)".format(len(self.threads)))
-
-        # Remove all threads from self.threads that are finished
-        done_removing = False
-        while not done_removing:
-            for t in self.threads:
-                if t.isFinished():
-                    self.threads.remove(t)
-                    self.log("removing a thread".format(len(self.threads)))
-                    break
-            done_removing = True
+    """
 
     def sync_all_endpoints(self, force=False):
+        pass
+
+        """
         # Skip if a sync is currently in progress
         if self.currently_syncing:
             return
@@ -425,8 +424,6 @@ class GPGSync(QtWidgets.QMainWindow):
         for e in self.settings.endpoints:
             if e.verified:
                 refresher = Refresher(self.debug, self.gpg, self.settings.update_interval_hours, self.status_q, e, force)
-                self.threads.append(refresher)
-                self.log("sync_all_endpoints, adding Refresher thread ({} threads right now)".format(len(self.threads)))
                 refresher.finished.connect(self.refresher_finished)
                 refresher.success.connect(self.refresher_success)
                 refresher.error.connect(self.refresher_error)
@@ -440,8 +437,10 @@ class GPGSync(QtWidgets.QMainWindow):
 
             sync_string = "Syncing: {} {}".format(self.gpg.get_uid(r.e.fingerprint), common.fp_to_keyid(r.e.fingerprint).decode())
             print(sync_string)
-            self.toggle_input(False, sync_string)
+            #self.toggle_input(False, sync_string)
+        """
 
+    """
     def toggle_input(self, enabled=False, sync_msg=None):
         # Show/hide loading graphic
         if enabled:
@@ -469,6 +468,7 @@ class GPGSync(QtWidgets.QMainWindow):
 
         if len(self.syncing_errors) > 0:
             self.systray.setIcon(common.get_systray_error_icon())
+    """
 
     def check_for_updates(self, force=False):
         self.log("check_for_updates, force={}".format(force))
@@ -500,9 +500,9 @@ class GPGSync(QtWidgets.QMainWindow):
                       'http': socks5_address
                     }
 
-                    r = common.requests_get(url, proxies=proxies)
+                    r = self.common.requests_get(url, proxies=proxies)
                 else:
-                    r = common.requests_get(url)
+                    r = self.common.requests_get(url)
 
                 release = r.json()
             except (requests.exceptions.RequestException, requests.exceptions.ConnectionError) as e:
@@ -518,11 +518,11 @@ class GPGSync(QtWidgets.QMainWindow):
                     if self.saved_update_version < latest_version or force:
                         self.show_main_window()
 
-                        common.update_alert(self.version, latest_version, release['html_url'])
+                        self.common.update_alert(self.version, latest_version, release['html_url'])
                         self.saved_update_version = latest_version
                 elif self.version >= latest_version and force:
                     self.show_main_window()
-                    common.alert('No updates available.<br><br><span style="font-weight:normal;">Version {} is the latest version.</span>'.format(latest_version))
+                    self.common.alert('No updates available.<br><br><span style="font-weight:normal;">Version {} is the latest version.</span>'.format(latest_version))
                 self.settings.last_update_check_err = False
             elif release and 'tag_name' not in release:
                 if not self.settings.last_update_check_err or force:
@@ -531,7 +531,7 @@ class GPGSync(QtWidgets.QMainWindow):
                     for key, val in release.items():
                         details += '{}: {}\n\n'.format(key, val)
 
-                    common.alert('Error checking for updates.', details)
+                    self.common.alert('Error checking for updates.', details)
                 self.settings.last_update_check_err = True
 
             self.settings.last_update_check = datetime.datetime.now()
@@ -546,15 +546,8 @@ class GPGSync(QtWidgets.QMainWindow):
             self.force_check_for_updates()
 
     def shutdown(self):
-        self.log("shutdown ({} threads)".format(len(self.threads)))
-
-        # Tell all the threads to quit
-        for t in self.threads:
-            self.log("terminating thread {}".format(type(t)))
-
-            t.terminate()
-            t.wait()
+        self.log("shutdown")
 
     def quit(self):
-        self.log("quitting GPGSync")
+        self.log("quit")
         self.app.quit()
