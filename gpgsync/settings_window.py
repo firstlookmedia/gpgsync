@@ -23,16 +23,14 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 
 
 class SettingsWindow(QtWidgets.QWidget):
-    def __init__(self, common, settings):
+    def __init__(self, common):
         super(SettingsWindow, self).__init__()
         self.c = common
 
         self.setWindowTitle('GPG Sync Settings')
         self.setMinimumWidth(425)
         self.setMaximumWidth(425)
-        # self.setMinimumHeight(250)
-        # self.setMaximumHeight(250)
-        self.settings = settings
+        self.settings = self.c.settings
         self.settings_layout = SettingsLayout(self.settings)
 
         layout = QtWidgets.QVBoxLayout()

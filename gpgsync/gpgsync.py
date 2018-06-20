@@ -22,9 +22,6 @@ import sys, platform, queue, datetime, requests
 from packaging.version import parse
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-from .gnupg import GnuPG
-from .settings import Settings
-
 from .endpoint import Endpoint, Verifier, Refresher, URLDownloadError, ProxyURLDownloadError, InvalidFingerprints
 from .status_bar import StatusBar, MessageQueue
 from .systray import SysTray
@@ -46,13 +43,11 @@ class GPGSync(QtWidgets.QMainWindow):
         self.version = parse(open(version_file).read().strip())
         self.saved_update_version = self.version
 
-        # Load settings
-        self.settings = Settings(self.c)
-        self.settings_window = SettingsWindow(self.c, self.settings)
+        # Settings dialog, for when it's needed
+        self.settings_window = SettingsWindow(self.c)
 
-        # Initialize gpg
-        self.gpg = GnuPG(self.c, appdata_path=self.settings.get_appdata_path())
-        if not self.gpg.is_gpg_available():
+        # Make sure gpg is available
+        if not self.c.gpg.is_gpg_available():
             if self.system == 'Linux':
                 self.c.alert('GnuPG 2.x doesn\'t seem to be installed. Install your operating system\'s gnupg2 package.')
             if self.system == 'Darwin':
@@ -64,9 +59,9 @@ class GPGSync(QtWidgets.QMainWindow):
         # Initialize endpoints
         self.current_endpoint = None
         try:
-            for e in self.settings.endpoints:
+            for e in self.c.settings.endpoints:
                 if e.verified:
-                    self.gpg.import_pubkey_from_disk(e.fingerprint)
+                    self.c.gpg.import_pubkey_from_disk(e.fingerprint)
                 else:
                     self.unconfigured_endpoint = e
         except:
@@ -133,7 +128,7 @@ class GPGSync(QtWidgets.QMainWindow):
         self.global_timer.start(60000) # 1 minute
 
         # Decide if window should start out shown or hidden
-        if len(self.settings.endpoints) == 0:
+        if len(self.c.settings.endpoints) == 0:
             self.show()
             self.systray.set_window_show(True)
         else:
@@ -147,7 +142,7 @@ class GPGSync(QtWidgets.QMainWindow):
     def run_interval_tasks(self):
         self.sync_all_endpoints(False)
 
-        if self.system != 'Linux' and self.settings.run_autoupdate:
+        if self.system != 'Linux' and self.c.settings.run_autoupdate:
             self.check_for_updates(False)
 
     def application_state_change(self, state):
@@ -198,7 +193,7 @@ class GPGSync(QtWidgets.QMainWindow):
 
     def update_ui(self):
         # Add button
-        if len(self.settings.endpoints) == 0:
+        if len(self.c.settings.endpoints) == 0:
             self.add_button.setText("Add First GPG Sync Endpoint")
             self.add_button.setStyleSheet(self.c.css['GPGSync add_button_first'])
         else:
@@ -242,7 +237,7 @@ class GPGSync(QtWidgets.QMainWindow):
 
     def add_endpoint(self):
         d = EndpointDialog(self.c)
-        res = d.exec_()
+        d.exec_()
 
     """
     def edit_endpoint_alert_error(self, msg, details='', icon=QtWidgets.QMessageBox.Warning):
@@ -418,7 +413,7 @@ class GPGSync(QtWidgets.QMainWindow):
             self.active_refreshers.append(r)
             r.start()
 
-            sync_string = "Syncing: {} {}".format(self.gpg.get_uid(r.e.fingerprint), common.fp_to_keyid(r.e.fingerprint).decode())
+            sync_string = "Syncing: {} {}".format(self.c.gpg.get_uid(r.e.fingerprint), common.fp_to_keyid(r.e.fingerprint).decode())
             print(sync_string)
             #self.toggle_input(False, sync_string)
         """
@@ -458,9 +453,9 @@ class GPGSync(QtWidgets.QMainWindow):
 
         one_day = 60*60*24 # One day
         run_update = False
-        if self.settings.last_update_check is None:
+        if self.c.settings.last_update_check is None:
             run_update = True
-        elif (datetime.datetime.now() - self.settings.last_update_check).total_seconds() >= one_day:
+        elif (datetime.datetime.now() - self.c.settings.last_update_check).total_seconds() >= one_day:
             run_update = True
         elif force:
             run_update = True
@@ -475,8 +470,8 @@ class GPGSync(QtWidgets.QMainWindow):
                 url = 'https://api.github.com/repos/firstlookmedia/gpgsync/releases/latest'
 
                 self.c.log("GPGSync", "check_for_updates", "loading {}".format(url))
-                if self.settings.automatic_update_use_proxy:
-                    socks5_address = 'socks5://{}:{}'.format(self.settings.automatic_update_proxy_host.decode(), self.settings.automatic_update_proxy_port.decode())
+                if self.c.settings.automatic_update_use_proxy:
+                    socks5_address = 'socks5://{}:{}'.format(self.c.settings.automatic_update_proxy_host.decode(), self.c.settings.automatic_update_proxy_port.decode())
 
                     proxies = {
                       'https': socks5_address,
@@ -506,19 +501,19 @@ class GPGSync(QtWidgets.QMainWindow):
                 elif self.version >= latest_version and force:
                     self.show_main_window()
                     self.c.alert('No updates available.<br><br><span style="font-weight:normal;">Version {} is the latest version.</span>'.format(latest_version))
-                self.settings.last_update_check_err = False
+                self.c.settings.last_update_check_err = False
             elif release and 'tag_name' not in release:
-                if not self.settings.last_update_check_err or force:
+                if not self.c.settings.last_update_check_err or force:
                     self.show_main_window()
                     details = ''
                     for key, val in release.items():
                         details += '{}: {}\n\n'.format(key, val)
 
                     self.c.alert('Error checking for updates.', details)
-                self.settings.last_update_check_err = True
+                self.c.settings.last_update_check_err = True
 
-            self.settings.last_update_check = datetime.datetime.now()
-            self.settings.save()
+            self.c.settings.last_update_check = datetime.datetime.now()
+            self.c.settings.save()
             self.checking_for_updates = False
 
     def force_check_for_updates(self):

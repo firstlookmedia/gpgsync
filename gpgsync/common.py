@@ -28,6 +28,9 @@ import requests
 import socket
 from PyQt5 import QtCore, QtWidgets, QtGui
 
+from .gnupg import GnuPG
+from .settings import Settings
+
 
 class Common(object):
     """
@@ -35,6 +38,12 @@ class Common(object):
     """
     def __init__(self, debug):
         self.debug = debug
+
+        # Load settings
+        self.settings = Settings(self)
+
+        # Initialize GnuPG
+        self.gpg = GnuPG(self, appdata_path=self.settings.get_appdata_path())
 
         # Preload icons
         self.icon = QtGui.QIcon(self.get_resource_path('gpgsync.png'))
