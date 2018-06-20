@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+self.c.gpg# -*- coding: utf-8 -*-
 """
 GPG Sync
 Helps users have up-to-date public keys for everyone in their organization
@@ -174,10 +174,9 @@ class Verifier(QtCore.QThread):
     alert_error = QtCore.pyqtSignal(str, str)
     success = QtCore.pyqtSignal(bytes, bytes, bytes, bool, bytes, bytes)
 
-    def __init__(self, common, gpg, q, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port):
+    def __init__(self, common, q, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port):
         super(Verifier, self).__init__()
         self.c = common
-        self.gpg = gpg
         self.q = q
         self.fingerprint = fingerprint
         self.url = url
@@ -246,7 +245,7 @@ class Verifier(QtCore.QThread):
         success = False
         try:
             self.log('run', 'Downloading {} from keyserver {}'.format(self.c.fp_to_keyid(self.fingerprint).decode(), self.keyserver.decode()))
-            e.fetch_public_key(self.gpg)
+            e.fetch_public_key(self.c.gpg)
         except InvalidFingerprint:
             self.alert_error.emit('Invalid signing key fingerprint.', '')
         except InvalidKeyserver:
@@ -282,7 +281,7 @@ class Verifier(QtCore.QThread):
         success = False
         try:
             self.log('run', 'Verifying signature')
-            e.verify_fingerprints_sig(self.gpg, msg_sig_bytes, msg_bytes)
+            e.verify_fingerprints_sig(self.c.gpg, msg_sig_bytes, msg_bytes)
         except VerificationError:
             self.alert_error.emit('Signature does not verify.', '')
         except BadSignature:
@@ -319,10 +318,9 @@ class Refresher(QtCore.QThread):
     success = QtCore.pyqtSignal(Endpoint, list, list)
     error = QtCore.pyqtSignal(Endpoint, str, bool)
 
-    def __init__(self, debug, gpg, refresh_interval, q, endpoint, force=False):
+    def __init__(self, common, refresh_interval, q, endpoint, force=False):
         super(Refresher, self).__init__()
-        self.debug = debug
-        self.gpg = gpg
+        self.c = common
         # this should be safe to cast directly to a float since it passed the input test
         self.refresh_interval = float(refresh_interval)
         self.q = q
@@ -333,9 +331,8 @@ class Refresher(QtCore.QThread):
         self.q.add_message(type='clear')
         self.error.emit(self.e, err, reset_last_checked)
 
-    def log(self, message, timeout=None):
-        if self.debug:
-            print("[Refresher] {}".format(message))
+    def log(self, func, message, timeout=None):
+        self.c.log("Refresher", func, message)
 
         if timeout:
             self.q.add_message(message, timeout=timeout)
@@ -371,8 +368,8 @@ class Refresher(QtCore.QThread):
         success = False
         reset_last_checked = True
         try:
-            self.log('Fetching public key {} {}'.format(self.c.fp_to_keyid(self.e.fingerprint).decode(), self.gpg.get_uid(self.e.fingerprint)))
-            self.e.fetch_public_key(self.gpg)
+            self.log('run', 'Fetching public key {} {}'.format(self.c.fp_to_keyid(self.e.fingerprint).decode(), self.c.gpg.get_uid(self.e.fingerprint)))
+            self.e.fetch_public_key(self.c.gpg)
         except InvalidFingerprint:
             err = 'Invalid signing key fingerprint'
         except InvalidKeyserver:
@@ -397,7 +394,7 @@ class Refresher(QtCore.QThread):
         # Download URL
         success = False
         try:
-            self.log('Downloading URL {}'.format(self.e.url.decode()))
+            self.log('run', 'Downloading URL {}'.format(self.e.url.decode()))
             msg_bytes = self.e.fetch_msg_url()
         except URLDownloadError as e:
             err = 'Failed to download: Check your internet connection'
@@ -412,7 +409,7 @@ class Refresher(QtCore.QThread):
         # Download signature URL
         success = False
         try:
-            self.log('Downloading URL {}'.format(self.e.sig_url.decode()))
+            self.log('run', 'Downloading URL {}'.format(self.e.sig_url.decode()))
             msg_sig_bytes = self.e.fetch_msg_sig_url()
         except URLDownloadError as e:
             err = 'Failed to download: Check your internet connection'
@@ -427,8 +424,8 @@ class Refresher(QtCore.QThread):
         # Verifiy signature
         success = False
         try:
-            self.log('Verifying signature')
-            self.e.verify_fingerprints_sig(self.gpg, msg_sig_bytes, msg_bytes)
+            self.log('run', 'Verifying signature')
+            self.e.verify_fingerprints_sig(self.c.gpg, msg_sig_bytes, msg_bytes)
         except VerificationError:
             err = 'Signature does not verify'
         except BadSignature:
@@ -446,7 +443,7 @@ class Refresher(QtCore.QThread):
         # Get fingerprint list
         success = False
         try:
-            self.log('Validating fingerprints')
+            self.log('run', 'Validating fingerprints')
             fingerprints = self.e.get_fingerprint_list(msg_bytes)
         except InvalidFingerprints as e:
             err = 'Invalid fingerprints: {}'.format(e)
@@ -461,7 +458,7 @@ class Refresher(QtCore.QThread):
         invalid_fingerprints = []
         for fingerprint in fingerprints:
             try:
-                self.gpg.test_key(fingerprint)
+                self.c.gpg.test_key(fingerprint)
             except InvalidFingerprint:
                 invalid_fingerprints.append(fingerprint)
             except (NotFoundInKeyring, ExpiredKey):
@@ -478,8 +475,8 @@ class Refresher(QtCore.QThread):
         notfound_fingerprints = []
         for fingerprint in fingerprints_to_fetch:
             try:
-                self.log('Fetching public key {} {}'.format(self.c.fp_to_keyid(fingerprint).decode(), self.gpg.get_uid(fingerprint)))
-                self.gpg.recv_key(self.e.keyserver, fingerprint, self.e.use_proxy, self.e.proxy_host, self.e.proxy_port)
+                self.log('run', 'Fetching public key {} {}'.format(self.c.fp_to_keyid(fingerprint).decode(), self.c.gpg.get_uid(fingerprint)))
+                self.c.gpg.recv_key(self.e.keyserver, fingerprint, self.e.use_proxy, self.e.proxy_host, self.e.proxy_port)
             except InvalidKeyserver:
                 return self.finish_with_failure('Invalid keyserver')
             except KeyserverError:
