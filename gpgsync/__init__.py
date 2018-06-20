@@ -44,8 +44,8 @@ def main():
         debug = True
 
     app = Application()
-    common = Common()
-    gui = GPGSync(app, common, debug)
+    common = Common(debug)
+    gui = GPGSync(app, common)
 
     # Clean up when app quits
     def shutdown():

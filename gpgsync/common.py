@@ -33,7 +33,9 @@ class Common(object):
     """
     The Common class is a singleton of shared functionality throughout the app
     """
-    def __init__(self):
+    def __init__(self, debug):
+        self.debug = debug
+
         # Preload icons
         self.icon = QtGui.QIcon(self.get_resource_path('gpgsync.png'))
         if platform.system() == 'Darwin':
@@ -44,6 +46,13 @@ class Common(object):
             self.systray_icon = QtGui.QIcon(self.get_resource_path('gpgsync.png'))
             self.systray_syncing_icon = QtGui.QIcon(self.get_resource_path('syncing.png'))
             self.systray_error_icon = QtGui.QIcon(self.get_resource_path('error.png'))
+
+    def log(self, module, func, msg=''):
+        if self.debug:
+            final_msg = "[{}] {}".format(module, func)
+            if msg:
+                final_msg = "{}: {}".format(final_msg, msg)
+            print(final_msg)
 
     def alert(self, msg, details='', icon=QtWidgets.QMessageBox.Warning):
         d = QtWidgets.QMessageBox()

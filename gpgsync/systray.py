@@ -33,7 +33,7 @@ class SysTray(QtWidgets.QSystemTrayIcon):
 
     def __init__(self, common, version):
         super(SysTray, self).__init__(common.systray_icon)
-        self.common = common
+        self.c = common
 
         self.show_text = 'Show GPG Sync'
         self.hide_text = 'Hide GPG Sync'
