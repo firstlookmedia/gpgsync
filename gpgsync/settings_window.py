@@ -25,7 +25,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 class SettingsWindow(QtWidgets.QWidget):
     def __init__(self, common, settings):
         super(SettingsWindow, self).__init__()
-        self.common = common
+        self.c = common
 
         self.setWindowTitle('GPG Sync Settings')
         self.setMinimumWidth(425)

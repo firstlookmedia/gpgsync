@@ -49,16 +49,30 @@ class Common(object):
 
         # Stylesheets
         self.css = {
-            'add_button': """
+            'GPGSync add_button': """
                 QPushButton {
                     font-weight: normal;
                 }
                 """,
 
-            'add_button_first': """
+            'GPGSync add_button_first': """
                 QPushButton {
                     font-weight: bold;
-                    font-size: 16px;
+                }
+                """,
+
+            'EndpointDialog sig_url': """
+                QLabel {
+                    font-style: italic;
+                    color: #666666;
+                    font-size: 11px;
+                }
+                """,
+
+            'EndpointDialog advanced_button': """
+                QPushButton {
+                    text-decoration: underline;
+                    color: #225dbf;
                 }
                 """
         }

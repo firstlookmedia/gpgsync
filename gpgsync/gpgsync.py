@@ -29,6 +29,7 @@ from .endpoint import Endpoint, Verifier, Refresher, URLDownloadError, ProxyURLD
 from .status_bar import StatusBar, MessageQueue
 from .systray import SysTray
 from .settings_window import SettingsWindow
+from .endpoint_dialog import EndpointDialog
 
 class GPGSync(QtWidgets.QMainWindow):
     def __init__(self, app, common):
@@ -99,6 +100,7 @@ class GPGSync(QtWidgets.QMainWindow):
 
         # Add button
         self.add_button = QtWidgets.QPushButton()
+        self.add_button.clicked.connect(self.add_endpoint)
         add_button_layout = QtWidgets.QHBoxLayout()
         add_button_layout.addStretch()
         add_button_layout.addWidget(self.add_button)
@@ -114,42 +116,6 @@ class GPGSync(QtWidgets.QMainWindow):
 
         # Update the UI
         self.update_ui()
-
-        """
-        # Endpoint selection GUI
-        self.endpoint_selection = EndpointSelection(self.gpg)
-        self.endpoint_selection.load_endpoints(self.settings.endpoints)
-        endpoint_selection_wrapper = QtWidgets.QWidget()
-        endpoint_selection_wrapper.setMinimumWidth(300)
-        endpoint_selection_wrapper.setLayout(self.endpoint_selection)
-
-        self.endpoint_selection.add_endpoint_signal.connect(self.add_endpoint)
-        self.endpoint_selection.endpoint_list.itemClicked.connect(self.endpoint_clicked)
-
-        if self.unconfigured_endpoint is not None:
-            self.endpoint_selection.add_btn.setEnabled(False)
-
-        # Edit endpoint GUI
-        self.edit_endpoint = EditEndpoint()
-        self.edit_endpoint_wrapper = QtWidgets.QWidget()
-        self.edit_endpoint_wrapper.setMinimumWidth(400)
-        self.edit_endpoint_wrapper.setLayout(self.edit_endpoint)
-        self.edit_endpoint_wrapper.hide() # starts out hidden
-
-        self.edit_endpoint.save_signal.connect(self.save_endpoint)
-        self.edit_endpoint.delete_signal.connect(self.delete_endpoint)
-
-        # Buttons
-        self.buttons = Buttons(self.settings)
-        self.buttons.sync_now_signal.connect(self.sync_all_endpoints)
-        self.buttons.autoupdate_signal.connect(self.configure_autoupdate)
-        self.buttons.quit_signal.connect(self.quit)
-        self.sync_msg = None
-
-        # Status bar
-        self.status_bar = StatusBar()
-        self.setStatusBar(self.status_bar)
-        """
 
         # Check for status bar messages from other threads
         # Also, reload endpoint display
@@ -234,10 +200,10 @@ class GPGSync(QtWidgets.QMainWindow):
         # Add button
         if len(self.settings.endpoints) == 0:
             self.add_button.setText("Add First GPG Sync Endpoint")
-            self.add_button.setStyleSheet(self.c.css['add_button_first'])
+            self.add_button.setStyleSheet(self.c.css['GPGSync add_button_first'])
         else:
             self.add_button.setText("Add Endpoint")
-            self.add_button.setStyleSheet(self.c.css['add_button'])
+            self.add_button.setStyleSheet(self.c.css['GPGSync add_button'])
 
         pass
         """
@@ -273,6 +239,10 @@ class GPGSync(QtWidgets.QMainWindow):
         else:
             self.buttons.update_sync_label()
         """
+
+    def add_endpoint(self):
+        d = EndpointDialog(self.c)
+        res = d.exec_()
 
     """
     def edit_endpoint_alert_error(self, msg, details='', icon=QtWidgets.QMessageBox.Warning):
