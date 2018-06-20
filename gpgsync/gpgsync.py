@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import sys, platform, queue, datetime, requests
 from packaging.version import parse
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets, QtGui
 
 from .gnupg import GnuPG
 from .settings import Settings
@@ -87,12 +87,24 @@ class GPGSync(QtWidgets.QMainWindow):
         self.setWindowIcon(self.c.icon)
 
         # Logo
+        logo_image = QtGui.QImage(self.c.get_resource_path("gpgsync.png"))
+        logo_label = QtWidgets.QLabel()
+        logo_label.setPixmap(QtGui.QPixmap.fromImage(logo_image))
+        logo_layout = QtWidgets.QHBoxLayout()
+        logo_layout.addStretch()
+        logo_layout.addWidget(logo_label)
+        logo_layout.addStretch()
 
         # Endpoints list
 
         # Add button
 
         # Layout
+        layout = QtWidgets.QVBoxLayout()
+        layout.addLayout(logo_layout)
+        central_widget = QtWidgets.QWidget()
+        central_widget.setLayout(layout)
+        self.setCentralWidget(central_widget)
 
         """
         # Endpoint selection GUI
@@ -124,17 +136,6 @@ class GPGSync(QtWidgets.QMainWindow):
         self.buttons.autoupdate_signal.connect(self.configure_autoupdate)
         self.buttons.quit_signal.connect(self.quit)
         self.sync_msg = None
-
-        # Layout
-        hlayout = QtWidgets.QHBoxLayout()
-        hlayout.addWidget(endpoint_selection_wrapper)
-        hlayout.addWidget(self.edit_endpoint_wrapper)
-        layout = QtWidgets.QVBoxLayout()
-        layout.addLayout(hlayout)
-        layout.addLayout(self.buttons)
-        central_widget = QtWidgets.QWidget()
-        central_widget.setLayout(layout)
-        self.setCentralWidget(central_widget)
 
         # Status bar
         self.status_bar = StatusBar()
