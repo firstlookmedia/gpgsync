@@ -47,6 +47,22 @@ class Common(object):
             self.systray_syncing_icon = QtGui.QIcon(self.get_resource_path('syncing.png'))
             self.systray_error_icon = QtGui.QIcon(self.get_resource_path('error.png'))
 
+        # Stylesheets
+        self.css = {
+            'add_button': """
+                QPushButton {
+                    font-weight: normal;
+                }
+                """,
+
+            'add_button_first': """
+                QPushButton {
+                    font-weight: bold;
+                    font-size: 16px;
+                }
+                """
+        }
+
     def log(self, module, func, msg=''):
         if self.debug:
             final_msg = "[{}] {}".format(module, func)

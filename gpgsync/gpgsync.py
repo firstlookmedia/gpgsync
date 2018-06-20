@@ -98,13 +98,22 @@ class GPGSync(QtWidgets.QMainWindow):
         # Endpoints list
 
         # Add button
+        self.add_button = QtWidgets.QPushButton()
+        add_button_layout = QtWidgets.QHBoxLayout()
+        add_button_layout.addStretch()
+        add_button_layout.addWidget(self.add_button)
+        add_button_layout.addStretch()
 
         # Layout
         layout = QtWidgets.QVBoxLayout()
         layout.addLayout(logo_layout)
+        layout.addLayout(add_button_layout)
         central_widget = QtWidgets.QWidget()
         central_widget.setLayout(layout)
         self.setCentralWidget(central_widget)
+
+        # Update the UI
+        self.update_ui()
 
         """
         # Endpoint selection GUI
@@ -222,6 +231,14 @@ class GPGSync(QtWidgets.QMainWindow):
         self.settings_window.show()
 
     def update_ui(self):
+        # Add button
+        if len(self.settings.endpoints) == 0:
+            self.add_button.setText("Add First GPG Sync Endpoint")
+            self.add_button.setStyleSheet(self.c.css['add_button_first'])
+        else:
+            self.add_button.setText("Add Endpoint")
+            self.add_button.setStyleSheet(self.c.css['add_button'])
+
         pass
         """
         # Print events, and update status bar
