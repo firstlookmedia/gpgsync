@@ -18,10 +18,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import queue, platform
+import queue
+import platform
 from PyQt5 import QtCore, QtWidgets
 
-from . import common
 
 class SysTray(QtWidgets.QSystemTrayIcon):
     show_signal = QtCore.pyqtSignal()
@@ -31,8 +31,10 @@ class SysTray(QtWidgets.QSystemTrayIcon):
     quit_signal = QtCore.pyqtSignal()
     clicked_applet_signal = QtCore.pyqtSignal()
 
-    def __init__(self, version):
-        super(SysTray, self).__init__(common.get_systray_icon())
+    def __init__(self, common, version):
+        super(SysTray, self).__init__(common.systray_icon)
+        self.c = common
+
         self.show_text = 'Show GPG Sync'
         self.hide_text = 'Hide GPG Sync'
 

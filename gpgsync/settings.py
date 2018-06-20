@@ -18,15 +18,18 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import os, json, pickle, platform
+import os
+import json
+import pickle
+import platform
 import dateutil.parser as date_parser
-from . import common
 
 from .endpoint import Endpoint
 
+
 class Settings(object):
-    def __init__(self, debug):
-        self.debug = debug
+    def __init__(self, common):
+        self.c = common
 
         system = platform.system()
         if system == 'Windows':
@@ -37,13 +40,9 @@ class Settings(object):
         else:
             self.appdata_path = os.path.expanduser("~/.config/gpgsync")
 
-        self.log("appdata_path: {}".format(self.appdata_path))
+        self.c.log("Settings", "__init__", "appdata_path: {}".format(self.appdata_path))
 
         self.load()
-
-    def log(self, msg):
-        if self.debug:
-            print("[Settings] {}".format(msg))
 
     def get_appdata_path(self):
         return self.appdata_path
@@ -58,7 +57,7 @@ class Settings(object):
                 # Parse the json file
                 self.settings = json.load(open(settings_file, 'r'))
                 load_settings = True
-                self.log("load: settings loaded from {}".format(settings_file))
+                self.c.log("Settings", "load", "settings loaded from {}".format(settings_file))
 
                 # Copy json settings into self
                 if 'endpoints' in self.settings:
@@ -104,12 +103,12 @@ class Settings(object):
                 self.configure_run_automatically()
 
             except:
-                self.log("load: error loading settings file, starting from scratch")
+                self.c.log("Settings", "load", "error loading settings file, starting from scratch")
                 print("Error loading settings file, starting from scratch")
                 start_new_settings = True
 
         else:
-            self.log("load: settings file doesn't exist")
+            self.c.log("Settings", "load", "settings file doesn't exist")
 
             # Try migrating from old settings
             if not self.migrate_settings_010_011():
@@ -131,7 +130,7 @@ class Settings(object):
             self.configure_run_automatically()
 
     def save(self):
-        self.log("save")
+        self.c.log("Settings", "save")
         self.settings = {
             'endpoints': [e.serialize() for e in self.endpoints],
             'run_automatically': self.run_automatically,
@@ -149,13 +148,13 @@ class Settings(object):
             os.makedirs(self.appdata_path)
 
         with open(os.path.join(self.appdata_path, 'settings.json'), 'w') as settings_file:
-            json.dump(self.settings, settings_file, default=common.serialize_settings, indent=4)
+            json.dump(self.settings, settings_file, default=self.c.serialize_settings, indent=4)
 
         self.configure_run_automatically()
         return True
 
     def configure_run_automatically(self):
-        self.log("configure_run_automatically")
+        self.c.log("Settings", "configure_run_automatically")
 
         if platform.system() == 'Darwin':
             share_filename = 'org.firstlook.gpgsync.plist'
@@ -170,7 +169,7 @@ class Settings(object):
         autorun_filename = os.path.join(autorun_dir, share_filename)
 
         if self.run_automatically:
-            buf = open(common.get_resource_path(share_filename)).read()
+            buf = open(self.c.get_resource_path(share_filename)).read()
             open(autorun_filename, 'w').write(buf)
         else:
             if os.path.exists(autorun_filename):
@@ -185,7 +184,7 @@ class Settings(object):
     def migrate_settings_010_011(self):
         old_settings_path = os.path.expanduser("~/.gpgsync")
         if os.path.isfile(old_settings_path):
-            self.log("migrate_settings_010_011: there is an old settings file, converting it to a new one")
+            self.c.log("Settings", "migrate_settings_010_011", "there is an old settings file, converting it to a new one")
 
             # Open it, and modify it to use a different Endpoint object
             # See https://github.com/firstlookmedia/gpgsync/issues/104
@@ -195,7 +194,7 @@ class Settings(object):
             try:
                 # Unpickle the old settings data
                 settings = pickle.loads(pickle_data)
-                self.log("migrate_settings_010_011: settings loaded from {}".format(old_settings_path))
+                self.c.log("Settings", "migrate_settings_010_011", "settings loaded from {}".format(old_settings_path))
 
                 # Copy pickle settings into self
                 if 'endpoints' in settings:
@@ -256,7 +255,7 @@ class Settings(object):
                 os.remove(old_settings_path)
                 return True
             except:
-                self.log("migrate_settings_010_011: exception thrown, just start over with settings")
+                self.c.log("Settings", "migrate_settings_010_011", "exception thrown, just start over with settings")
                 return False
 
         return False

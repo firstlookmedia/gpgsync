@@ -18,16 +18,21 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import os, sys, platform
+import os
+import sys
+import platform
 from PyQt5 import QtCore, QtWidgets
 
 from .gpgsync import GPGSync
+from .common import Common
+
 
 class Application(QtWidgets.QApplication):
     def __init__(self):
         if platform.system() == 'Linux':
             self.setAttribute(QtCore.Qt.AA_X11InitThreads, True)
         QtWidgets.QApplication.__init__(self, sys.argv)
+
 
 def main():
     # https://stackoverflow.com/questions/15157502/requests-library-missing-file-after-cx-freeze
@@ -39,7 +44,8 @@ def main():
         debug = True
 
     app = Application()
-    gui = GPGSync(app, debug)
+    common = Common(debug)
+    gui = GPGSync(app, common)
 
     # Clean up when app quits
     def shutdown():

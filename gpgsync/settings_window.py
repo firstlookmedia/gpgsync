@@ -21,9 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import platform
 from PyQt5 import QtCore, QtWidgets, QtGui
 
+
 class SettingsWindow(QtWidgets.QWidget):
-    def __init__(self, settings):
+    def __init__(self, common, settings):
         super(SettingsWindow, self).__init__()
+        self.common = common
+
         self.setWindowTitle('GPG Sync Settings')
         self.setMinimumWidth(425)
         self.setMaximumWidth(425)
