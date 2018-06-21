@@ -23,11 +23,11 @@ import socks
 import uuid
 import datetime
 import dateutil.parser as date_parser
+import queue
 from io import BytesIO
 from PyQt5 import QtCore, QtWidgets
 
 from .gnupg import *
-from .message_queues import RefresherMessageQueue
 
 
 class URLDownloadError(Exception):
@@ -199,6 +199,18 @@ class Endpoint(QtCore.QObject):
         self.c.log("Endpoint", "refresher_error")
 
 
+class VerifierMessageQueue(queue.Queue):
+    def __init(self):
+        super(VerifierMessageQueue, self).__init__()
+
+    def add_message(self, msg=None, type='update', timeout=0):
+        self.put({
+            'type': type,
+            'msg': msg,
+            'timeout': timeout
+        })
+
+
 class Verifier(QtCore.QThread):
     alert_error = QtCore.pyqtSignal(str, str)
     success = QtCore.pyqtSignal(bytes, bytes, bytes, bool, bytes, bytes)
@@ -341,6 +353,21 @@ class Verifier(QtCore.QThread):
         self.log('run', 'Endpoint saved', 4000)
         self.success.emit(self.fingerprint, self.url, self.keyserver, self.use_proxy, self.proxy_host, self.proxy_port)
         self.finished.emit()
+
+
+class RefresherMessageQueue(queue.LifoQueue):
+    STATUS_STARTING = 0
+    STATUS_IN_PROGRESS = 1
+
+    def __init(self):
+        super(RefresherMessageQueue, self).__init__()
+
+    def add_message(self, status, total_keys=0, current_key=0):
+        self.put({
+            'status': status,
+            'total_keys': total_keys,
+            'current_key': current_key
+        })
 
 
 class Refresher(QtCore.QThread):

@@ -22,9 +22,8 @@ import platform
 import queue
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-from .endpoint import Endpoint
+from .endpoint import Endpoint, RefresherMessageQueue
 from .endpoint_dialog import EndpointDialog
-from .message_queues import RefresherMessageQueue
 
 
 class EndpointList(QtWidgets.QWidget):
