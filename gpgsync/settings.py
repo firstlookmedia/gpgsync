@@ -61,7 +61,7 @@ class Settings(object):
 
                 # Copy json settings into self
                 if 'endpoints' in self.settings:
-                    self.endpoints = [Endpoint().load(e) for e in self.settings['endpoints']]
+                    self.endpoints = [Endpoint(self.c).load(e) for e in self.settings['endpoints']]
                 else:
                     self.endpoints = []
                 if 'run_automatically' in self.settings:
@@ -200,7 +200,7 @@ class Settings(object):
                 if 'endpoints' in settings:
                     self.endpoints = []
                     for old_e in settings['endpoints']:
-                        e = Endpoint()
+                        e = Endpoint(self.c)
                         e.verified = old_e.verified
                         e.fingerprint = old_e.fingerprint
                         e.url = old_e.url
