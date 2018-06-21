@@ -27,6 +27,7 @@ from io import BytesIO
 from PyQt5 import QtCore, QtWidgets
 
 from .gnupg import *
+from .status_bar import MessageQueue
 
 
 class URLDownloadError(Exception):
@@ -47,12 +48,12 @@ class InvalidFingerprints(Exception):
 
 class Endpoint(QtCore.QObject):
     fetched_public_key_signal = QtCore.pyqtSignal()
+    sync_finished = QtCore.pyqtSignal()
 
     def __init__(self, common):
         super(Endpoint, self).__init__()
         self.c = common
 
-        self.verified = False
         self.fingerprint = b''
         self.url = b''
         self.sig_url = b'https://.sig'
@@ -66,11 +67,13 @@ class Endpoint(QtCore.QObject):
         self.error = None
         self.warning = None
 
+        # Temporary variable for if it's in the middle of syncing
+        self.syncing = False
+
     """
     Acts as a secondary constructor to load an endpoint from settings
     """
     def load(self, e):
-        self.verified = e['verified']
         self.fingerprint = str.encode(e['fingerprint'])
         self.url = str.encode(e['url'])
         self.sig_url = str.encode(e['sig_url'])
@@ -168,6 +171,31 @@ class Endpoint(QtCore.QObject):
             raise InvalidFingerprints(invalid_fingerprints)
 
         return fingerprints
+
+    def start_syncing(self, force=False):
+        if self.syncing:
+            return
+
+        self.syncing = True
+
+        # Start the Refresher
+        self.q = MessageQueue()
+        self.refresher = Refresher(self.c, self.c.settings.update_interval_hours, self.q, self, force)
+        self.refresher.finished.connect(self.refresher_finished)
+        self.refresher.success.connect(self.refresher_success)
+        self.refresher.error.connect(self.refresher_error)
+        self.refresher.start()
+
+    def refresher_finished(self):
+        self.c.log("Endpoint", "refresher_finished")
+        self.syncing = False
+        self.sync_finished.emit()
+
+    def refresher_success(self, e, invalid_fingerprints, notfound_fingerprints):
+        self.c.log("Endpoint", "refresher_success")
+
+    def refresher_error(self, e, err, reset_last_checked=True):
+        self.c.log("Endpoint", "refresher_error")
 
 
 class Verifier(QtCore.QThread):

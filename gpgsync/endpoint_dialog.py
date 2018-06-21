@@ -27,7 +27,7 @@ from .status_bar import StatusBar, MessageQueue
 
 
 class EndpointDialog(QtWidgets.QDialog):
-    saved = QtCore.pyqtSignal()
+    saved = QtCore.pyqtSignal(Endpoint)
 
     def __init__(self, common, endpoint=None):
         super(EndpointDialog, self).__init__()
@@ -228,7 +228,7 @@ class EndpointDialog(QtWidgets.QDialog):
         # Save settings
         self.c.settings.save()
 
-        self.saved.emit()
+        self.saved.emit(self.endpoint)
         self.close()
 
     def verifier_finished(self):

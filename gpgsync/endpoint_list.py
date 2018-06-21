@@ -62,6 +62,8 @@ class EndpointWidget(QtWidgets.QWidget):
         self.c = common
         self.endpoint = endpoint
 
+        self.c.log("EndpointWidget", "__init__")
+
         # Authority Key user ID
         uid = self.c.gpg.get_uid(self.endpoint.fingerprint)
         uid_label = QtWidgets.QLabel(uid)
@@ -70,11 +72,15 @@ class EndpointWidget(QtWidgets.QWidget):
         uid_label.setStyleSheet(self.c.css['EndpointWidget uid_label'])
 
         # Last synced date
-        if self.endpoint.last_synced:
-            last_synced = self.endpoint.last_synced.strftime("%B %d, %I:%M %p")
+        if self.endpoint.syncing:
+            last_synced_text = "Syncing now..."
         else:
-            last_synced = 'Never'
-        last_synced_label = QtWidgets.QLabel("Last synced: {}".format(last_synced))
+            if self.endpoint.last_synced:
+                last_synced = self.endpoint.last_synced.strftime("%B %d, %I:%M %p")
+            else:
+                last_synced = "Never"
+            last_synced_text = "Last synced: {}".format(last_synced)
+        last_synced_label = QtWidgets.QLabel(last_synced_text)
         last_synced_label.setMinimumSize(350, 20)
         last_synced_label.setMaximumSize(350, 20)
         last_synced_label.setStyleSheet(self.c.css['EndpointWidget last_synced_label'])
@@ -92,6 +98,17 @@ class EndpointWidget(QtWidgets.QWidget):
         delete_button.clicked.connect(self.delete_clicked)
         delete_button.setStyleSheet(self.c.css['EndpointWidget button'])
         delete_button.setMinimumHeight(20)
+        cancel_sync_button = QtWidgets.QPushButton("Cancel Sync")
+        cancel_sync_button.clicked.connect(self.cancel_sync_clicked)
+        cancel_sync_button.setStyleSheet(self.c.css['EndpointWidget button'])
+        cancel_sync_button.setMinimumHeight(20)
+
+        if self.endpoint.syncing:
+            sync_button.hide()
+            edit_button.hide()
+            delete_button.hide()
+        else:
+            cancel_sync_button.hide()
 
         # Layout
         hlayout = QtWidgets.QHBoxLayout()
@@ -101,6 +118,7 @@ class EndpointWidget(QtWidgets.QWidget):
         hlayout.addWidget(sync_button)
         hlayout.addWidget(edit_button)
         hlayout.addWidget(delete_button)
+        hlayout.addWidget(cancel_sync_button)
         layout = QtWidgets.QVBoxLayout()
         layout.setSpacing(5)
         layout.addWidget(uid_label)
@@ -112,14 +130,22 @@ class EndpointWidget(QtWidgets.QWidget):
         self.setMaximumSize(350, 50)
 
     def sync_clicked(self):
+        self.c.log("EndpointWidget", "sync_clicked")
+        self.endpoint.start_syncing()
+        self.refresh.emit()
+
+    def cancel_sync_clicked(self):
+        self.c.log("EndpointWidget", "cancel_sync_clicked")
         pass
 
     def edit_clicked(self):
+        self.c.log("EndpointWidget", "edit_clicked")
         d = EndpointDialog(self.c, endpoint=self.endpoint)
         d.saved.connect(self.refresh.emit)
         d.exec_()
 
     def delete_clicked(self):
+        self.c.log("EndpointWidget", "delete_clicked")
         uid = self.c.gpg.get_uid(self.endpoint.fingerprint)
         alert_text = "Are you sure you want to delete this endpoint?<br><br><b>{}</b>".format(uid)
         reply = self.c.alert(alert_text, icon=QtWidgets.QMessageBox.Critical, question=True)

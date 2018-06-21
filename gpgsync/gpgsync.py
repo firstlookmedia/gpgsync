@@ -62,6 +62,7 @@ class GPGSync(QtWidgets.QMainWindow):
         try:
             for e in self.c.settings.endpoints:
                 self.c.gpg.import_pubkey_from_disk(e.fingerprint)
+                e.sync_finished.connect(self.update_ui)
         except:
             pass
 
@@ -201,41 +202,15 @@ class GPGSync(QtWidgets.QMainWindow):
 
     def add_endpoint(self):
         d = EndpointDialog(self.c)
-        d.saved.connect(self.update_ui)
+        d.saved.connect(self.add_endpoint_saved)
         d.exec_()
+
+    def add_endpoint_saved(self, e):
+        e.sync_finished.connect(self.update_ui)
+        self.update_ui()
 
     def sync_all_endpoints(self, force=False):
         pass
-
-        """
-        # Skip if a sync is currently in progress
-        if self.currently_syncing:
-            return
-
-        self.currently_syncing = True
-        self.syncing_errors = []
-
-        # Make a refresher for each endpoint
-        self.waiting_refreshers = []
-        self.active_refreshers = []
-        for e in self.settings.endpoints:
-            if e.verified:
-                refresher = Refresher(self.debug, self.gpg, self.settings.update_interval_hours, self.status_q, e, force)
-                refresher.finished.connect(self.refresher_finished)
-                refresher.success.connect(self.refresher_success)
-                refresher.error.connect(self.refresher_error)
-                self.waiting_refreshers.append(refresher)
-
-        # Start the first refresher thread
-        if len(self.waiting_refreshers) > 0:
-            r = self.waiting_refreshers.pop()
-            self.active_refreshers.append(r)
-            r.start()
-
-            sync_string = "Syncing: {} {}".format(self.c.gpg.get_uid(r.e.fingerprint), common.fp_to_keyid(r.e.fingerprint).decode())
-            print(sync_string)
-            #self.toggle_input(False, sync_string)
-        """
 
     def check_for_updates(self, force=False):
         self.c.log("GPGSync", "check_for_updates", "force={}".format(force))
