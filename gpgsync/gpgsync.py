@@ -27,6 +27,7 @@ from .status_bar import StatusBar, MessageQueue
 from .systray import SysTray
 from .settings_window import SettingsWindow
 from .endpoint_dialog import EndpointDialog
+from .endpoint_list import EndpointList
 
 class GPGSync(QtWidgets.QMainWindow):
     def __init__(self, app, common):
@@ -92,6 +93,7 @@ class GPGSync(QtWidgets.QMainWindow):
         logo_layout.addStretch()
 
         # Endpoints list
+        self.endpoint_list = EndpointList(self.c)
 
         # Add button
         self.add_button = QtWidgets.QPushButton()
@@ -104,6 +106,7 @@ class GPGSync(QtWidgets.QMainWindow):
         # Layout
         layout = QtWidgets.QVBoxLayout()
         layout.addLayout(logo_layout)
+        layout.addWidget(self.endpoint_list)
         layout.addLayout(add_button_layout)
         central_widget = QtWidgets.QWidget()
         central_widget.setLayout(layout)
@@ -112,17 +115,9 @@ class GPGSync(QtWidgets.QMainWindow):
         # Update the UI
         self.update_ui()
 
-        # Check for status bar messages from other threads
-        # Also, reload endpoint display
-        self.status_q = MessageQueue()
-        self.update_ui_timer = QtCore.QTimer()
-        self.update_ui_timer.timeout.connect(self.update_ui)
-        self.update_ui_timer.start(500) # 0.5 seconds
-
         # Timed tasks intialize
         self.currently_syncing = False
         self.syncing_errors = []
-
         self.global_timer = QtCore.QTimer()
         self.global_timer.timeout.connect(self.run_interval_tasks)
         self.global_timer.start(60000) # 1 minute
@@ -200,190 +195,14 @@ class GPGSync(QtWidgets.QMainWindow):
             self.add_button.setText("Add Endpoint")
             self.add_button.setStyleSheet(self.c.css['GPGSync add_button'])
 
-        pass
-        """
-        # Print events, and update status bar
-        events = []
-        done = False
-        while not done:
-            try:
-                ev = self.status_q.get(False)
-                events.append(ev)
-            except queue.Empty:
-                done = True
+        # Update the endpoint list
+        self.endpoint_list.update_ui()
 
-        for event in events:
-            if event['type'] == 'update':
-                print(event['msg'])
-                if not self.isHidden():
-                    self.status_bar.showMessage(event['msg'], event['timeout'])
-            elif event['type'] == 'clear':
-                if not self.isHidden():
-                    self.status_bar.clearMessage()
-
-        # Ignore the rest of the UI if window is hidden
-        if self.isHidden():
-            return
-
-        # Endpoint display
-        self.endpoint_selection.reload_endpoints()
-
-        # Sync message
-        if(self.sync_msg):
-            self.buttons.update_sync_label(self.sync_msg)
-        else:
-            self.buttons.update_sync_label()
-        """
+        self.adjustSize()
 
     def add_endpoint(self):
         d = EndpointDialog(self.c)
         d.exec_()
-
-    """
-    def edit_endpoint_alert_error(self, msg, details='', icon=QtWidgets.QMessageBox.Warning):
-        common.alert(msg, details, icon)
-        self.toggle_input(True)
-
-    def edit_endpoint_save(self, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port):
-        # Save the settings
-        self.settings.endpoints[self.current_endpoint].verified = True
-        self.settings.endpoints[self.current_endpoint].fingerprint = fingerprint
-        self.settings.endpoints[self.current_endpoint].url = url
-        self.settings.endpoints[self.current_endpoint].sig_url = url + b'.sig'
-        self.settings.endpoints[self.current_endpoint].keyserver = keyserver
-        self.settings.endpoints[self.current_endpoint].use_proxy = use_proxy
-        self.settings.endpoints[self.current_endpoint].proxy_host = proxy_host
-        self.settings.endpoints[self.current_endpoint].proxy_port = proxy_port
-        self.settings.save()
-        self.unconfigured_endpoint = None
-
-        # Refresh the display
-        self.toggle_input(True)
-        self.endpoint_selection.reload_endpoint(self.settings.endpoints[self.current_endpoint])
-
-        # Unselect endpoint
-        self.endpoint_selection.endpoint_list.setCurrentItem(None)
-        self.edit_endpoint_wrapper.hide()
-        self.current_endpoint = None
-
-        self.sync_all_endpoints(True)
-
-    def add_endpoint(self):
-        e = Endpoint()
-        self.settings.endpoints.append(e)
-        self.endpoint_selection.add_endpoint(e)
-        self.unconfigured_endpoint = e
-        self.endpoint_selection.add_btn.setEnabled(False)
-
-        # Click on the newest endpoint
-        count = self.endpoint_selection.endpoint_list.count()
-        item = self.endpoint_selection.endpoint_list.item(count-1)
-        self.endpoint_selection.endpoint_list.setCurrentItem(item)
-        self.endpoint_selection.endpoint_list.itemClicked.emit(item)
-
-    def save_endpoint(self):
-        # Get values for endpoint
-        fingerprint = common.clean_fp(self.edit_endpoint.fingerprint_edit.text().strip().encode())
-        url         = self.edit_endpoint.url_edit.text().strip().encode()
-        keyserver   = self.edit_endpoint.keyserver_edit.text().strip().encode()
-        use_proxy   = self.edit_endpoint.use_proxy.checkState() == QtCore.Qt.Checked
-        proxy_host  = self.edit_endpoint.proxy_host_edit.text().strip().encode()
-        proxy_port  = self.edit_endpoint.proxy_port_edit.text().strip().encode()
-
-        # Show loading graphic, and disable all input until it's finished Verifying
-        self.toggle_input(False)
-
-        # Run the verifier inside a new thread
-        self.verifier = Verifier(self.debug, self.gpg, self.status_q, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
-        self.verifier.alert_error.connect(self.edit_endpoint_alert_error)
-        self.verifier.success.connect(self.edit_endpoint_save)
-        self.verifier.start()
-
-    def delete_endpoint(self):
-        self.log("delete_endpoint, asking for confirmation")
-
-        # Ask if you really want to delete
-        d = QtWidgets.QMessageBox()
-        d.setWindowTitle('GPG Sync')
-        d.setText("Are you sure you want to delete this endpoint?")
-        d.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
-        d.setIcon(QtWidgets.QMessageBox.Warning)
-        d.exec_()
-
-        if d.standardButton(d.clickedButton()) == QtWidgets.QMessageBox.Ok:
-            self.log("delete_endpoint, user clicked Ok, deleting")
-
-            self.edit_endpoint_wrapper.hide()
-            if self.settings.endpoints[self.current_endpoint] is self.unconfigured_endpoint:
-                self.unconfigured_endpoint = None
-                self.endpoint_selection.add_btn.setEnabled(True)
-            self.endpoint_selection.delete_endpoint(self.settings.endpoints[self.current_endpoint])
-            self.settings.endpoints.remove(self.settings.endpoints[self.current_endpoint])
-            self.current_endpoint = None
-            self.settings.save()
-
-        else:
-            self.log("delete_endpoint, user clicked Cancel")
-
-    def endpoint_clicked(self, item):
-        try:
-            i = self.settings.endpoints.index(item.endpoint)
-        except ValueError:
-            print('ERROR: Invalid endpoint')
-            return
-
-        # Clicking on an already-selected endpoint unselects it
-        if i == self.current_endpoint:
-            self.edit_endpoint_wrapper.hide()
-            self.endpoint_selection.endpoint_list.setCurrentItem(None)
-            self.current_endpoint = None
-
-        # Select new endpoint
-        else:
-            self.current_endpoint = i
-            self.edit_endpoint.set_endpoint(item.endpoint)
-            self.edit_endpoint_wrapper.show()
-
-    def refresher_finished(self):
-        if len(self.waiting_refreshers) > 0:
-            r = self.waiting_refreshers.pop()
-            self.active_refreshers.append(r)
-            r.start()
-        else:
-            self.status_q.add_message('Syncing complete.', timeout=4000)
-            self.currently_syncing = False
-            self.toggle_input(True)
-
-    def refresher_success(self, e, invalid_fingerprints, notfound_fingerprints):
-        if len(invalid_fingerprints) == 0 and len(notfound_fingerprints) == 0:
-            warning = False
-        else:
-            warnings = []
-            if len(invalid_fingerprints) > 0:
-                warning.append('Invalid fingerprints {}'.format(invalid_fingerprints))
-            if len(notfound_fingerprints) > 0:
-                warnings.append('Not found fingerprints {}'.format(notfound_fingerprints))
-            warning = ', '.join(warnings)
-
-        e.last_checked = datetime.datetime.now()
-        e.last_synced = datetime.datetime.now()
-        e.warning = warning
-        e.error = None
-
-        self.endpoint_selection.reload_endpoint(e)
-        self.settings.save()
-
-    def refresher_error(self, e, err, reset_last_checked=True):
-        self.syncing_errors.append(e)
-        if reset_last_checked:
-            e.last_checked = datetime.datetime.now()
-        e.last_failed = datetime.datetime.now()
-        e.warning = None
-        e.error = err
-
-        self.endpoint_selection.reload_endpoint(e)
-        self.settings.save()
-    """
 
     def sync_all_endpoints(self, force=False):
         pass
@@ -417,36 +236,6 @@ class GPGSync(QtWidgets.QMainWindow):
             print(sync_string)
             #self.toggle_input(False, sync_string)
         """
-
-    """
-    def toggle_input(self, enabled=False, sync_msg=None):
-        # Show/hide loading graphic
-        if enabled:
-            self.status_bar.hide_loading()
-            self.systray.setIcon(common.get_systray_icon())
-        else:
-            self.status_bar.show_loading()
-            self.systray.setIcon(common.get_systray_syncing_icon())
-
-        # Disable/enable all input
-        if self.unconfigured_endpoint is not None:
-            self.endpoint_selection.add_btn.setEnabled(False)
-            self.endpoint_selection.endpoint_list.setEnabled(enabled)
-        else:
-            self.endpoint_selection.setEnabled(enabled)
-        self.edit_endpoint_wrapper.setEnabled(enabled)
-        self.buttons.sync_now_btn.setEnabled(enabled)
-        self.systray.refresh_act.setEnabled(enabled)
-
-        # Next sync check message
-        if enabled:
-            self.sync_msg = None
-        else:
-            self.sync_msg = sync_msg
-
-        if len(self.syncing_errors) > 0:
-            self.systray.setIcon(common.get_systray_error_icon())
-    """
 
     def check_for_updates(self, force=False):
         self.c.log("GPGSync", "check_for_updates", "force={}".format(force))

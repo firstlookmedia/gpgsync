@@ -25,6 +25,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from .endpoint import Endpoint, Verifier
 from .status_bar import StatusBar, MessageQueue
 
+
 class EndpointDialog(QtWidgets.QDialog):
     saved = QtCore.pyqtSignal()
 
