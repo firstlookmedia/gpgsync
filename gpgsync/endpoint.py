@@ -349,15 +349,26 @@ class Refresher(QtCore.QThread):
     def __init__(self, common, refresh_interval, q, endpoint, force=False):
         super(Refresher, self).__init__()
         self.c = common
+        self.c.log("Refresher", "__init__")
+
         # this should be safe to cast directly to a float since it passed the input test
         self.refresh_interval = float(refresh_interval)
         self.q = q
         self.e = endpoint
         self.force = force
 
+        self.should_cancel = False
+
+    def cancel_early(self):
+        self.should_cancel = True
+        self.quit()
+
     def finish_with_failure(self, err, reset_last_checked=True):
         self.q.add_message(type='clear')
         self.error.emit(self.e, err, reset_last_checked)
+
+    def finish_with_cancel(self):
+        self.finish_with_failure("Canceled")
 
     def log(self, func, message, timeout=None):
         self.c.log("Refresher", func, message)
@@ -419,6 +430,9 @@ class Refresher(QtCore.QThread):
         if not success:
             return self.finish_with_failure(err, reset_last_checked)
 
+        if self.should_cancel:
+            return self.finish_with_cancel()
+
         # Download URL
         success = False
         try:
@@ -434,6 +448,9 @@ class Refresher(QtCore.QThread):
         if not success:
             return self.finish_with_failure(err)
 
+        if self.should_cancel:
+            return self.finish_with_cancel()
+
         # Download signature URL
         success = False
         try:
@@ -448,6 +465,9 @@ class Refresher(QtCore.QThread):
 
         if not success:
             return self.finish_with_failure(err)
+
+        if self.should_cancel:
+            return self.finish_with_cancel()
 
         # Verifiy signature
         success = False
@@ -468,6 +488,9 @@ class Refresher(QtCore.QThread):
         if not success:
             return self.finish_with_failure(err)
 
+        if self.should_cancel:
+            return self.finish_with_cancel()
+
         # Get fingerprint list
         success = False
         try:
@@ -480,6 +503,9 @@ class Refresher(QtCore.QThread):
 
         if not success:
             return self.finish_with_failure(err)
+
+        if self.should_cancel:
+            return self.finish_with_cancel()
 
         # Build list of fingerprints to fetch
         fingerprints_to_fetch = []
@@ -511,6 +537,9 @@ class Refresher(QtCore.QThread):
                 return self.finish_with_failure('Keyserver error')
             except NotFoundOnKeyserver:
                 notfound_fingerprints.append(fingerprint)
+
+            if self.should_cancel:
+                return self.finish_with_cancel()
 
         # All done
         self.success.emit(self.e, invalid_fingerprints, notfound_fingerprints)

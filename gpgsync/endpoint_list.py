@@ -98,17 +98,17 @@ class EndpointWidget(QtWidgets.QWidget):
         delete_button.clicked.connect(self.delete_clicked)
         delete_button.setStyleSheet(self.c.css['EndpointWidget button'])
         delete_button.setMinimumHeight(20)
-        cancel_sync_button = QtWidgets.QPushButton("Cancel Sync")
-        cancel_sync_button.clicked.connect(self.cancel_sync_clicked)
-        cancel_sync_button.setStyleSheet(self.c.css['EndpointWidget button'])
-        cancel_sync_button.setMinimumHeight(20)
+        self.cancel_sync_button = QtWidgets.QPushButton("Cancel Sync")
+        self.cancel_sync_button.clicked.connect(self.cancel_sync_clicked)
+        self.cancel_sync_button.setStyleSheet(self.c.css['EndpointWidget button'])
+        self.cancel_sync_button.setMinimumHeight(20)
 
         if self.endpoint.syncing:
             sync_button.hide()
             edit_button.hide()
             delete_button.hide()
         else:
-            cancel_sync_button.hide()
+            self.cancel_sync_button.hide()
 
         # Layout
         hlayout = QtWidgets.QHBoxLayout()
@@ -118,7 +118,7 @@ class EndpointWidget(QtWidgets.QWidget):
         hlayout.addWidget(sync_button)
         hlayout.addWidget(edit_button)
         hlayout.addWidget(delete_button)
-        hlayout.addWidget(cancel_sync_button)
+        hlayout.addWidget(self.cancel_sync_button)
         layout = QtWidgets.QVBoxLayout()
         layout.setSpacing(5)
         layout.addWidget(uid_label)
@@ -131,12 +131,14 @@ class EndpointWidget(QtWidgets.QWidget):
 
     def sync_clicked(self):
         self.c.log("EndpointWidget", "sync_clicked")
-        self.endpoint.start_syncing()
+        self.endpoint.start_syncing(force=True)
         self.refresh.emit()
 
     def cancel_sync_clicked(self):
         self.c.log("EndpointWidget", "cancel_sync_clicked")
-        pass
+        self.cancel_sync_button.setText("Canceling...")
+        self.cancel_sync_button.setEnabled(False)
+        self.endpoint.refresher.cancel_early()
 
     def edit_clicked(self):
         self.c.log("EndpointWidget", "edit_clicked")
