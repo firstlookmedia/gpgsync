@@ -202,6 +202,7 @@ class GPGSync(QtWidgets.QMainWindow):
 
     def add_endpoint(self):
         d = EndpointDialog(self.c)
+        d.saved.connect(self.update_ui)
         d.exec_()
 
     def sync_all_endpoints(self, force=False):

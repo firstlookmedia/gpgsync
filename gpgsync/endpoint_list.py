@@ -26,9 +26,37 @@ from .endpoint import Endpoint
 
 
 class EndpointList(QtWidgets.QWidget):
-    def __init__(self, common, endpoint=None):
+    def __init__(self, common):
         super(EndpointList, self).__init__()
         self.c = common
 
+        self.layout = QtWidgets.QVBoxLayout()
+        self.setLayout(self.layout)
+
+        self.update_ui()
+
     def update_ui(self):
-        pass
+        # Delete all widgets from the layout
+        # https://stackoverflow.com/questions/4528347/clear-all-widgets-in-a-layout-in-pyqt
+        for i in reversed(range(self.layout.count())):
+            self.layout.itemAt(i).widget().setParent(None)
+
+        # Add new endpoint widgets
+        for e in self.c.settings.endpoints:
+            self.layout.addWidget(EndpointWidget(self.c, e))
+
+        self.adjustSize()
+
+
+class EndpointWidget(QtWidgets.QWidget):
+    def __init__(self, common, endpoint):
+        super(EndpointWidget, self).__init__()
+        self.c = common
+
+        # Display the fingerprint for now
+        label = QtWidgets.QLabel(endpoint.fingerprint.decode())
+
+        # Layout
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(label)
+        self.setLayout(layout)

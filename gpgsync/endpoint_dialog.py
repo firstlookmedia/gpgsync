@@ -228,6 +228,7 @@ class EndpointDialog(QtWidgets.QDialog):
         # Save settings
         self.c.settings.save()
 
+        self.saved.emit()
         self.close()
 
     def verifier_finished(self):
