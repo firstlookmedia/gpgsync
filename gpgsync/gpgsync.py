@@ -210,7 +210,11 @@ class GPGSync(QtWidgets.QMainWindow):
         self.update_ui()
 
     def sync_all_endpoints(self, force=False):
-        pass
+        self.c.log("GPGSync", "sync_all_endpoints", "force={}".format(force))
+
+        for e in self.c.settings.endpoints:
+            e.start_syncing(force)
+        self.update_ui()
 
     def check_for_updates(self, force=False):
         self.c.log("GPGSync", "check_for_updates", "force={}".format(force))
