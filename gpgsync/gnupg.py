@@ -107,14 +107,14 @@ class GnuPG(object):
     def recv_key(self, keyserver, fp, use_proxy, proxy_host, proxy_port):
         self.c.log("GnuPG", "recv_key", "keyserver={}, fp={}, use_proxy={}, proxy_host={}, proxy_port={}".format(keyserver, fp, use_proxy, proxy_host, proxy_port))
 
-        if not common.valid_fp(fp):
+        if not self.c.valid_fp(fp):
             raise InvalidFingerprint(fp)
 
-        fp = common.clean_fp(fp)
-        keyserver = common.clean_keyserver(keyserver).decode()
+        fp = self.c.clean_fp(fp)
+        keyserver = self.c.clean_keyserver(keyserver).decode()
 
         default_hkps_server = 'hkps://hkps.pool.sks-keyservers.net'
-        ca_cert_file = common.get_resource_path('sks-keyservers.netCA.pem')
+        ca_cert_file = self.c.get_resource_path('sks-keyservers.netCA.pem')
 
         # Create gpg.conf and dirmngr.conf
         dirmngr_conf = ''
@@ -146,12 +146,12 @@ class GnuPG(object):
         self.import_to_default_homedir(fp)
 
     def get_pubkey_filename_on_disk(self, fp):
-        fp = common.clean_fp(fp)
+        fp = self.c.clean_fp(fp)
         filename = fp.decode() + '.asc'
         return os.path.join(self.appdata_path, filename)
 
     def export_pubkey_to_disk(self, fp):
-        fp = common.clean_fp(fp)
+        fp = self.c.clean_fp(fp)
         filename = self.get_pubkey_filename_on_disk(fp)
 
         self.c.log("GnuPG", "export_pubkey_to_disk", "fp={}".format(fp))
@@ -168,7 +168,7 @@ class GnuPG(object):
         open(filename, 'w').write(pubkey.decode())
 
     def import_pubkey_from_disk(self, fp):
-        fp = common.clean_fp(fp)
+        fp = self.c.clean_fp(fp)
         filename = self.get_pubkey_filename_on_disk(fp)
 
         self.c.log("GnuPG", "import_pubkey_from_disk", "fp={}".format(fp))
@@ -185,7 +185,7 @@ class GnuPG(object):
             pass
 
     def delete_pubkey_from_disk(self, fp):
-        fp = common.clean_fp(fp)
+        fp = self.c.clean_fp(fp)
         filename = self.get_pubkey_filename_on_disk(fp)
 
         self.c.log("GnuPG", "delete_pubkey_from_disk", "fp={}".format(fp))
@@ -207,10 +207,10 @@ class GnuPG(object):
     def test_key(self, fp):
         self.c.log("GnuPG", "test_key", "fp={}".format(fp))
 
-        if not common.valid_fp(fp):
+        if not self.c.valid_fp(fp):
             raise InvalidFingerprint(fp)
 
-        fp = common.clean_fp(fp)
+        fp = self.c.clean_fp(fp)
         out,err = self._gpg(['--with-colons', '--list-keys', fp])
 
         if b"error reading key: No public key" in err:
@@ -227,10 +227,10 @@ class GnuPG(object):
     def get_uid(self, fp):
         self.c.log("GnuPG", "get_uid", "fp={}".format(fp))
 
-        if not common.valid_fp(fp):
+        if not self.c.valid_fp(fp):
             raise InvalidFingerprint(fp)
 
-        fp = common.clean_fp(fp)
+        fp = self.c.clean_fp(fp)
 
         if fp in self.uids:
             return self.uids[fp]
@@ -246,12 +246,12 @@ class GnuPG(object):
         return ''
 
     def verify(self, msg_sig, msg, fp):
-        self.c,log("GnuPG", "verify," "(not displaying msg_sig, msg), fp={}".format(fp))
+        self.c.log("GnuPG", "verify," "(not displaying msg_sig, msg), fp={}".format(fp))
 
-        if not common.valid_fp(fp):
+        if not self.c.valid_fp(fp):
             raise InvalidFingerprint(fp)
 
-        fp = common.clean_fp(fp)
+        fp = self.c.clean_fp(fp)
 
         # Write message and detached signature to disk
         msg_sig_filename = tempfile.NamedTemporaryFile(delete=False).name
@@ -288,10 +288,10 @@ class GnuPG(object):
     def list_all_keyids(self, fp):
         self.c.log("GnuPG", "list_all_keyids", "fp={}".format(fp))
 
-        if not common.valid_fp(fp):
+        if not self.c.valid_fp(fp):
             raise InvalidFingerprint(fp)
 
-        fp = common.clean_fp(fp)
+        fp = self.c.clean_fp(fp)
 
         out, err = self._gpg(['--keyid-format', '0xlong', '--list-keys', fp])
         if b'gpg: error reading key: No public key' in err:

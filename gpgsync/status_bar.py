@@ -19,22 +19,24 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import queue
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets, QtGui
 
-from .loading_animation import LoadingAnimation
 
 class StatusBar(QtWidgets.QStatusBar):
-        def __init__(self):
-            super(StatusBar, self).__init__()
-            self.loading_animation = LoadingAnimation()
-            self.loading_animation.hide()
-            self.addPermanentWidget(self.loading_animation)
+    def __init__(self, common):
+        super(StatusBar, self).__init__()
 
-        def show_loading(self):
-            self.loading_animation.show()
+        self.c = common
 
-        def hide_loading(self):
-            self.loading_animation.hide()
+        self.loading_animation = LoadingAnimation(self.c)
+        self.loading_animation.hide()
+        self.addPermanentWidget(self.loading_animation)
+
+    def show_loading(self):
+        self.loading_animation.show()
+
+    def hide_loading(self):
+        self.loading_animation.hide()
 
 
 class MessageQueue(queue.Queue):
@@ -47,3 +49,22 @@ class MessageQueue(queue.Queue):
             'msg': msg,
             'timeout': timeout
         })
+
+
+class LoadingAnimation(QtWidgets.QLabel):
+    def __init__(self, common):
+        QtWidgets.QLabel.__init__(self)
+
+        self.c = common
+
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.setAlignment(QtCore.Qt.AlignCenter)
+        self.setFixedWidth(16)
+        self.setFixedHeight(16)
+
+        self.movie = QtGui.QMovie(self.c.get_resource_path('loading.gif'), QtCore.QByteArray(), self)
+        self.movie.setSpeed(100)
+        self.movie.start()
+        self.setMovie(self.movie)
+
+        self.show()

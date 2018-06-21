@@ -19,12 +19,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import platform
+import queue
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-from .endpoint import Endpoint
-
+from .endpoint import Endpoint, Verifier
+from .status_bar import StatusBar, MessageQueue
 
 class EndpointDialog(QtWidgets.QDialog):
+    saved = QtCore.pyqtSignal()
+
     def __init__(self, common, endpoint=None):
         super(EndpointDialog, self).__init__()
         self.c = common
@@ -32,14 +35,14 @@ class EndpointDialog(QtWidgets.QDialog):
         # If endpoint == None, this is an add endpoint dialog. Otherwise, this
         # is an edit endpoint dialog
         if endpoint:
-            self.endpoint = endpoint
-        else:
-            self.endpoint = Endpoint(self.c)
-
-        if self.endpoint:
             self.setWindowTitle('Edit Endpoint')
+            self.endpoint = endpoint
+            self.new_endpoint = False
         else:
             self.setWindowTitle('Add Endpoint')
+            self.endpoint = Endpoint(self.c)
+            self.new_endpoint = True
+        self.setMinimumWidth(400)
 
         # Authority key fingerprint
         fingerprint_label = QtWidgets.QLabel("Authority Key Fingerprint")
@@ -91,14 +94,17 @@ class EndpointDialog(QtWidgets.QDialog):
         self.advanced_group.setLayout(advanced_layout)
 
         # Buttons
-        save_button = QtWidgets.QPushButton("Save")
-        save_button.clicked.connect(self.save_clicked)
-        cancel_button = QtWidgets.QPushButton("Cancel")
-        cancel_button.clicked.connect(self.cancel_clicked)
+        self.save_button = QtWidgets.QPushButton("Save")
+        self.save_button.clicked.connect(self.save_clicked)
+        self.cancel_button = QtWidgets.QPushButton("Cancel")
+        self.cancel_button.clicked.connect(self.cancel_clicked)
         buttons_layout = QtWidgets.QHBoxLayout()
         buttons_layout.addStretch()
-        buttons_layout.addWidget(save_button)
-        buttons_layout.addWidget(cancel_button)
+        buttons_layout.addWidget(self.save_button)
+        buttons_layout.addWidget(self.cancel_button)
+
+        # Status bar
+        self.status_bar = StatusBar(self.c)
 
         # Layout
         layout = QtWidgets.QVBoxLayout()
@@ -110,6 +116,7 @@ class EndpointDialog(QtWidgets.QDialog):
         layout.addWidget(self.advanced_button)
         layout.addWidget(self.advanced_group)
         layout.addLayout(buttons_layout)
+        layout.addWidget(self.status_bar)
         self.setLayout(layout)
 
         # Populate the widgets with endpoint data
@@ -148,7 +155,75 @@ class EndpointDialog(QtWidgets.QDialog):
         self.adjustSize()
 
     def save_clicked(self):
-        pass
+        # Disable buttons, start verifier
+        self.save_button.setEnabled(False)
+        self.cancel_button.setEnabled(False)
+        self.status_bar.show_loading()
+        self.status_q = MessageQueue()
+        self.update_ui_timer = QtCore.QTimer()
+        self.update_ui_timer.timeout.connect(self.update_ui)
+        self.update_ui_timer.start(500) # 0.5 seconds
+
+        # Verify the endpoint
+        fingerprint = self.fingerprint_edit.text().encode()
+        url = self.url_edit.text().encode()
+        keyserver = self.keyserver_edit.text().encode()
+        use_proxy = self.use_proxy.isChecked()
+        proxy_host = self.proxy_host_edit.text().encode()
+        proxy_port = self.proxy_port_edit.text().encode()
+
+        self.verifier = Verifier(self.c, self.status_q, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
+        self.verifier.alert_error.connect(self.verifier_alert_error)
+        self.verifier.success.connect(self.verifier_success)
+        self.verifier.finished.connect(self.verifier_finished)
+        self.verifier.start()
 
     def cancel_clicked(self):
         self.close()
+
+    def update_ui(self):
+        # Update the status bar with events
+        events = []
+        done = False
+        while not done:
+            try:
+                ev = self.status_q.get(False)
+                events.append(ev)
+            except queue.Empty:
+                done = True
+
+        for event in events:
+            if event['type'] == 'update':
+                print(event['msg'])
+                self.status_bar.showMessage(event['msg'], event['timeout'])
+            elif event['type'] == 'clear':
+                self.status_bar.clearMessage()
+
+    def verifier_alert_error(self):
+        # Re-enable buttons
+        self.save_button.setEnabled(True)
+        self.cancel_button.setEnabled(True)
+
+    def verifier_success(self):
+        # Update the endpoint values
+        self.endpoint.fingerprint = self.fingerprint_edit.text().encode()
+        self.endpoint.url = self.url_edit.text().encode()
+        self.endpoint.sig_url = self.endpoint.url + b'.sig'
+        self.endpoint.keyserver = self.keyserver_edit.text().encode()
+        self.endpoint.use_proxy = self.use_proxy.isChecked()
+        self.endpoint.proxy_host = self.proxy_host_edit.text().encode()
+        self.endpoint.proxy_port = self.proxy_port_edit.text().encode()
+
+        # Add the endpoint, if necessary
+        if self.new_endpoint:
+            self.c.log("EndpointDialog", "verifier_success", "adding endpoint")
+            self.c.settings.endpoints.append(self.endpoint)
+
+        # Save settings
+        self.c.settings.save()
+
+        self.close()
+
+    def verifier_finished(self):
+        self.status_bar.hide_loading()
+        self.update_ui_timer.stop()

@@ -1,4 +1,4 @@
-self.c.gpg# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 GPG Sync
 Helps users have up-to-date public keys for everyone in their organization
@@ -202,7 +202,7 @@ class Verifier(QtCore.QThread):
         print("Verifying endpoint with authority key {}".format(self.fingerprint.decode()))
 
         # Make an endpoint
-        e = Endpoint()
+        e = Endpoint(self.c)
         e.fingerprint = self.fingerprint
         e.url = self.url
         e.sig_url = self.sig_url
