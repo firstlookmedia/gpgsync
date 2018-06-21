@@ -23,6 +23,7 @@ import queue
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 from .endpoint import Endpoint
+from .endpoint_dialog import EndpointDialog
 
 
 class EndpointList(QtWidgets.QWidget):
@@ -114,7 +115,9 @@ class EndpointWidget(QtWidgets.QWidget):
         pass
 
     def edit_clicked(self):
-        pass
+        d = EndpointDialog(self.c, endpoint=self.endpoint)
+        d.saved.connect(self.refresh.emit)
+        d.exec_()
 
     def delete_clicked(self):
         uid = self.c.gpg.get_uid(self.endpoint.fingerprint)
