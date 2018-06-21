@@ -105,6 +105,7 @@ class EndpointDialog(QtWidgets.QDialog):
 
         # Status bar
         self.status_bar = StatusBar(self.c)
+        self.status_bar.hide()
 
         # Layout
         layout = QtWidgets.QVBoxLayout()
@@ -155,9 +156,11 @@ class EndpointDialog(QtWidgets.QDialog):
         self.adjustSize()
 
     def save_clicked(self):
-        # Disable buttons, start verifier
-        self.save_button.setEnabled(False)
-        self.cancel_button.setEnabled(False)
+        # Disable dialog
+        self.setEnabled(False)
+
+        # Get ready to verify
+        self.status_bar.show()
         self.status_bar.show_loading()
         self.status_q = MessageQueue()
         self.update_ui_timer = QtCore.QTimer()
@@ -199,10 +202,12 @@ class EndpointDialog(QtWidgets.QDialog):
             elif event['type'] == 'clear':
                 self.status_bar.clearMessage()
 
-    def verifier_alert_error(self):
-        # Re-enable buttons
-        self.save_button.setEnabled(True)
-        self.cancel_button.setEnabled(True)
+    def verifier_alert_error(self, msg, details=''):
+        # Alert the error
+        self.c.alert(msg, details, QtWidgets.QMessageBox.Warning)
+
+        # Re-enable dialog
+        self.setEnabled(True)
 
     def verifier_success(self):
         # Update the endpoint values
@@ -225,5 +230,7 @@ class EndpointDialog(QtWidgets.QDialog):
         self.close()
 
     def verifier_finished(self):
+        self.status_bar.clearMessage()
         self.status_bar.hide_loading()
+        self.status_bar.hide()
         self.update_ui_timer.stop()
