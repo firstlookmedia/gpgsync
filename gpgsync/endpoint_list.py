@@ -24,6 +24,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 
 from .endpoint import Endpoint
 from .endpoint_dialog import EndpointDialog
+from .message_queues import RefresherMessageQueue
 
 
 class EndpointList(QtWidgets.QWidget):
@@ -80,10 +81,16 @@ class EndpointWidget(QtWidgets.QWidget):
             else:
                 last_synced = "Never"
             last_synced_text = "Last synced: {}".format(last_synced)
-        last_synced_label = QtWidgets.QLabel(last_synced_text)
-        last_synced_label.setMinimumSize(350, 20)
-        last_synced_label.setMaximumSize(350, 20)
-        last_synced_label.setStyleSheet(self.c.css['EndpointWidget last_synced_label'])
+        self.last_synced_label = QtWidgets.QLabel(last_synced_text)
+        self.last_synced_label.setMinimumSize(350, 20)
+        self.last_synced_label.setMaximumSize(350, 20)
+        self.last_synced_label.setStyleSheet(self.c.css['EndpointWidget last_synced_label'])
+
+        # Sync progress bar
+        self.progress_bar = QtWidgets.QProgressBar()
+        self.progress_bar.setMinimumSize(240, 20)
+        self.progress_bar.setMaximumSize(240, 20)
+        self.progress_bar.hide()
 
         # Buttons
         sync_button = QtWidgets.QPushButton("Sync Now")
@@ -113,7 +120,8 @@ class EndpointWidget(QtWidgets.QWidget):
         # Layout
         hlayout = QtWidgets.QHBoxLayout()
         hlayout.setSpacing(3)
-        hlayout.addWidget(last_synced_label)
+        hlayout.addWidget(self.last_synced_label)
+        hlayout.addWidget(self.progress_bar)
         hlayout.addStretch()
         hlayout.addWidget(sync_button)
         hlayout.addWidget(edit_button)
@@ -128,6 +136,11 @@ class EndpointWidget(QtWidgets.QWidget):
         # Size
         self.setMinimumSize(350, 50)
         self.setMaximumSize(350, 50)
+
+        # Update timer
+        self.update_ui_timer = QtCore.QTimer()
+        self.update_ui_timer.timeout.connect(self.update_ui)
+        self.update_ui_timer.start(500) # 0.5 seconds
 
     def sync_clicked(self):
         self.c.log("EndpointWidget", "sync_clicked")
@@ -156,3 +169,18 @@ class EndpointWidget(QtWidgets.QWidget):
             self.c.settings.endpoints.remove(self.endpoint)
             self.c.settings.save()
             self.refresh.emit()
+
+    def update_ui(self):
+        # Only need to update the UI if the endpoint is syncing
+        if self.endpoint.syncing:
+            # Process the last event in the LIFO queue, ignore the rest
+            try:
+                event = self.endpoint.q.get(False)
+                if event['status'] == RefresherMessageQueue.STATUS_IN_PROGRESS:
+                    self.last_synced_label.hide()
+                    self.progress_bar.show()
+                    self.progress_bar.setRange(0, event['total_keys'])
+                    self.progress_bar.setValue(event['current_key'])
+
+            except queue.Empty:
+                pass

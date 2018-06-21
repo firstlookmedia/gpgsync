@@ -27,7 +27,7 @@ from io import BytesIO
 from PyQt5 import QtCore, QtWidgets
 
 from .gnupg import *
-from .status_bar import MessageQueue
+from .message_queues import RefresherMessageQueue
 
 
 class URLDownloadError(Exception):
@@ -69,6 +69,7 @@ class Endpoint(QtCore.QObject):
 
         # Temporary variable for if it's in the middle of syncing
         self.syncing = False
+        self.q = None
 
     """
     Acts as a secondary constructor to load an endpoint from settings
@@ -179,7 +180,7 @@ class Endpoint(QtCore.QObject):
         self.syncing = True
 
         # Start the Refresher
-        self.q = MessageQueue()
+        self.q = RefresherMessageQueue()
         self.refresher = Refresher(self.c, self.c.settings.update_interval_hours, self.q, self, force)
         self.refresher.finished.connect(self.refresher_finished)
         self.refresher.success.connect(self.refresher_success)
@@ -364,22 +365,18 @@ class Refresher(QtCore.QThread):
         self.quit()
 
     def finish_with_failure(self, err, reset_last_checked=True):
-        self.q.add_message(type='clear')
         self.error.emit(self.e, err, reset_last_checked)
 
     def finish_with_cancel(self):
         self.finish_with_failure("Canceled")
 
-    def log(self, func, message, timeout=None):
+    def log(self, func, message):
         self.c.log("Refresher", func, message)
-
-        if timeout:
-            self.q.add_message(message, timeout=timeout)
-        else:
-            self.q.add_message(message)
 
     def run(self):
         print("Refreshing endpoint with authority key {}".format(self.e.fingerprint.decode()))
+
+        self.q.add_message(RefresherMessageQueue.STATUS_STARTING)
 
         # Refresh if it's forced, if it's never been checked before,
         # or if it's been longer than the configured refresh interval
@@ -525,6 +522,11 @@ class Refresher(QtCore.QThread):
                 # Fetch all others
                 fingerprints_to_fetch.append(fingerprint)
 
+        # Communicate
+        total_keys = len(fingerprints_to_fetch)
+        current_key = 0
+        self.q.add_message(RefresherMessageQueue.STATUS_IN_PROGRESS, total_keys, current_key)
+
         # Fetch fingerprints
         notfound_fingerprints = []
         for fingerprint in fingerprints_to_fetch:
@@ -537,6 +539,9 @@ class Refresher(QtCore.QThread):
                 return self.finish_with_failure('Keyserver error')
             except NotFoundOnKeyserver:
                 notfound_fingerprints.append(fingerprint)
+
+            current_key += 1
+            self.q.add_message(RefresherMessageQueue.STATUS_IN_PROGRESS, total_keys, current_key)
 
             if self.should_cancel:
                 return self.finish_with_cancel()
