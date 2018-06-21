@@ -22,15 +22,16 @@ import platform
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 
-class SettingsWindow(QtWidgets.QWidget):
+class SettingsDialog(QtWidgets.QDialog):
     def __init__(self, common):
-        super(SettingsWindow, self).__init__()
+        super(SettingsDialog, self).__init__()
         self.c = common
 
         self.setWindowTitle('GPG Sync Settings')
-        self.setMinimumWidth(425)
-        self.setMaximumWidth(425)
+        self.setMinimumSize(425, 200)
+        self.setMaximumSize(425, 400)
         self.settings = self.c.settings
+
         self.settings_layout = SettingsLayout(self.settings)
 
         layout = QtWidgets.QVBoxLayout()
@@ -101,14 +102,18 @@ class SettingsLayout(QtWidgets.QVBoxLayout):
         autoupdate_group = QtWidgets.QGroupBox("Automatic Updates")
         autoupdate_group.setLayout(proxy_vlayout)
 
-        self.save_btn = QtWidgets.QPushButton("Save Settings")
-        self.save_btn.clicked.connect(self.save_settings)
+        save_button = QtWidgets.QPushButton("Save Settings")
+        save_button.clicked.connect(self.save_settings)
+        button_layout = QtWidgets.QHBoxLayout()
+        button_layout.addStretch()
+        button_layout.addWidget(save_button)
+        button_layout.addStretch()
 
         self.addWidget(autostart_group)
         self.addWidget(update_interval_group)
         if platform.system() != 'Linux':
             self.addWidget(autoupdate_group)
-        self.addWidget(self.save_btn)
+        self.addLayout(button_layout)
 
     def is_number(self, input):
         try:
@@ -129,6 +134,6 @@ class SettingsLayout(QtWidgets.QVBoxLayout):
         if self.is_number(self.update_interval_edit.text().strip()):
             self.settings.update_interval_hours = self.update_interval_edit.text().strip().encode()
 
-        # if save is successful, hide the window
+        # if save is successful, close the dialog
         if self.settings.save():
-            self.parent().parent().hide()
+            self.parent().parent().close()

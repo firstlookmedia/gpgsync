@@ -25,7 +25,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from .endpoint import Endpoint, Verifier, Refresher, URLDownloadError, ProxyURLDownloadError, InvalidFingerprints
 from .status_bar import StatusBar, MessageQueue
 from .systray import SysTray
-from .settings_window import SettingsWindow
+from .settings_dialog import SettingsDialog
 from .endpoint_dialog import EndpointDialog
 from .endpoint_list import EndpointList
 
@@ -47,9 +47,6 @@ class GPGSync(QtWidgets.QMainWindow):
         # Initialize the window
         self.setWindowTitle('GPG Sync')
         self.setWindowIcon(self.c.icon)
-
-        # Settings dialog, for when it's needed
-        self.settings_window = SettingsWindow(self.c)
 
         # Make sure gpg is available
         if not self.c.gpg.is_gpg_available():
@@ -182,7 +179,8 @@ class GPGSync(QtWidgets.QMainWindow):
 
     def open_settings_window(self):
         self.show_main_window()
-        self.settings_window.show()
+        d = SettingsDialog(self.c)
+        d.exec_()
 
     def update_ui(self):
         # Add button
