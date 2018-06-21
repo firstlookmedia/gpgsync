@@ -44,6 +44,10 @@ class GPGSync(QtWidgets.QMainWindow):
         self.version = parse(open(version_file).read().strip())
         self.saved_update_version = self.version
 
+        # Initialize the window
+        self.setWindowTitle('GPG Sync')
+        self.setWindowIcon(self.c.icon)
+
         # Settings dialog, for when it's needed
         self.settings_window = SettingsWindow(self.c)
 
@@ -58,13 +62,9 @@ class GPGSync(QtWidgets.QMainWindow):
             sys.exit()
 
         # Initialize endpoints
-        self.current_endpoint = None
         try:
             for e in self.c.settings.endpoints:
-                if e.verified:
-                    self.c.gpg.import_pubkey_from_disk(e.fingerprint)
-                else:
-                    self.unconfigured_endpoint = e
+                self.c.gpg.import_pubkey_from_disk(e.fingerprint)
         except:
             pass
 
@@ -79,10 +79,6 @@ class GPGSync(QtWidgets.QMainWindow):
         self.systray.show_settings_window_signal.connect(self.open_settings_window)
         self.systray.clicked_applet_signal.connect(self.clicked_applet)
 
-        # Initialize the window
-        self.setWindowTitle('GPG Sync')
-        self.setWindowIcon(self.c.icon)
-
         # Logo
         logo_image = QtGui.QImage(self.c.get_resource_path("gpgsync.png"))
         logo_label = QtWidgets.QLabel()
@@ -94,6 +90,7 @@ class GPGSync(QtWidgets.QMainWindow):
 
         # Endpoints list
         self.endpoint_list = EndpointList(self.c)
+        self.endpoint_list.refresh.connect(self.update_ui)
 
         # Add button
         self.add_button = QtWidgets.QPushButton()
@@ -107,6 +104,7 @@ class GPGSync(QtWidgets.QMainWindow):
         layout = QtWidgets.QVBoxLayout()
         layout.addLayout(logo_layout)
         layout.addWidget(self.endpoint_list)
+        layout.addStretch()
         layout.addLayout(add_button_layout)
         central_widget = QtWidgets.QWidget()
         central_widget.setLayout(layout)
@@ -198,7 +196,10 @@ class GPGSync(QtWidgets.QMainWindow):
         # Update the endpoint list
         self.endpoint_list.update_ui()
 
-        self.adjustSize()
+        # Set new window size
+        height = len(self.c.settings.endpoints)*70 + 120
+        self.setMinimumSize(390, height)
+        self.setMaximumSize(390, height)
 
     def add_endpoint(self):
         d = EndpointDialog(self.c)

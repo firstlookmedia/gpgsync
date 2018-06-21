@@ -83,6 +83,27 @@ class Common(object):
                     text-decoration: underline;
                     color: #225dbf;
                 }
+                """,
+
+            'EndpointWidget uid_label': """
+                QLabel {
+                    font-weight: bold;
+                }
+                """,
+
+            'EndpointWidget last_synced_label': """
+                QLabel {
+                    font-size: 12px;
+                    font-style: italic;
+                    color: #666666;
+                }
+                """,
+
+            'EndpointWidget button': """
+                QPushButton {
+                    font-size: 12px;
+                    padding: 3px 5px 3px 5px;
+                }
                 """
         }
 
@@ -93,7 +114,7 @@ class Common(object):
                 final_msg = "{}: {}".format(final_msg, msg)
             print(final_msg)
 
-    def alert(self, msg, details='', icon=QtWidgets.QMessageBox.Warning):
+    def alert(self, msg, details='', icon=QtWidgets.QMessageBox.Warning, question=False):
         d = QtWidgets.QMessageBox()
         d.setWindowTitle('GPG Sync')
         d.setText(msg)
@@ -101,8 +122,13 @@ class Common(object):
         if details:
             d.setDetailedText(details)
 
+        if question:
+            yes_button = d.addButton("Yes", QtWidgets.QMessageBox.YesRole)
+            cancel_button = d.addButton("Cancel", QtWidgets.QMessageBox.NoRole)
+            d.setDefaultButton(cancel_button)
+
         d.setIcon(icon)
-        d.exec_()
+        return d.exec_()
 
     def update_alert(self, curr_version, latest_version, url):
         d = QtWidgets.QMessageBox()
