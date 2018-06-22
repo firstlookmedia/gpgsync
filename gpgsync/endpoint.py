@@ -308,8 +308,6 @@ class Verifier(QtCore.QThread):
             e.fetch_public_key(self.c.gpg)
         except InvalidFingerprint:
             self.alert_error.emit('Invalid signing key fingerprint.', '')
-        except InvalidKeyserver:
-            self.alert_error.emit('Invalid keyserver.', '')
         except KeyserverError:
             self.alert_error.emit('Error with keyserver {}.'.format(self.keyserver.decode()), '')
         except NotFoundOnKeyserver:
@@ -455,8 +453,6 @@ class Refresher(QtCore.QThread):
             self.e.fetch_public_key(self.c.gpg)
         except InvalidFingerprint:
             err = 'Invalid signing key fingerprint'
-        except InvalidKeyserver:
-            err = 'Invalid keyserver'
         except NotFoundOnKeyserver:
             err = 'Signing key is not found on keyserver'
         except NotFoundInKeyring:
@@ -580,8 +576,6 @@ class Refresher(QtCore.QThread):
             try:
                 self.log('run', 'Fetching public key {} {}'.format(self.c.fp_to_keyid(fingerprint).decode(), self.c.gpg.get_uid(fingerprint)))
                 self.c.gpg.recv_key(self.e.keyserver, fingerprint, self.e.use_proxy, self.e.proxy_host, self.e.proxy_port)
-            except InvalidKeyserver:
-                return self.finish_with_failure('Invalid keyserver')
             except KeyserverError:
                 return self.finish_with_failure('Keyserver error')
             except NotFoundOnKeyserver:

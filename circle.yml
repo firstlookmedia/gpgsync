@@ -11,4 +11,4 @@ dependencies:
 
 test:
   override:
-    - pytest
+    - python3 -m pytest
