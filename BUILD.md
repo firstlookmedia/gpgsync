@@ -88,7 +88,7 @@ make build-debianstretch-deb
 From the `gpgsync` folder run:
 
 ```sh
-nosetests
+pytest
 ```
 
 Note that one of the tests will fail if you don't have SOCKS5 proxy server listening on port 9050 (e.g. Tor installed).
