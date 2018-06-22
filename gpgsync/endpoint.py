@@ -199,15 +199,14 @@ class Endpoint(QtCore.QObject):
         self.c.log("Endpoint", "refresher_error")
 
 
-class VerifierMessageQueue(queue.Queue):
+class VerifierMessageQueue(queue.LifoQueue):
     def __init(self):
         super(VerifierMessageQueue, self).__init__()
 
-    def add_message(self, msg=None, type='update', timeout=0):
+    def add_message(self, msg, step):
         self.put({
-            'type': type,
             'msg': msg,
-            'timeout': timeout
+            'step': step
         })
 
 
@@ -228,16 +227,11 @@ class Verifier(QtCore.QThread):
         self.proxy_port = proxy_port
 
     def finish_with_failure(self):
-        self.q.add_message(type='clear')
         self.finished.emit()
 
-    def log(self, func, message, timeout=None):
+    def log(self, func, message, step=0):
         self.c.log("Verifier", func, message)
-
-        if timeout:
-            self.q.add_message(message, timeout=timeout)
-        else:
-            self.q.add_message(message)
+        self.q.add_message(message, step)
 
     def run(self):
         print("Verifying endpoint with authority key {}".format(self.fingerprint.decode()))
@@ -255,7 +249,7 @@ class Verifier(QtCore.QThread):
         # Test loading URL
         success = False
         try:
-            self.log('run', 'Testing downloading URL {}'.format(self.url.decode()))
+            self.log('run', 'Testing downloading URL {}'.format(self.url.decode()), 0)
             msg_bytes = e.fetch_msg_url()
         except ProxyURLDownloadError as e:
             self.alert_error.emit('URL failed to download: Check your internet connection and proxy settings.', str(e))
@@ -270,7 +264,7 @@ class Verifier(QtCore.QThread):
         # Test loading signature URL
         success = False
         try:
-            self.log('run', 'Testing downloading URL {}'.format(self.sig_url.decode()))
+            self.log('run', 'Testing downloading URL {}'.format(self.sig_url.decode()), 1)
             msg_sig_bytes = e.fetch_msg_sig_url()
         except ProxyURLDownloadError as e:
             self.alert_error.emit('URL failed to download: Check your internet connection and proxy settings.', str(e))
@@ -285,7 +279,7 @@ class Verifier(QtCore.QThread):
         # Test fingerprint and keyserver, and that the key isn't revoked or expired
         success = False
         try:
-            self.log('run', 'Downloading {} from keyserver {}'.format(self.c.fp_to_keyid(self.fingerprint).decode(), self.keyserver.decode()))
+            self.log('run', 'Downloading {} from keyserver {}'.format(self.c.fp_to_keyid(self.fingerprint).decode(), self.keyserver.decode()), 2)
             e.fetch_public_key(self.c.gpg)
         except InvalidFingerprint:
             self.alert_error.emit('Invalid signing key fingerprint.', '')
@@ -321,7 +315,7 @@ class Verifier(QtCore.QThread):
         # After downloading URL, test that it's signed by signing key
         success = False
         try:
-            self.log('run', 'Verifying signature')
+            self.log('run', 'Verifying signature', 3)
             e.verify_fingerprints_sig(self.c.gpg, msg_sig_bytes, msg_bytes)
         except VerificationError:
             self.alert_error.emit('Signature does not verify.', '')
@@ -340,7 +334,7 @@ class Verifier(QtCore.QThread):
         # Test that it's a list of fingerprints
         success = False
         try:
-            self.log('run', 'Validating fingerprint list')
+            self.log('run', 'Validating fingerprint list', 4)
             e.get_fingerprint_list(msg_bytes)
         except InvalidFingerprints as e:
             self.alert_error.emit('Invalid fingerprints', str(e), '')
@@ -350,7 +344,8 @@ class Verifier(QtCore.QThread):
         if not success:
             return self.finish_with_failure()
 
-        self.log('run', 'Endpoint saved', 4000)
+        self.log('run', 'Endpoint saved', 5)
+
         self.success.emit(self.fingerprint, self.url, self.keyserver, self.use_proxy, self.proxy_host, self.proxy_port)
         self.finished.emit()
 

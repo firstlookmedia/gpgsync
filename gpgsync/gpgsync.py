@@ -22,12 +22,12 @@ import sys, platform, queue, datetime, requests
 from packaging.version import parse
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-from .endpoint import Endpoint, Verifier, Refresher, URLDownloadError, ProxyURLDownloadError, InvalidFingerprints
-from .status_bar import StatusBar, MessageQueue
+from .endpoint import URLDownloadError, ProxyURLDownloadError, InvalidFingerprints
 from .systray import SysTray
 from .settings_dialog import SettingsDialog
 from .endpoint_dialog import EndpointDialog
 from .endpoint_list import EndpointList
+
 
 class GPGSync(QtWidgets.QMainWindow):
     def __init__(self, app, common):

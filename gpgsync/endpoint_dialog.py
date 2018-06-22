@@ -22,8 +22,7 @@ import platform
 import queue
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-from .endpoint import Endpoint, Verifier
-from .status_bar import StatusBar, MessageQueue
+from .endpoint import Endpoint, Verifier, VerifierMessageQueue
 
 
 class EndpointDialog(QtWidgets.QDialog):
@@ -104,10 +103,6 @@ class EndpointDialog(QtWidgets.QDialog):
         buttons_layout.addWidget(self.save_button)
         buttons_layout.addWidget(self.cancel_button)
 
-        # Status bar
-        self.status_bar = StatusBar(self.c)
-        self.status_bar.hide()
-
         # Layout
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(fingerprint_label)
@@ -118,7 +113,6 @@ class EndpointDialog(QtWidgets.QDialog):
         layout.addWidget(self.advanced_button)
         layout.addWidget(self.advanced_group)
         layout.addLayout(buttons_layout)
-        layout.addWidget(self.status_bar)
         self.setLayout(layout)
 
         # Populate the widgets with endpoint data
@@ -157,18 +151,7 @@ class EndpointDialog(QtWidgets.QDialog):
         self.adjustSize()
 
     def save_clicked(self):
-        # Disable dialog
-        self.setEnabled(False)
-
-        # Get ready to verify
-        self.status_bar.show()
-        self.status_bar.show_loading()
-        self.status_q = MessageQueue()
-        self.update_ui_timer = QtCore.QTimer()
-        self.update_ui_timer.timeout.connect(self.update_ui)
-        self.update_ui_timer.start(500) # 0.5 seconds
-
-        # Verify the endpoint
+        # Grab the values
         fingerprint = self.fingerprint_edit.text().encode()
         url = self.url_edit.text().encode()
         keyserver = self.keyserver_edit.text().encode()
@@ -176,41 +159,15 @@ class EndpointDialog(QtWidgets.QDialog):
         proxy_host = self.proxy_host_edit.text().encode()
         proxy_port = self.proxy_port_edit.text().encode()
 
-        self.verifier = Verifier(self.c, self.status_q, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
-        self.verifier.alert_error.connect(self.verifier_alert_error)
-        self.verifier.success.connect(self.verifier_success)
-        self.verifier.finished.connect(self.verifier_finished)
-        self.verifier.start()
+        # Open the verifier dialog
+        d = VerifierDialog(self.c, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
+        d.success.connect(self.verified)
+        d.exec_()
 
     def cancel_clicked(self):
         self.close()
 
-    def update_ui(self):
-        # Update the status bar with events
-        events = []
-        done = False
-        while not done:
-            try:
-                ev = self.status_q.get(False)
-                events.append(ev)
-            except queue.Empty:
-                done = True
-
-        for event in events:
-            if event['type'] == 'update':
-                print(event['msg'])
-                self.status_bar.showMessage(event['msg'], event['timeout'])
-            elif event['type'] == 'clear':
-                self.status_bar.clearMessage()
-
-    def verifier_alert_error(self, msg, details=''):
-        # Alert the error
-        self.c.alert(msg, details, QtWidgets.QMessageBox.Warning)
-
-        # Re-enable dialog
-        self.setEnabled(True)
-
-    def verifier_success(self):
+    def verified(self):
         # Update the endpoint values
         self.endpoint.fingerprint = self.fingerprint_edit.text().encode()
         self.endpoint.url = self.url_edit.text().encode()
@@ -231,8 +188,58 @@ class EndpointDialog(QtWidgets.QDialog):
         self.saved.emit(self.endpoint)
         self.close()
 
+
+class VerifierDialog(QtWidgets.QDialog):
+    success = QtCore.pyqtSignal()
+
+    def __init__(self, common, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port):
+        super(VerifierDialog, self).__init__()
+        self.c = common
+
+        self.setWindowTitle('Verifying Endpoint')
+
+        # Label
+        self.label = QtWidgets.QLabel("Verifying endpoint")
+
+        # Progress bar
+        self.progress_bar = QtWidgets.QProgressBar()
+        self.progress_bar.setRange(0, 5)
+        self.progress_bar.setValue(0)
+
+        # Layout
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(self.label)
+        layout.addWidget(self.progress_bar)
+        self.setLayout(layout)
+
+        # Timer to update the UI
+        self.update_ui_timer = QtCore.QTimer()
+        self.update_ui_timer.timeout.connect(self.update_ui)
+        self.update_ui_timer.start(500) # 0.5 seconds
+
+        # Start the verifier
+        self.q = VerifierMessageQueue()
+        self.verifier = Verifier(self.c, self.q, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
+        self.verifier.alert_error.connect(self.verifier_alert_error)
+        self.verifier.success.connect(self.verifier_success)
+        self.verifier.finished.connect(self.verifier_finished)
+        self.verifier.start()
+
+    def update_ui(self):
+        # Process the last event in the LIFO queue, ignore the rest
+        try:
+            event = self.q.get(False)
+            self.label.setText(event['msg'])
+            self.progress_bar.setValue(event['step'])
+
+        except queue.Empty:
+            pass
+
+    def verifier_alert_error(self, msg, details=''):
+        self.c.alert(msg, details, QtWidgets.QMessageBox.Warning)
+
+    def verifier_success(self):
+        self.success.emit()
+
     def verifier_finished(self):
-        self.status_bar.clearMessage()
-        self.status_bar.hide_loading()
-        self.status_bar.hide()
-        self.update_ui_timer.stop()
+        self.close()
