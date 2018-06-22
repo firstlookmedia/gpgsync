@@ -195,8 +195,33 @@ class Endpoint(QtCore.QObject):
     def refresher_success(self, e, invalid_fingerprints, notfound_fingerprints):
         self.c.log("Endpoint", "refresher_success")
 
+        if len(invalid_fingerprints) == 0 and len(notfound_fingerprints) == 0:
+            warning = False
+        else:
+            warnings = []
+            if len(invalid_fingerprints) > 0:
+                warning.append('Invalid fingerprints {}'.format(invalid_fingerprints))
+            if len(notfound_fingerprints) > 0:
+                warnings.append('Not found fingerprints {}'.format(notfound_fingerprints))
+            warning = ', '.join(warnings)
+
+        e.last_checked = datetime.datetime.now()
+        e.last_synced = datetime.datetime.now()
+        e.warning = warning
+        e.error = None
+
+        self.c.settings.save()
+
     def refresher_error(self, e, err, reset_last_checked=True):
         self.c.log("Endpoint", "refresher_error")
+
+        if reset_last_checked:
+            e.last_checked = datetime.datetime.now()
+        e.last_failed = datetime.datetime.now()
+        e.warning = None
+        e.error = err
+
+        self.c.settings.save()
 
 
 class VerifierMessageQueue(queue.LifoQueue):

@@ -71,19 +71,28 @@ class EndpointWidget(QtWidgets.QWidget):
         uid_label.setMaximumSize(350, 20)
         uid_label.setStyleSheet(self.c.css['EndpointWidget uid_label'])
 
-        # Last synced date
+        # Status
         if self.endpoint.syncing:
-            last_synced_text = "Syncing now..."
+            status_text = "Syncing now..."
+            status_css = self.c.css['EndpointWidget status_label']
         else:
-            if self.endpoint.last_synced:
-                last_synced = self.endpoint.last_synced.strftime("%B %d, %I:%M %p")
+            if self.endpoint.error:
+                status_text = self.endpoint.error
+                status_css = self.c.css['EndpointWidget status_label_error']
+            elif self.endpoint.warning:
+                status_text = self.endpoint.warning
+                status_css = self.c.css['EndpointWidget status_label_warning']
             else:
-                last_synced = "Never"
-            last_synced_text = "Last synced: {}".format(last_synced)
-        self.last_synced_label = QtWidgets.QLabel(last_synced_text)
-        self.last_synced_label.setMinimumSize(350, 20)
-        self.last_synced_label.setMaximumSize(350, 20)
-        self.last_synced_label.setStyleSheet(self.c.css['EndpointWidget last_synced_label'])
+                if self.endpoint.last_synced:
+                    status = self.endpoint.last_synced.strftime("%B %d, %I:%M %p")
+                else:
+                    status = "Never"
+                status_text = "Last synced: {}".format(status)
+                status_css = self.c.css['EndpointWidget status_label']
+        self.status_label = QtWidgets.QLabel(status_text)
+        self.status_label.setStyleSheet(status_css)
+        self.status_label.setMinimumSize(350, 20)
+        self.status_label.setMaximumSize(350, 20)
 
         # Sync progress bar
         self.progress_bar = QtWidgets.QProgressBar()
@@ -119,7 +128,7 @@ class EndpointWidget(QtWidgets.QWidget):
         # Layout
         hlayout = QtWidgets.QHBoxLayout()
         hlayout.setSpacing(3)
-        hlayout.addWidget(self.last_synced_label)
+        hlayout.addWidget(self.status_label)
         hlayout.addWidget(self.progress_bar)
         hlayout.addStretch()
         hlayout.addWidget(sync_button)
@@ -176,7 +185,7 @@ class EndpointWidget(QtWidgets.QWidget):
             try:
                 event = self.endpoint.q.get(False)
                 if event['status'] == RefresherMessageQueue.STATUS_IN_PROGRESS:
-                    self.last_synced_label.hide()
+                    self.status_label.hide()
                     self.progress_bar.show()
                     self.progress_bar.setRange(0, event['total_keys'])
                     self.progress_bar.setValue(event['current_key'])

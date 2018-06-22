@@ -22,7 +22,6 @@ import sys, platform, queue, datetime, requests
 from packaging.version import parse
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-from .endpoint import URLDownloadError, ProxyURLDownloadError, InvalidFingerprints
 from .systray import SysTray
 from .settings_dialog import SettingsDialog
 from .endpoint_dialog import EndpointDialog

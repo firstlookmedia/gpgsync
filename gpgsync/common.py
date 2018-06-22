@@ -91,11 +91,27 @@ class Common(object):
                 }
                 """,
 
-            'EndpointWidget last_synced_label': """
+            'EndpointWidget status_label': """
                 QLabel {
                     font-size: 12px;
                     font-style: italic;
                     color: #666666;
+                }
+                """,
+
+            'EndpointWidget status_label_error': """
+                QLabel {
+                    font-size: 12px;
+                    font-style: italic;
+                    color: #cc0000;
+                }
+                """,
+
+            'EndpointWidget status_label_warning': """
+                QLabel {
+                    font-size: 12px;
+                    font-style: italic;
+                    color: #cc8400;
                 }
                 """,
 
