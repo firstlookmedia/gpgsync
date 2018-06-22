@@ -1,45 +1,94 @@
 # -*- coding: utf-8 -*-
-from nose import with_setup
-from nose.tools import raises
-from gpgsync.endpoint import *
+import os
+import pytest
 
-from .test_helpers import *
+from gpgsync.endpoint import URLDownloadError, ProxyURLDownloadError, \
+    InvalidFingerprints, Endpoint, VerifierMessageQueue, RefresherMessageQueue
 
-def test_fetch_url_valid_url():
-    e = Endpoint()
-    e.fetch_url('http://www.example.com/')
 
-@raises(URLDownloadError)
-def test_fetch_url_invalid_url():
-    e = Endpoint()
-    e.fetch_url('https://somethingfake')
+# Load an endpoint test file
+def get_endpoint_file_content(filename):
+    filename = os.path.join(os.path.abspath('test/endpoint_files'), filename)
+    return open(filename, 'rb').read()
 
-@raises(ProxyURLDownloadError)
-def test_fetch_url_valid_url_invalid_proxy():
-    # Assuming 127.0.0.1:9988 is not a valid SOCKS5 proxy...
-    e = Endpoint()
-    e.use_proxy = True
-    e.proxy_host = b'127.0.0.1'
-    e.proxy_port = b'9988'
-    e.fetch_url('https://raw.githubusercontent.com/firstlookmedia/gpgsync/master/fingerprints/fingerprints.txt')
 
-def test_fetch_url_valid_url_valid_proxy():
+def test_fetch_url_valid_url(endpoint):
+    endpoint.fetch_url('http://www.example.com/')
+
+
+def test_fetch_url_invalid_url(endpoint):
+    with pytest.raises(URLDownloadError):
+        endpoint.fetch_url('https://somethingfake')
+
+
+def test_fetch_url_valid_url_invalid_proxy(endpoint):
+    with pytest.raises(ProxyURLDownloadError):
+        # Assuming 127.0.0.1:9988 is not a valid SOCKS5 proxy...
+        endpoint.use_proxy = True
+        endpoint.proxy_host = b'127.0.0.1'
+        endpoint.proxy_port = b'9988'
+        endpoint.fetch_url('https://raw.githubusercontent.com/firstlookmedia/gpgsync/master/fingerprints/fingerprints.txt')
+
+
+def test_fetch_url_valid_url_valid_proxy(endpoint):
     # Assuming you have a system Tor installed listening on 127.0.0.1:9050
-    e = Endpoint()
-    e.use_proxy = True
-    e.proxy_host = b'127.0.0.1'
-    e.proxy_port = b'9050'
-    e.fetch_url('https://raw.githubusercontent.com/firstlookmedia/gpgsync/master/fingerprints/fingerprints.txt')
+    endpoint.use_proxy = True
+    endpoint.proxy_host = b'127.0.0.1'
+    endpoint.proxy_port = b'9050'
+    endpoint.fetch_url('https://raw.githubusercontent.com/firstlookmedia/gpgsync/master/fingerprints/fingerprints.txt')
 
-def test_get_fingerprint_list_valid():
+
+def test_get_fingerprint_list_valid(endpoint):
     # None of these should throw exceptions
-    e = Endpoint()
-    e.get_fingerprint_list(get_endpoint_file_content('fingerprints.txt'))
-    e.get_fingerprint_list(get_endpoint_file_content('fingerprints_comments.txt'))
-    e.get_fingerprint_list(get_endpoint_file_content('fingerprints_no_whitespace.txt'))
-    e.get_fingerprint_list(get_endpoint_file_content('fingerprints_weird_whitespace.txt'))
+    endpoint.get_fingerprint_list(get_endpoint_file_content('fingerprints.txt'))
+    endpoint.get_fingerprint_list(get_endpoint_file_content('fingerprints_comments.txt'))
+    endpoint.get_fingerprint_list(get_endpoint_file_content('fingerprints_no_whitespace.txt'))
+    endpoint.get_fingerprint_list(get_endpoint_file_content('fingerprints_weird_whitespace.txt'))
 
-@raises(InvalidFingerprints)
-def test_get_fingerprint_list_invalid_fingerprints():
-    e = Endpoint()
-    e.get_fingerprint_list(get_endpoint_file_content('invalid_fingerprints.txt'))
+
+def test_get_fingerprint_list_invalid_fingerprints(endpoint):
+    with pytest.raises(InvalidFingerprints):
+        endpoint.get_fingerprint_list(get_endpoint_file_content('invalid_fingerprints.txt'))
+
+
+def test_verifier_message_queue_add_message():
+    q = VerifierMessageQueue()
+    q.add_message('this is a test', 1)
+    q.add_message('another test', 2)
+    q.add_message('yet another test', 3)
+
+    assert q.get(False) == {
+        'msg': 'yet another test',
+        'step': 3
+    }
+    assert q.get(False) == {
+        'msg': 'another test',
+        'step': 2
+    }
+    assert q.get(False) == {
+        'msg': 'this is a test',
+        'step': 1
+    }
+
+
+def test_refresher_message_queue_add_message():
+    q = RefresherMessageQueue()
+    q.add_message(RefresherMessageQueue.STATUS_STARTING)
+    q.add_message(RefresherMessageQueue.STATUS_IN_PROGRESS, 10, 2)
+    q.add_message(RefresherMessageQueue.STATUS_IN_PROGRESS, 10, 7)
+
+    assert q.get(False) == {
+        'status': RefresherMessageQueue.STATUS_IN_PROGRESS,
+        'total_keys': 10,
+        'current_key': 7
+    }
+    assert q.get(False) == {
+        'status': RefresherMessageQueue.STATUS_IN_PROGRESS,
+        'total_keys': 10,
+        'current_key': 2
+    }
+    assert q.get(False) == {
+        'status': RefresherMessageQueue.STATUS_STARTING,
+        'total_keys': 0,
+        'current_key': 0
+    }
