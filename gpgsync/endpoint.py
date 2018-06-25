@@ -445,34 +445,6 @@ class Refresher(QtCore.QThread):
         if not run_refresher:
             return
 
-        # Fetch signing key from keyserver, make sure it's not expired or revoked
-        success = False
-        reset_last_checked = True
-        try:
-            self.log('run', 'Fetching public key {} {}'.format(self.c.fp_to_keyid(self.e.fingerprint).decode(), self.c.gpg.get_uid(self.e.fingerprint)))
-            self.e.fetch_public_key(self.c.gpg)
-        except InvalidFingerprint:
-            err = 'Invalid signing key fingerprint'
-        except NotFoundOnKeyserver:
-            err = 'Signing key is not found on keyserver'
-        except NotFoundInKeyring:
-            err = 'Signing key is not found in keyring'
-        except RevokedKey:
-            err = 'The signing key is revoked'
-        except ExpiredKey:
-            err = 'The signing key is expired'
-        except KeyserverError:
-            err = 'Error connecting to keyserver'
-            reset_last_checked = False
-        else:
-            success = True
-
-        if not success:
-            return self.finish_with_failure(err, reset_last_checked)
-
-        if self.should_cancel:
-            return self.finish_with_cancel()
-
         # Download URL
         success = False
         try:
@@ -505,6 +477,34 @@ class Refresher(QtCore.QThread):
 
         if not success:
             return self.finish_with_failure(err)
+
+        if self.should_cancel:
+            return self.finish_with_cancel()
+
+        # Fetch signing key from keyserver, make sure it's not expired or revoked
+        success = False
+        reset_last_checked = True
+        try:
+            self.log('run', 'Fetching public key {} {}'.format(self.c.fp_to_keyid(self.e.fingerprint).decode(), self.c.gpg.get_uid(self.e.fingerprint)))
+            self.e.fetch_public_key(self.c.gpg)
+        except InvalidFingerprint:
+            err = 'Invalid signing key fingerprint'
+        except NotFoundOnKeyserver:
+            err = 'Signing key is not found on keyserver'
+        except NotFoundInKeyring:
+            err = 'Signing key is not found in keyring'
+        except RevokedKey:
+            err = 'The signing key is revoked'
+        except ExpiredKey:
+            err = 'The signing key is expired'
+        except KeyserverError:
+            err = 'Error connecting to keyserver'
+            reset_last_checked = False
+        else:
+            success = True
+
+        if not success:
+            return self.finish_with_failure(err, reset_last_checked)
 
         if self.should_cancel:
             return self.finish_with_cancel()
