@@ -183,6 +183,9 @@ class GPGSync(QtWidgets.QMainWindow):
         d.exec_()
 
     def update_ui(self):
+        # Update the systray icon
+        self.systray.update_icon()
+
         # Add button
         if len(self.c.settings.endpoints) == 0:
             self.add_button.setText("Add First GPG Sync Endpoint")

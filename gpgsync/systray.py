@@ -77,6 +77,17 @@ class SysTray(QtWidgets.QSystemTrayIcon):
         else:
             self.show_act.setText(self.show_text)
 
+    def update_icon(self):
+        # If endpoints are done syncing, set the systray icon back
+        syncing = False
+        for e in self.c.settings.endpoints:
+            if e.syncing:
+                syncing = True
+        if syncing:
+            self.setIcon(self.c.systray_syncing_icon)
+        else:
+            self.setIcon(self.c.systray_icon)
+
     def clicked_show(self):
         self.show_signal.emit()
 
