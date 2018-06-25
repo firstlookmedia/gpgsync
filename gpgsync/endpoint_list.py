@@ -67,8 +67,8 @@ class EndpointWidget(QtWidgets.QWidget):
         # Authority Key user ID
         uid = self.c.gpg.get_uid(self.endpoint.fingerprint)
         uid_label = QtWidgets.QLabel(uid)
-        uid_label.setMinimumSize(350, 20)
-        uid_label.setMaximumSize(350, 20)
+        uid_label.setMinimumSize(380, 20)
+        uid_label.setMaximumSize(380, 20)
         uid_label.setStyleSheet(self.c.css['EndpointWidget uid_label'])
 
         # Status
@@ -77,30 +77,34 @@ class EndpointWidget(QtWidgets.QWidget):
             status_css = self.c.css['EndpointWidget status_label']
         else:
             if self.endpoint.error:
-                status_text = self.endpoint.error
+                status_text = 'Error syncing'
                 status_css = self.c.css['EndpointWidget status_label_error']
-            elif self.endpoint.warning:
-                status_text = self.endpoint.warning
-                status_css = self.c.css['EndpointWidget status_label_warning']
             else:
                 if self.endpoint.last_synced:
                     status = self.endpoint.last_synced.strftime("%B %d, %I:%M %p")
                 else:
                     status = "Never"
-                status_text = "Last synced: {}".format(status)
-                status_css = self.c.css['EndpointWidget status_label']
+                status_text = "Synced {}".format(status)
+                if self.endpoint.warning:
+                    status_css = self.c.css['EndpointWidget status_label_warning']
+                else:
+                    status_css = self.c.css['EndpointWidget status_label']
         self.status_label = QtWidgets.QLabel(status_text)
         self.status_label.setStyleSheet(status_css)
-        self.status_label.setMinimumSize(350, 20)
-        self.status_label.setMaximumSize(350, 20)
+        self.status_label.setMinimumSize(380, 20)
+        self.status_label.setMaximumSize(380, 20)
 
         # Sync progress bar
         self.progress_bar = QtWidgets.QProgressBar()
-        self.progress_bar.setMinimumSize(240, 20)
-        self.progress_bar.setMaximumSize(240, 20)
+        self.progress_bar.setMinimumSize(270, 20)
+        self.progress_bar.setMaximumSize(270, 20)
         self.progress_bar.hide()
 
         # Buttons
+        details_button = QtWidgets.QPushButton("Details")
+        details_button.clicked.connect(self.details_clicked)
+        details_button.setStyleSheet(self.c.css['EndpointWidget button'])
+        details_button.setMinimumHeight(20)
         sync_button = QtWidgets.QPushButton("Sync Now")
         sync_button.clicked.connect(self.sync_clicked)
         sync_button.setStyleSheet(self.c.css['EndpointWidget button'])
@@ -119,11 +123,17 @@ class EndpointWidget(QtWidgets.QWidget):
         self.cancel_sync_button.setMinimumHeight(20)
 
         if self.endpoint.syncing:
+            details_button.hide()
             sync_button.hide()
             edit_button.hide()
             delete_button.hide()
         else:
             self.cancel_sync_button.hide()
+
+            if self.endpoint.error or self.endpoint.warning:
+                details_button.show()
+            else:
+                details_button.hide()
 
         # Layout
         hlayout = QtWidgets.QHBoxLayout()
@@ -131,6 +141,7 @@ class EndpointWidget(QtWidgets.QWidget):
         hlayout.addWidget(self.status_label)
         hlayout.addWidget(self.progress_bar)
         hlayout.addStretch()
+        hlayout.addWidget(details_button)
         hlayout.addWidget(sync_button)
         hlayout.addWidget(edit_button)
         hlayout.addWidget(delete_button)
@@ -142,13 +153,20 @@ class EndpointWidget(QtWidgets.QWidget):
         self.setLayout(layout)
 
         # Size
-        self.setMinimumSize(350, 50)
-        self.setMaximumSize(350, 50)
+        self.setMinimumSize(380, 50)
+        self.setMaximumSize(380, 50)
 
         # Update timer
         self.update_ui_timer = QtCore.QTimer()
         self.update_ui_timer.timeout.connect(self.update_ui)
         self.update_ui_timer.start(100) # 0.1 seconds
+
+    def details_clicked(self):
+        self.c.log("EndpointWidget", "details_clicked")
+        if self.endpoint.error:
+            self.c.alert("Sync error:\n\n{}".format(self.endpoint.error), icon=QtWidgets.QMessageBox.Critical)
+        elif self.endpoint.warning:
+            self.c.alert("Sync warning:\n\n{}".format(self.endpoint.warning), icon=QtWidgets.QMessageBox.Warning)
 
     def sync_clicked(self):
         self.c.log("EndpointWidget", "sync_clicked")

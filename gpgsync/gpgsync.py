@@ -199,8 +199,8 @@ class GPGSync(QtWidgets.QMainWindow):
 
         # Set new window size
         height = len(self.c.settings.endpoints)*70 + 140
-        self.setMinimumSize(390, height)
-        self.setMaximumSize(390, height)
+        self.setMinimumSize(420, height)
+        self.setMaximumSize(420, height)
 
     def add_endpoint(self):
         d = EndpointDialog(self.c)

@@ -200,9 +200,9 @@ class Endpoint(QtCore.QObject):
         else:
             warnings = []
             if len(invalid_fingerprints) > 0:
-                warning.append('Invalid fingerprints {}'.format(invalid_fingerprints))
+                warning.append('Invalid fingerprints: {}'.format(', '.join([x.decode() for x in invalid_fingerprints])))
             if len(notfound_fingerprints) > 0:
-                warnings.append('Not found fingerprints {}'.format(notfound_fingerprints))
+                warnings.append('Fingerprints not found: {}'.format(', '.join([x.decode() for x in notfound_fingerprints])))
             warning = ', '.join(warnings)
 
         e.last_checked = datetime.datetime.now()
@@ -360,7 +360,7 @@ class Verifier(QtCore.QThread):
             self.log('run', 'Validating fingerprint list', 4)
             e.get_fingerprint_list(msg_bytes)
         except InvalidFingerprints as e:
-            self.alert_error.emit('Invalid fingerprints', str(e), '')
+            self.alert_error.emit('Invalid fingerprints', str(e))
         else:
             success = True
 
