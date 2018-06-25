@@ -1,5 +1,11 @@
 # GPG Sync Changelog
 
+## 0.2.0
+
+* Completely redesigned the user interface
+* Removed dock icon in macOS
+* Fixed various minor bugs
+
 ## 0.1.2
 
 * Fix bugs where GPG Sync randomly crashes, or crashes on exit
