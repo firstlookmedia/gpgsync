@@ -50,11 +50,9 @@ class Common(object):
         if platform.system() == 'Darwin':
             self.systray_icon = QtGui.QIcon(self.get_resource_path('gpgsync-bw.png'))
             self.systray_syncing_icon = QtGui.QIcon(self.get_resource_path('syncing-bw.png'))
-            self.systray_error_icon = QtGui.QIcon(self.get_resource_path('error-bw.png'))
         else:
             self.systray_icon = QtGui.QIcon(self.get_resource_path('gpgsync.png'))
             self.systray_syncing_icon = QtGui.QIcon(self.get_resource_path('syncing.png'))
-            self.systray_error_icon = QtGui.QIcon(self.get_resource_path('error.png'))
 
         # Stylesheets
         self.css = {
