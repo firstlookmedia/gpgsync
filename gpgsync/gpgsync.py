@@ -81,6 +81,8 @@ class GPGSync(QtWidgets.QMainWindow):
         logo_label = QtWidgets.QLabel()
         logo_label.setPixmap(QtGui.QPixmap.fromImage(logo_image))
         logo_layout = QtWidgets.QHBoxLayout()
+        logo_label.setMinimumSize(64, 64)
+        logo_label.setMaximumSize(64, 64)
         logo_layout.addStretch()
         logo_layout.addWidget(logo_label)
         logo_layout.addStretch()
@@ -198,9 +200,9 @@ class GPGSync(QtWidgets.QMainWindow):
         self.endpoint_list.update_ui()
 
         # Set new window size
-        height = len(self.c.settings.endpoints)*70 + 140
-        self.setMinimumSize(420, height)
-        self.setMaximumSize(420, height)
+        height = len(self.c.settings.endpoints)*80 + 140
+        self.setMinimumSize(480, height)
+        self.setMaximumSize(480, height)
 
     def add_endpoint(self):
         d = EndpointDialog(self.c)

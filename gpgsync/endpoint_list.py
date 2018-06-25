@@ -67,8 +67,8 @@ class EndpointWidget(QtWidgets.QWidget):
         # Authority Key user ID
         uid = self.c.gpg.get_uid(self.endpoint.fingerprint)
         uid_label = QtWidgets.QLabel(uid)
-        uid_label.setMinimumSize(380, 20)
-        uid_label.setMaximumSize(380, 20)
+        uid_label.setMinimumSize(440, 30)
+        uid_label.setMaximumSize(440, 30)
         uid_label.setStyleSheet(self.c.css['EndpointWidget uid_label'])
 
         # Status
@@ -91,39 +91,35 @@ class EndpointWidget(QtWidgets.QWidget):
                     status_css = self.c.css['EndpointWidget status_label']
         self.status_label = QtWidgets.QLabel(status_text)
         self.status_label.setStyleSheet(status_css)
-        self.status_label.setMinimumSize(380, 20)
-        self.status_label.setMaximumSize(380, 20)
+        self.status_label.setMinimumSize(440, 20)
+        self.status_label.setMaximumSize(440, 20)
 
         # Sync progress bar
         self.progress_bar = QtWidgets.QProgressBar()
-        self.progress_bar.setMinimumSize(270, 20)
-        self.progress_bar.setMaximumSize(270, 20)
+        self.progress_bar.setMinimumSize(290, 20)
+        self.progress_bar.setMaximumSize(290, 20)
         self.progress_bar.hide()
 
         # Buttons
-        details_button = QtWidgets.QPushButton("Details")
-        details_button.clicked.connect(self.details_clicked)
-        details_button.setStyleSheet(self.c.css['EndpointWidget button'])
-        details_button.setMinimumHeight(20)
+        info_button = QtWidgets.QPushButton("Info")
+        info_button.clicked.connect(self.details_clicked)
+        info_button.setStyleSheet(self.c.css['EndpointWidget button'])
         sync_button = QtWidgets.QPushButton("Sync Now")
         sync_button.clicked.connect(self.sync_clicked)
         sync_button.setStyleSheet(self.c.css['EndpointWidget button'])
-        sync_button.setMinimumHeight(20)
         edit_button = QtWidgets.QPushButton("Edit")
         edit_button.clicked.connect(self.edit_clicked)
         edit_button.setStyleSheet(self.c.css['EndpointWidget button'])
-        edit_button.setMinimumHeight(20)
         delete_button = QtWidgets.QPushButton("Delete")
         delete_button.clicked.connect(self.delete_clicked)
         delete_button.setStyleSheet(self.c.css['EndpointWidget button'])
-        delete_button.setMinimumHeight(20)
+        #delete_button.setMinimumHeight(30)
         self.cancel_sync_button = QtWidgets.QPushButton("Cancel Sync")
         self.cancel_sync_button.clicked.connect(self.cancel_sync_clicked)
         self.cancel_sync_button.setStyleSheet(self.c.css['EndpointWidget button'])
-        self.cancel_sync_button.setMinimumHeight(20)
 
         if self.endpoint.syncing:
-            details_button.hide()
+            info_button.hide()
             sync_button.hide()
             edit_button.hide()
             delete_button.hide()
@@ -131,30 +127,30 @@ class EndpointWidget(QtWidgets.QWidget):
             self.cancel_sync_button.hide()
 
             if self.endpoint.error or self.endpoint.warning:
-                details_button.show()
+                info_button.show()
             else:
-                details_button.hide()
+                info_button.hide()
 
         # Layout
         hlayout = QtWidgets.QHBoxLayout()
-        hlayout.setSpacing(3)
+        hlayout.setSpacing(4)
         hlayout.addWidget(self.status_label)
         hlayout.addWidget(self.progress_bar)
         hlayout.addStretch()
-        hlayout.addWidget(details_button)
+        hlayout.addWidget(info_button)
         hlayout.addWidget(sync_button)
         hlayout.addWidget(edit_button)
         hlayout.addWidget(delete_button)
         hlayout.addWidget(self.cancel_sync_button)
         layout = QtWidgets.QVBoxLayout()
-        layout.setSpacing(5)
+        layout.setSpacing(0)
         layout.addWidget(uid_label)
         layout.addLayout(hlayout)
         self.setLayout(layout)
 
         # Size
-        self.setMinimumSize(380, 50)
-        self.setMaximumSize(380, 50)
+        self.setMinimumSize(440, 70)
+        self.setMaximumSize(440, 70)
 
         # Update timer
         self.update_ui_timer = QtCore.QTimer()

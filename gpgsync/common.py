@@ -86,12 +86,13 @@ class Common(object):
             'EndpointWidget uid_label': """
                 QLabel {
                     font-weight: bold;
+                    font-size: 14px;
                 }
                 """,
 
             'EndpointWidget status_label': """
                 QLabel {
-                    font-size: 12px;
+                    font-size: 11px;
                     font-style: italic;
                     color: #666666;
                 }
@@ -99,7 +100,7 @@ class Common(object):
 
             'EndpointWidget status_label_error': """
                 QLabel {
-                    font-size: 12px;
+                    font-size: 11px;
                     font-style: italic;
                     color: #cc0000;
                 }
@@ -107,7 +108,7 @@ class Common(object):
 
             'EndpointWidget status_label_warning': """
                 QLabel {
-                    font-size: 12px;
+                    font-size: 11px;
                     font-style: italic;
                     color: #cc8400;
                 }
@@ -115,8 +116,7 @@ class Common(object):
 
             'EndpointWidget button': """
                 QPushButton {
-                    font-size: 12px;
-                    padding: 3px 5px 3px 5px;
+                    font-size: 11px;
                 }
                 """
         }
