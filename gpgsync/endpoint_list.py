@@ -148,7 +148,7 @@ class EndpointWidget(QtWidgets.QWidget):
         # Update timer
         self.update_ui_timer = QtCore.QTimer()
         self.update_ui_timer.timeout.connect(self.update_ui)
-        self.update_ui_timer.start(500) # 0.5 seconds
+        self.update_ui_timer.start(100) # 0.1 seconds
 
     def sync_clicked(self):
         self.c.log("EndpointWidget", "sync_clicked")
