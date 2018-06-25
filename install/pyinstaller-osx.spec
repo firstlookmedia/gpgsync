@@ -47,7 +47,7 @@ app = BUNDLE(
     icon='install/gpgsync.icns',
     bundle_identifier='org.firstlook.gpgsync',
     info_plist={
-        'LSUIElement': 'True',
-        'NSHighResolutionCapable': 'True',
+        'LSUIElement': True,
+        'NSHighResolutionCapable': True,
         'CFBundleShortVersionString': version
     })

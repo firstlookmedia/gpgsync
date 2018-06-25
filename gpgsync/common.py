@@ -198,7 +198,7 @@ class Common(object):
         # the location of cacerts.pem. Here's a hack to let it know where it is.
         # https://stackoverflow.com/questions/17158529/fixing-ssl-certificate-error-in-exe-compiled-with-py2exe-or-pyinstaller
         if getattr(sys, 'frozen', False):
-            verify = os.path.join(os.path.dirname(sys.executable), 'requests/cacert.pem')
+            verify = os.path.join(os.path.dirname(os.path.dirname(sys.executable)), 'Resources/certifi/cacert.pem')
             return requests.get(url, proxies=proxies, verify=verify)
         else:
             return requests.get(url, proxies=proxies)
