@@ -36,6 +36,10 @@ install/build_osx.sh --release
 
 Now you should have `dist/GPG Sync.pkg`.
 
+### PyInstaller note
+
+If you'd like to build an app bundle that hides the dock icon ([#7](https://github.com/firstlookmedia/gpgsync/issues/7)), you must have a version of PyInstaller installed that fixes [this bug](https://github.com/pyinstaller/pyinstaller/issues/1917). At time of writing the fix for that isn't merged yet, but manually installing PyInstaller from [this PR branch](https://github.com/pyinstaller/pyinstaller/pull/3566) does the trick for me.
+
 ## Linux distributions
 
 *Debian / Ubuntu / Mint*
