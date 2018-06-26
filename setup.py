@@ -41,8 +41,6 @@ if p == 'Linux':
         'share/gpgsync.desktop',
         'share/gpgsync.png',
         'share/syncing.png',
-        'share/error.png',
-        'share/loading.gif',
         'share/sks-keyservers.netCA.pem',
         'share/sks-keyservers.netCA.pem.asc',
         'share/version'
