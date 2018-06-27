@@ -157,6 +157,12 @@ class Settings(object):
         self.c.log("Settings", "configure_run_automatically")
 
         # TODO: Support Windows
+        # Need to copy a shortcut into here on Windows 10:
+        # C:\Users\user\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
+        # (Is it the same path for Windows 7?)
+        # Proably should create the installer first, in order to generate a shortcut.
+        # Then, if GPG Sync is installed, this function can copy the shortcut into
+        # the right location, or delete the shortcut.
 
         autorun_dir = None
         if platform.system() == 'Darwin':
