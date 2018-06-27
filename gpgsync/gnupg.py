@@ -81,7 +81,7 @@ class GnuPG(object):
         elif self.system == 'Windows':
             import win32process
             self.creationflags = win32process.CREATE_NO_WINDOW
-            self.gpg_path = shutil.which('gpg2')
+            self.gpg_path = "C:/Program Files (x86)/GnuPG/bin/gpg.exe"
 
         # Remember uids that have already been queried
         self.uids = dict()
@@ -93,7 +93,10 @@ class GnuPG(object):
 
     def is_gpg_available(self):
         if self.system == 'Windows':
-            return os.path.isfile(self.gpg_path)
+            try:
+                return os.path.isfile(self.gpg_path)
+            except:
+                return False
         else:
             try:
                 return os.path.isfile(self.gpg_path) and os.access(self.gpg_path, os.X_OK)
@@ -106,7 +109,7 @@ class GnuPG(object):
         if not self.c.valid_fp(fp):
             raise InvalidFingerprint(fp)
 
-        fp = self.c.clean_fp(fp)
+        fp = self.c.clean_fp(fp).decode()
         keyserver = self.c.clean_keyserver(keyserver).decode()
 
         default_hkps_server = 'hkps://hkps.pool.sks-keyservers.net'
@@ -142,13 +145,14 @@ class GnuPG(object):
         self.import_to_default_homedir(fp)
 
     def get_pubkey_filename_on_disk(self, fp):
-        fp = self.c.clean_fp(fp)
-        filename = fp.decode() + '.asc'
+        fp = self.c.clean_fp(fp).decode()
+        filename = fp + '.asc'
         return os.path.join(self.appdata_path, filename)
 
     def export_pubkey_to_disk(self, fp):
         fp = self.c.clean_fp(fp)
         filename = self.get_pubkey_filename_on_disk(fp)
+        fp = fp.decode()
 
         self.c.log("GnuPG", "export_pubkey_to_disk", "fp={}".format(fp))
 
@@ -166,6 +170,7 @@ class GnuPG(object):
     def import_pubkey_from_disk(self, fp):
         fp = self.c.clean_fp(fp)
         filename = self.get_pubkey_filename_on_disk(fp)
+        fp = fp.decode()
 
         self.c.log("GnuPG", "import_pubkey_from_disk", "fp={}".format(fp))
 
@@ -183,6 +188,7 @@ class GnuPG(object):
     def delete_pubkey_from_disk(self, fp):
         fp = self.c.clean_fp(fp)
         filename = self.get_pubkey_filename_on_disk(fp)
+        fp = fp.decode()
 
         self.c.log("GnuPG", "delete_pubkey_from_disk", "fp={}".format(fp))
 
@@ -206,7 +212,7 @@ class GnuPG(object):
         if not self.c.valid_fp(fp):
             raise InvalidFingerprint(fp)
 
-        fp = self.c.clean_fp(fp)
+        fp = self.c.clean_fp(fp).decode()
         out,err = self._gpg(['--with-colons', '--list-keys', fp])
 
         if b"error reading key: No public key" in err:
@@ -226,7 +232,7 @@ class GnuPG(object):
         if not self.c.valid_fp(fp):
             raise InvalidFingerprint(fp)
 
-        fp = self.c.clean_fp(fp)
+        fp = self.c.clean_fp(fp).decode()
 
         if fp in self.uids:
             return self.uids[fp]
@@ -247,7 +253,7 @@ class GnuPG(object):
         if not self.c.valid_fp(fp):
             raise InvalidFingerprint(fp)
 
-        fp = self.c.clean_fp(fp)
+        fp = self.c.clean_fp(fp).decode()
 
         # Write message and detached signature to disk
         msg_sig_filename = tempfile.NamedTemporaryFile(delete=False).name
@@ -287,7 +293,7 @@ class GnuPG(object):
         if not self.c.valid_fp(fp):
             raise InvalidFingerprint(fp)
 
-        fp = self.c.clean_fp(fp)
+        fp = self.c.clean_fp(fp).decode()
 
         out, err = self._gpg(['--keyid-format', '0xlong', '--list-keys', fp])
         if b'gpg: error reading key: No public key' in err:

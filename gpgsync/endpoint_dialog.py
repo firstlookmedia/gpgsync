@@ -42,6 +42,7 @@ class EndpointDialog(QtWidgets.QDialog):
             self.setWindowTitle('Add Endpoint')
             self.endpoint = Endpoint(self.c)
             self.new_endpoint = True
+        self.setWindowIcon(self.c.icon)
         self.setMinimumWidth(400)
 
         # Authority key fingerprint
@@ -197,6 +198,7 @@ class VerifierDialog(QtWidgets.QDialog):
         self.c = common
 
         self.setWindowTitle('Verifying Endpoint')
+        self.setWindowIcon(self.c.icon)
 
         # Label
         self.label = QtWidgets.QLabel("Verifying endpoint")

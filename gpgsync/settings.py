@@ -156,6 +156,9 @@ class Settings(object):
     def configure_run_automatically(self):
         self.c.log("Settings", "configure_run_automatically")
 
+        # TODO: Support Windows
+
+        autorun_dir = None
         if platform.system() == 'Darwin':
             share_filename = 'org.firstlook.gpgsync.plist'
             autorun_dir = os.path.expanduser("~/Library/LaunchAgents")
@@ -163,17 +166,18 @@ class Settings(object):
             share_filename = 'gpgsync.desktop'
             autorun_dir = os.path.expanduser("~/.config/autostart")
 
-        if not os.path.exists(autorun_dir):
-            os.makedirs(autorun_dir)
+        if autorun_dir:
+            if not os.path.exists(autorun_dir):
+                os.makedirs(autorun_dir)
 
-        autorun_filename = os.path.join(autorun_dir, share_filename)
+            autorun_filename = os.path.join(autorun_dir, share_filename)
 
-        if self.run_automatically:
-            buf = open(self.c.get_resource_path(share_filename)).read()
-            open(autorun_filename, 'w').write(buf)
-        else:
-            if os.path.exists(autorun_filename):
-                os.remove(autorun_filename)
+            if self.run_automatically:
+                buf = open(self.c.get_resource_path(share_filename)).read()
+                open(autorun_filename, 'w').write(buf)
+            else:
+                if os.path.exists(autorun_filename):
+                    os.remove(autorun_filename)
 
 
     """

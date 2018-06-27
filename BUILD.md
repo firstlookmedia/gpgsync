@@ -40,6 +40,24 @@ Now you should have `dist/GPG Sync.pkg`.
 
 If you'd like to build an app bundle that hides the dock icon ([#7](https://github.com/firstlookmedia/gpgsync/issues/7)), you must have a version of PyInstaller installed that fixes [this bug](https://github.com/pyinstaller/pyinstaller/issues/1917). At time of writing the fix for that isn't merged yet, but manually installing PyInstaller from [this PR branch](https://github.com/pyinstaller/pyinstaller/pull/3566) does the trick for me.
 
+## Windows
+
+Download Python 3.6.4, 32-bit (x86) from https://www.python.org/downloads/release/python-364/. I downloaded `python-3.6.4.exe`. When installing it, make sure to check the "Add Python 3.6 to PATH" checkbox on the first page of the installer.
+
+Open a command prompt, cd to the gpgsync folder, and install dependencies with pip:
+
+```cmd
+pip3 install -r install\requirements.txt
+```
+
+Download and install Qt5 from https://www.qt.io/download-open-source/. I downloaded `qt-unified-windows-x86-3.0.4-online.exe`. There's no need to login to a Qt account during installation. Make sure you install the latest Qt 5.x. I installed Qt 5.11.0. You only need to install the `MSVC 2015 32-bit` component, as well as all of the the `Qt` components, for that that version.
+
+After that you can launch GPG Sync during development with:
+
+```
+python dev_scripts\gpg_sync --debug
+```
+
 ## Linux distributions
 
 *Debian / Ubuntu / Mint*

@@ -132,6 +132,7 @@ class Common(object):
         d = QtWidgets.QMessageBox()
         d.setWindowTitle('GPG Sync')
         d.setText(msg)
+        d.setWindowIcon(self.icon)
 
         if details:
             d.setDetailedText(details)
@@ -161,7 +162,10 @@ class Common(object):
             QtGui.QDesktopServices.openUrl(QtCore.QUrl(url))
 
     def clean_fp(self, fp):
-        return fp.strip().replace(b' ', b'').upper()
+        if type(fp) == bytes:
+            return fp.strip().replace(b' ', b'').upper()
+        else:
+            return fp.strip().replace(' ', '').upper().encode()
 
     def valid_fp(self, fp):
         return re.match(b'^[A-F\d]{40}$', self.clean_fp(fp))
