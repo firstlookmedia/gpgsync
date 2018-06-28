@@ -62,8 +62,8 @@ class SysTray(QtWidgets.QSystemTrayIcon):
         self.show()
 
     def clicked_activated(self, reason):
-        # Clicking the systray icon raises window in OSX
-        if platform.system() == 'Darwin':
+        # Clicking the systray icon raises window in OSX and Windows
+        if platform.system() == 'Darwin' or platform.system() == 'Window':
             self.clicked_applet_signal.emit()
             return
 
