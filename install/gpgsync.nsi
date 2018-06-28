@@ -39,7 +39,7 @@ ${EndIf}
     !echo "Creating normal installer"
     !system "makensis.exe /DINNER gpgsync.nsi" = 0
     !system "$%TEMP%\tempinstaller.exe" = 2
-    #!system "signtool.exe sign /v /d $\"Uninstall GPG Sync$\" /a /tr http://time.certum.pl/ $%TEMP%\uninstall.exe" = 0
+    !system "signtool.exe sign /v /d $\"Uninstall GPG Sync$\" /a /tr http://time.certum.pl/ $%TEMP%\uninstall.exe" = 0
 
     # all done, now we can build the real installer
     OutFile "..\dist\gpgsync-setup.exe"
@@ -132,9 +132,6 @@ Section "install"
     File "${BINPATH}\_socket.pyd"
     File "${BINPATH}\_ssl.pyd"
 
-    SetOutPath "$INSTDIR\requests"
-    File "${BINPATH}\requests\cacert.pem"
-
     SetOutPath "$INSTDIR\certifi"
     File "${BINPATH}\certifi\cacert.pem"
 
@@ -145,7 +142,6 @@ Section "install"
     File "${BINPATH}\PyQt5\Qt\plugins\iconengines\qsvgicon.dll"
 
     SetOutPath "$INSTDIR\PyQt5\Qt\plugins\imageformats"
-    File "${BINPATH}\PyQt5\Qt\plugins\imageformats\qdds.dll"
     File "${BINPATH}\PyQt5\Qt\plugins\imageformats\qgif.dll"
     File "${BINPATH}\PyQt5\Qt\plugins\imageformats\qicns.dll"
     File "${BINPATH}\PyQt5\Qt\plugins\imageformats\qico.dll"
@@ -287,11 +283,9 @@ FunctionEnd
         Delete "$INSTDIR\_lzma.pyd"
         Delete "$INSTDIR\_socket.pyd"
         Delete "$INSTDIR\_ssl.pyd"
-        Delete "$INSTDIR\requests\cacert.pem"
         Delete "$INSTDIR\certifi\cacert.pem"
         Delete "$INSTDIR\PyQt5\Qt\bin\qt.conf"
         Delete "$INSTDIR\PyQt5\Qt\plugins\iconengines\qsvgicon.dll"
-        Delete "$INSTDIR\PyQt5\Qt\plugins\imageformats\qdds.dll"
         Delete "$INSTDIR\PyQt5\Qt\plugins\imageformats\qgif.dll"
         Delete "$INSTDIR\PyQt5\Qt\plugins\imageformats\qicns.dll"
         Delete "$INSTDIR\PyQt5\Qt\plugins\imageformats\qico.dll"
@@ -318,7 +312,6 @@ FunctionEnd
         Delete "$INSTDIR\gpgsync.ico"
         Delete "$INSTDIR\uninstall.exe"
 
-        rmDir "$INSTDIR\requests"
         rmDir "$INSTDIR\certifi"
         rmDir "$INSTDIR\PyQt5\Qt\bin"
         rmDir "$INSTDIR\PyQt5\Qt\plugins\iconengines"

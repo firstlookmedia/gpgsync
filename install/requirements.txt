@@ -1,9 +1,9 @@
-packaging==16.8
+packaging==17.1
 PyInstaller==3.3.1
 pyparsing==2.2.0
-PyQt5==5.7.1
-PySocks==1.6.6
-python-dateutil==2.6.0
-requests==2.13.0
-sip==4.19
-six==1.10.0
+PyQt5==5.10.1
+PySocks==1.6.8
+python-dateutil==2.7.3
+requests==2.19.1
+sip==4.19.8
+six==1.11.0
