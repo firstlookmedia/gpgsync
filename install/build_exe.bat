@@ -3,3 +3,12 @@ rmdir /s /q dist
 
 REM build gpgsync.exe
 pyinstaller install\pyinstaller.spec -y
+
+REM codesign gpgsync.exe
+REM signtool.exe sign /v /d "GPG Sync" /a /tr http://time.certum.pl/ dist\gpgsync\gpgsync.exe
+
+REM build an installer, dist\gpgsync-setup.exe
+makensis.exe install\gpgsync.nsi
+
+REM sign gpgsync-setup.exe
+REM signtool.exe sign /v /d "GPG Sync" /a /tr http://time.certum.pl/ dist\gpgsync-setup.exe

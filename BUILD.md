@@ -58,7 +58,7 @@ After that you can launch GPG Sync during development with:
 python dev_scripts\gpg_sync --debug
 ```
 
-If you want to build a .exe:
+### To make a .exe:
 
 These instructions include adding folders to the path in Windows. To do this, go to Start and type "advanced system settings", and open "View advanced system settings" in the Control Panel. Click Environment Variables. Under "System variables" double-click on Path. From there you can add and remove folders that are available in the PATH.
 
@@ -72,9 +72,24 @@ Add the following directories to the path:
 * `C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x86`
 * `C:\Users\user\AppData\Local\Programs\Python\Python36-32\Lib\site-packages\PyQt5\Qt\bin`
 
-### To make a .exe:
+Finally, open a command prompt, cd into the gpgsync directory, and type: `pyinstaller install\pyinstaller.spec`. `gpgsync.exe` and all of their supporting files will get created inside the `dist` folder.
 
-* Open a command prompt, cd into the gpgsync directory, and type: `pyinstaller install\pyinstaller.spec`. `gpgsync.exe` and all of their supporting files will get created inside the `dist` folder.
+### To build the installer:
+
+* Go to http://nsis.sourceforge.net/Download and download the latest NSIS. I downloaded `nsis-3.03-setup.exe`.
+* Add `C:\Program Files (x86)\NSIS` to the path.
+
+If you want to sign binaries with Authenticode:
+
+* You'll need a code signing certificate. I got an open source code signing certificate from [Certum](https://www.certum.eu/certum/cert,offer_en_open_source_cs.xml).
+* Once you get a code signing key and certificate and covert it to a pfx file, import it into your certificate store.
+
+Note that you must have a codesigning certificate installed in order to use the `install\build_exe.bat` script, because it codesigns `gpgsync.exe`, `uninstall.exe`, and `gpgsync-setup.exe`.
+
+Open a command prompt, cd to the gpgsync directory, and type: `install\build_exe.bat`
+
+This will prompt you to codesign three binaries and execute one unsigned binary. When you're done clicking through everything you will have `dist\gpgsync-setup.exe`.
+
 
 ## Linux distributions
 
