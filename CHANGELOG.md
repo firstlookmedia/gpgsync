@@ -2,6 +2,7 @@
 
 ## 0.2.0
 
+* Ported to Windows!
 * Completely redesigned the user interface
 * Removed dock icon in macOS
 * Fixed various minor bugs
