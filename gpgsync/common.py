@@ -183,16 +183,13 @@ class Common(object):
             # Look for resources directory relative to python file
             prefix = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))), 'share')
 
+        # Check if app is "frozen"
+        # https://pythonhosted.org/PyInstaller/#run-time-information
+        elif getattr(sys, 'frozen', False):
+            prefix = os.path.join(os.path.dirname(sys.executable), 'share')
+
         elif platform.system() == 'Linux':
             prefix = os.path.join(sys.prefix, 'share/gpgsync')
-
-        elif platform.system() == 'Darwin':
-            # Check if app is "frozen"
-            # https://pythonhosted.org/PyInstaller/#run-time-information
-            if getattr(sys, 'frozen', False):
-                prefix = os.path.join(os.path.dirname(sys.executable), 'share')
-            else:
-                prefix = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'share')
 
         resource_path = os.path.join(prefix, filename)
         return resource_path
@@ -202,7 +199,12 @@ class Common(object):
         # the location of cacerts.pem. Here's a hack to let it know where it is.
         # https://stackoverflow.com/questions/17158529/fixing-ssl-certificate-error-in-exe-compiled-with-py2exe-or-pyinstaller
         if getattr(sys, 'frozen', False):
-            verify = os.path.join(os.path.dirname(os.path.dirname(sys.executable)), 'Resources/certifi/cacert.pem')
+            if platform.system() == 'Darwin':
+                verify = os.path.join(os.path.dirname(os.path.dirname(sys.executable)), 'Resources/certifi/cacert.pem')
+            elif platform.system() == 'Windows':
+                verify = os.path.join(os.path.dirname(sys.executable), 'certifi/cacert.pem')
+            else:
+                verify = None
             return requests.get(url, proxies=proxies, verify=verify)
         else:
             return requests.get(url, proxies=proxies)

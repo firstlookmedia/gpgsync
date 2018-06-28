@@ -1,12 +1,12 @@
 # -*- mode: python -*-
-
-block_cipher = None
+import platform
+p = platform.system()
 
 # Get the version
 version = open('share/version').read().strip().lstrip('v')
 
 a = Analysis(
-    ['gpgsync-osx.py'],
+    ['scripts/gpgsync-pyinstaller'],
     pathex=['.'],
     binaries=None,
     datas=[('../share/*', 'share')],
@@ -16,11 +16,11 @@ a = Analysis(
     excludes=[],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
-    cipher=block_cipher)
+    cipher=None)
 
 pyz = PYZ(
     a.pure, a.zipped_data,
-    cipher=block_cipher)
+    cipher=None)
 
 exe = EXE(
     pyz,
@@ -30,7 +30,7 @@ exe = EXE(
     debug=False,
     strip=False,
     upx=True,
-    console=False)
+    console=True)
 
 coll = COLLECT(
     exe,
@@ -41,13 +41,14 @@ coll = COLLECT(
     upx=True,
     name='gpgsync')
 
-app = BUNDLE(
-    coll,
-    name='GPG Sync.app',
-    icon='install/gpgsync.icns',
-    bundle_identifier='org.firstlook.gpgsync',
-    info_plist={
-        'LSUIElement': True,
-        'NSHighResolutionCapable': True,
-        'CFBundleShortVersionString': version
-    })
+if p == 'Darwin':
+  app = BUNDLE(
+      coll,
+      name='GPG Sync.app',
+      icon='install/gpgsync.icns',
+      bundle_identifier='org.firstlook.gpgsync',
+      info_plist={
+          'LSUIElement': True,
+          'NSHighResolutionCapable': True,
+          'CFBundleShortVersionString': version
+      })

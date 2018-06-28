@@ -72,6 +72,7 @@ class GnuPG(object):
         self.c.log("GnuPG", "__init__", "created homedir: {}".format(self.homedir))
 
         self.system = platform.system()
+        self.popen_startupinfo = None
         self.creationflags = 0
         if self.system == 'Darwin':
             os.environ['PATH'] = '/bin:/usr/bin:/usr/local/bin'
@@ -82,6 +83,10 @@ class GnuPG(object):
             import win32process
             self.creationflags = win32process.CREATE_NO_WINDOW
             self.gpg_path = "C:/Program Files (x86)/GnuPG/bin/gpg.exe"
+
+            # In Windows, hide console window when opening gpg.exe subprocess
+            self.popen_startupinfo = subprocess.STARTUPINFO()
+            self.popen_startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
         # Remember uids that have already been queried
         self.uids = dict()
@@ -316,7 +321,8 @@ class GnuPG(object):
         # Import public key into default homedir
         if not b'gpg: WARNING: nothing exported' in err:
             p = subprocess.Popen([self.gpg_path, '--import'],
-                stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+                stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE,
+                startupinfo=self.popen_startupinfo)
             (out, err) = p.communicate(pubkey)
 
             if out != '':
@@ -330,7 +336,8 @@ class GnuPG(object):
         self.c.log("GnuPG", "_gpg", "args: {}".format(default_args + args))
 
         p = subprocess.Popen(default_args + args,
-            stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE,
+            startupinfo=self.popen_startupinfo)
         (out, err) = p.communicate(input)
 
         if out != '':
