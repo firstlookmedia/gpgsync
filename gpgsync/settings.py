@@ -22,6 +22,7 @@ import os
 import json
 import pickle
 import platform
+import shutil
 import dateutil.parser as date_parser
 
 from .endpoint import Endpoint
@@ -31,11 +32,11 @@ class Settings(object):
     def __init__(self, common):
         self.c = common
 
-        system = platform.system()
-        if system == 'Windows':
+        self.system = platform.system()
+        if self.system == 'Windows':
             appdata = os.environ['APPDATA']
             self.appdata_path = '{0}\\gpgsync'.format(appdata)
-        elif system == 'Darwin':
+        elif self.system == 'Darwin':
             self.appdata_path = os.path.expanduser("~/Library/Application Support/GPG Sync")
         else:
             self.appdata_path = os.path.expanduser("~/.config/gpgsync")
@@ -156,19 +157,14 @@ class Settings(object):
     def configure_run_automatically(self):
         self.c.log("Settings", "configure_run_automatically")
 
-        # TODO: Support Windows
-        # Need to copy a shortcut into here on Windows 10:
-        # C:\Users\user\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
-        # (Is it the same path for Windows 7?)
-        # Proably should create the installer first, in order to generate a shortcut.
-        # Then, if GPG Sync is installed, this function can copy the shortcut into
-        # the right location, or delete the shortcut.
-
         autorun_dir = None
-        if platform.system() == 'Darwin':
+        if self.system == 'Darwin':
             share_filename = 'org.firstlook.gpgsync.plist'
             autorun_dir = os.path.expanduser("~/Library/LaunchAgents")
-        elif platform.system() == 'Linux':
+        elif self.system == 'Windows':
+            share_filename = 'GPG Sync.lnk'
+            autorun_dir = os.path.join(os.environ['APPDATA'], "Microsoft\\Windows\\Start Menu\\Programs\\Startup")
+        elif self.system == 'Linux':
             share_filename = 'gpgsync.desktop'
             autorun_dir = os.path.expanduser("~/.config/autostart")
 
@@ -179,8 +175,16 @@ class Settings(object):
             autorun_filename = os.path.join(autorun_dir, share_filename)
 
             if self.run_automatically:
-                buf = open(self.c.get_resource_path(share_filename)).read()
-                open(autorun_filename, 'w').write(buf)
+                if self.system == 'Windows':
+                    # Copy the existing shortcut into the autorun_dir
+                    src_filename = os.path.join(os.path.join(os.environ['PROGRAMDATA'], "Microsoft\\Windows\\Start Menu\\Programs"), share_filename)
+                    if os.path.exists(src_filename):
+                        shutil.copyfile(src_filename, autorun_filename)
+                    else:
+                        self.c.log("Settings", "configure_run_automatically", "GPG Sync not installed, skipping run automatically")
+                else:
+                    buf = open(self.c.get_resource_path(share_filename)).read()
+                    open(autorun_filename, 'w').write(buf)
             else:
                 if os.path.exists(autorun_filename):
                     os.remove(autorun_filename)
