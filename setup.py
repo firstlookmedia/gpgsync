@@ -51,7 +51,7 @@ if p == 'Linux':
         author=author, author_email=author_email,
         url=url, license=license, keywords=keywords,
         packages=['gpgsync'],
-        scripts=['install/gpgsync'],
+        scripts=['install/scripts/gpgsync'],
         data_files=[
             (os.path.join(sys.prefix, 'share/applications'), ['share/gpgsync.desktop']),
             (os.path.join(sys.prefix, 'share/pixmaps'), ['share/gpgsync.png']),
