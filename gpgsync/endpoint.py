@@ -259,7 +259,7 @@ class Verifier(QtCore.QThread):
         self.q.add_message(message, step)
 
     def run(self):
-        print("Verifying endpoint with authority key {}".format(self.fingerprint.decode()))
+        print("Verifying keylist with authority key {}".format(self.fingerprint.decode()))
 
         # Make an endpoint
         e = Endpoint(self.c)
@@ -419,7 +419,7 @@ class Refresher(QtCore.QThread):
         self.c.log("Refresher", func, message)
 
     def run(self):
-        print("Refreshing endpoint with authority key {}".format(self.e.fingerprint.decode()))
+        print("Refreshing keylist with authority key {}".format(self.e.fingerprint.decode()))
 
         self.q.add_message(RefresherMessageQueue.STATUS_STARTING)
 

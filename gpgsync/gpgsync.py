@@ -190,10 +190,10 @@ class GPGSync(QtWidgets.QMainWindow):
 
         # Add button
         if len(self.c.settings.endpoints) == 0:
-            self.add_button.setText("Add First GPG Sync Endpoint")
+            self.add_button.setText("Add First GPG Sync Keylist")
             self.add_button.setStyleSheet(self.c.css['GPGSync add_button_first'])
         else:
-            self.add_button.setText("Add Endpoint")
+            self.add_button.setText("Add Keylist")
             self.add_button.setStyleSheet(self.c.css['GPGSync add_button'])
 
         # Update the endpoint list
