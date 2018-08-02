@@ -64,7 +64,7 @@ class SettingsLayout(QtWidgets.QVBoxLayout):
 
         # Update interval
         update_interval_hlayout = QtWidgets.QHBoxLayout()
-        update_interval_label = QtWidgets.QLabel('Time between endpoint syncs (in hours)')
+        update_interval_label = QtWidgets.QLabel('Time between keylist syncs (in hours)')
         self.update_interval_edit = QtWidgets.QLineEdit()
         self.update_interval_edit.setText(self.settings.update_interval_hours.decode())
         update_interval_hlayout.addWidget(update_interval_label)
