@@ -184,7 +184,7 @@ class EndpointWidget(QtWidgets.QWidget):
     def delete_clicked(self):
         self.c.log("EndpointWidget", "delete_clicked")
         uid = self.c.gpg.get_uid(self.endpoint.fingerprint)
-        alert_text = "Are you sure you want to delete this endpoint?<br><br><b>{}</b>".format(uid)
+        alert_text = "Are you sure you want to delete this keylist?<br><br><b>{}</b>".format(uid)
         reply = self.c.alert(alert_text, icon=QtWidgets.QMessageBox.Critical, question=True)
         if reply == 0:
             # Delete

@@ -44,7 +44,7 @@ class SysTray(QtWidgets.QSystemTrayIcon):
         self.version_info.setEnabled(False)
         self.show_act = self.menu.addAction(self.show_text)
         self.show_act.triggered.connect(self.clicked_show)
-        self.refresh_act = self.menu.addAction('Sync endpoints')
+        self.refresh_act = self.menu.addAction('Sync keylists')
         self.refresh_act.triggered.connect(self.clicked_refresh)
         if platform.system() != 'Linux':
             self.update_act = self.menu.addAction('Check for updates')
