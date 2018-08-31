@@ -1,0 +1,18 @@
+workflows:
+  version: 2
+  test:
+    jobs:
+      - test
+version: 2
+jobs:
+  test:
+    environment:
+      FLM_ENV: "test"
+    docker:
+      - image: circleci/python:3
+    steps:
+      - run: sudo apt install gnupg2 python3-pyqt5 tor
+
+      - run: pip install -r ./install/requirements-circleci.txt
+      - run: python --version
+      - run: python -m pytest
