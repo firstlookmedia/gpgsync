@@ -11,8 +11,8 @@ jobs:
     docker:
       - image: circleci/python:3
     steps:
+      - run: python --version
       - run: sudo apt install gnupg2 python3-pyqt5 tor
       - checkout
-      - run: pip install -r ./install/requirements-circleci.txt
-      - run: python --version
+      - run: sudo pip install -r ./install/requirements-circleci.txt
       - run: python -m pytest
