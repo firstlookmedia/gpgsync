@@ -14,5 +14,5 @@ jobs:
       - run: python --version
       - run: sudo apt install gnupg2 python3-pyqt5 tor
       - checkout
-      - run: sudo pip install -r ./install/requirements-circleci.txt
+      - run: sudo pip install -q --no-color -r ./install/requirements-circleci.txt
       - run: python -m pytest
