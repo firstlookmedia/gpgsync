@@ -11,8 +11,13 @@ jobs:
     docker:
       - image: circleci/python:3
     steps:
-      - run: python --version
+      - run:
+          name: Verify python versions
+          command: |
+            python --version
+            python3 --version
+            pip --version
       - run: sudo apt install gnupg2 python3-pyqt5 tor
       - checkout
       - run: sudo pip install -q --no-color -r ./install/requirements-circleci.txt
-      - run: python -m pytest
+      - run: python3 -m pytest -v
