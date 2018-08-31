@@ -12,7 +12,7 @@ jobs:
       - image: circleci/python:3
     steps:
       - run: sudo apt install gnupg2 python3-pyqt5 tor
-
+      - checkout
       - run: pip install -r ./install/requirements-circleci.txt
       - run: python --version
       - run: python -m pytest
