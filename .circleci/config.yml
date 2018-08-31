@@ -19,5 +19,14 @@ jobs:
             pip --version
       - run: sudo apt install gnupg2 python3-pyqt5 tor
       - checkout
-      - run: sudo pip install -q --no-color -r ./install/requirements-circleci.txt
-      - run: python3 -m pytest -v
+      - run:
+          name: Install Python deps in a venv
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -q --no-color -r ./install/requirements-circleci.txt
+      - run:
+          name: run tests
+          command: |
+            . venv/bin/activate
+            python3 -m pytest -v
