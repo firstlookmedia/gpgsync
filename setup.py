@@ -35,29 +35,28 @@ url = 'https://github.com/firstlook/gpgsync'
 license = 'GPL v3'
 keywords = 'gpgsync, pgp, openpgp, gpg, gnupg'
 
-if p == 'Linux':
-    from setuptools import setup
-    share_files = [
-        'share/gpgsync.desktop',
-        'share/gpgsync.png',
-        'share/syncing.png',
-        'share/sks-keyservers.netCA.pem',
-        'share/sks-keyservers.netCA.pem.asc',
-        'share/version'
-    ]
-    setup(
-        name='gpgsync', version=version,
-        description=description, long_description=long_description,
-        author=author, author_email=author_email,
-        url=url, license=license, keywords=keywords,
-        packages=['gpgsync'],
-        scripts=['install/scripts/gpgsync'],
-        data_files=[
-            (os.path.join(sys.prefix, 'share/applications'), ['share/gpgsync.desktop']),
-            (os.path.join(sys.prefix, 'share/pixmaps'), ['share/gpgsync.png']),
-            (os.path.join(sys.prefix, 'share/gpgsync/'), share_files)
-        ]
-    )
+from setuptools import setup
+share_files = [
+    'share/gpgsync.desktop',
+    'share/gpgsync.png',
+    'share/syncing.png',
+    'share/sks-keyservers.netCA.pem',
+    'share/sks-keyservers.netCA.pem.asc',
+    'share/version'
+]
+setup(
+    name='gpgsync', version=version,
+    description=description, long_description=long_description,
+    author=author, author_email=author_email,
+    url=url, license=license, keywords=keywords,
+    packages=['gpgsync'],
+    scripts=['install/scripts/gpgsync'],
+    data_files=[
+        (os.path.join(sys.prefix, 'share/applications'), ['share/gpgsync.desktop']),
+        (os.path.join(sys.prefix, 'share/pixmaps'), ['share/gpgsync.png']),
+        (os.path.join(sys.prefix, 'share/gpgsync/'), share_files)
+    ],
+    setup_requires=["pytest-runner" ],
+    tests_require=["pytest", ],
+)
 
-else:
-    print('Unsupported platform')
