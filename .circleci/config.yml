@@ -30,4 +30,10 @@ jobs:
           name: run tests
           command: |
             . venv/bin/activate
-            python setup.py pytest
+            mkdir test-reports
+            python setup.py pytest --junitxml=test-reports/junit.xml
+
+      - store_test_results:
+          path: test-reports
+      - store_artifacts:
+          path: test-reports
