@@ -50,6 +50,7 @@ class Settings(object):
 
     def load(self):
         start_new_settings = False
+        resave_settings = False
         settings_file = os.path.join(self.appdata_path, 'settings.json')
 
         # If the settings file exists, load it
@@ -62,9 +63,15 @@ class Settings(object):
 
                 # Copy json settings into self
                 if 'keylists' in self.settings:
-                    self.keylists = [Keylist(self.c).load(e) for e in self.settings['keylists']]
+                    self.keylists = [Keylist(self.c).load(k) for k in self.settings['keylists']]
                 else:
-                    self.keylists = []
+                    # If there are not 'keylists' in the settings file, check for 'endpoints' as well (#131)
+                    if 'endpoints' in self.settings:
+                        self.keylists = [Keylist(self.c).load(k) for k in self.settings['endpoints']]
+                        resave_settings = True
+                        self.c.log("Settings", "load", "migrating settings from 'endpoints' to 'keylists'")
+                    else:
+                        self.keylists = []
                 if 'run_automatically' in self.settings:
                     self.run_automatically = self.settings['run_automatically']
                 else:
@@ -129,6 +136,10 @@ class Settings(object):
             self.automatic_update_proxy_port = b'9050'
             self.save()
             self.configure_run_automatically()
+
+        # Resave settings after loading them
+        if resave_settings:
+            self.save()
 
     def save(self):
         self.c.log("Settings", "save")
