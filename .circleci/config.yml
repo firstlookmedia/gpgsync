@@ -14,15 +14,17 @@ jobs:
       - run:
           name: Verify python versions
           command: |
-            python --version
             python3 --version
             pip --version
       - run: sudo apt install gnupg2 python3-pyqt5 tor
+      - run:
+          name: Restart tor service
+          command: sudo systemctl restart tor.service
       - checkout
       - run:
           name: Install Python deps in a venv
           command: |
-            python -m venv venv
+            python3 -m venv venv
             . venv/bin/activate
             pip install -q --upgrade pip
             pip install -q -r ./requirements.txt
