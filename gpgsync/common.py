@@ -68,7 +68,7 @@ class Common(object):
                 }
                 """,
 
-            'EndpointDialog sig_url': """
+            'KeylistDialog sig_url': """
                 QLabel {
                     font-style: italic;
                     color: #666666;
@@ -76,21 +76,21 @@ class Common(object):
                 }
                 """,
 
-            'EndpointDialog advanced_button': """
+            'KeylistDialog advanced_button': """
                 QPushButton {
                     text-decoration: underline;
                     color: #225dbf;
                 }
                 """,
 
-            'EndpointWidget uid_label': """
+            'KeylistWidget uid_label': """
                 QLabel {
                     font-weight: bold;
                     font-size: 14px;
                 }
                 """,
 
-            'EndpointWidget status_label': """
+            'KeylistWidget status_label': """
                 QLabel {
                     font-size: 11px;
                     font-style: italic;
@@ -98,7 +98,7 @@ class Common(object):
                 }
                 """,
 
-            'EndpointWidget status_label_error': """
+            'KeylistWidget status_label_error': """
                 QLabel {
                     font-size: 11px;
                     font-style: italic;
@@ -106,7 +106,7 @@ class Common(object):
                 }
                 """,
 
-            'EndpointWidget status_label_warning': """
+            'KeylistWidget status_label_warning': """
                 QLabel {
                     font-size: 11px;
                     font-style: italic;
@@ -114,7 +114,7 @@ class Common(object):
                 }
                 """,
 
-            'EndpointWidget button': """
+            'KeylistWidget button': """
                 QPushButton {
                     font-size: 11px;
                 }
