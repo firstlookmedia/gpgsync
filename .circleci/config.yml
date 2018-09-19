@@ -19,7 +19,7 @@ jobs:
       - run: sudo apt install gnupg2 python3-pyqt5 tor
       - run:
           name: Restart tor service
-          command: sudo systemctl restart tor.service
+          command: sudo service tor restart
       - checkout
       - run:
           name: Install Python deps in a venv
