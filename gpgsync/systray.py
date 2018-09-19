@@ -78,9 +78,9 @@ class SysTray(QtWidgets.QSystemTrayIcon):
             self.show_act.setText(self.show_text)
 
     def update_icon(self):
-        # If endpoints are done syncing, set the systray icon back
+        # If keylists are done syncing, set the systray icon back
         syncing = False
-        for e in self.c.settings.endpoints:
+        for e in self.c.settings.keylists:
             if e.syncing:
                 syncing = True
         if syncing:

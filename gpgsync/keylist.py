@@ -46,12 +46,12 @@ class InvalidFingerprints(Exception):
         return str([s.decode() for s in self.fingerprints])
 
 
-class Endpoint(QtCore.QObject):
+class Keylist(QtCore.QObject):
     fetched_public_key_signal = QtCore.pyqtSignal()
     sync_finished = QtCore.pyqtSignal()
 
     def __init__(self, common):
-        super(Endpoint, self).__init__()
+        super(Keylist, self).__init__()
         self.c = common
 
         self.fingerprint = b''
@@ -72,7 +72,7 @@ class Endpoint(QtCore.QObject):
         self.q = None
 
     """
-    Acts as a secondary constructor to load an endpoint from settings
+    Acts as a secondary constructor to load an keylist from settings
     """
     def load(self, e):
         self.fingerprint = str.encode(e['fingerprint'])
@@ -188,12 +188,12 @@ class Endpoint(QtCore.QObject):
         self.refresher.start()
 
     def refresher_finished(self):
-        self.c.log("Endpoint", "refresher_finished")
+        self.c.log("Keylist", "refresher_finished")
         self.syncing = False
         self.sync_finished.emit()
 
     def refresher_success(self, e, invalid_fingerprints, notfound_fingerprints):
-        self.c.log("Endpoint", "refresher_success")
+        self.c.log("Keylist", "refresher_success")
 
         if len(invalid_fingerprints) == 0 and len(notfound_fingerprints) == 0:
             warning = False
@@ -213,7 +213,7 @@ class Endpoint(QtCore.QObject):
         self.c.settings.save()
 
     def refresher_error(self, e, err, reset_last_checked=True):
-        self.c.log("Endpoint", "refresher_error")
+        self.c.log("Keylist", "refresher_error")
 
         if reset_last_checked:
             e.last_checked = datetime.datetime.now()
@@ -261,8 +261,8 @@ class Verifier(QtCore.QThread):
     def run(self):
         print("Verifying keylist with authority key {}".format(self.fingerprint.decode()))
 
-        # Make an endpoint
-        e = Endpoint(self.c)
+        # Make an keylist
+        e = Keylist(self.c)
         e.fingerprint = self.fingerprint
         e.url = self.url
         e.sig_url = self.sig_url
@@ -367,7 +367,7 @@ class Verifier(QtCore.QThread):
         if not success:
             return self.finish_with_failure()
 
-        self.log('run', 'Endpoint saved', 5)
+        self.log('run', 'Keylist saved', 5)
 
         self.success.emit(self.fingerprint, self.url, self.keyserver, self.use_proxy, self.proxy_host, self.proxy_port)
         self.finished.emit()
@@ -389,10 +389,10 @@ class RefresherMessageQueue(queue.LifoQueue):
 
 
 class Refresher(QtCore.QThread):
-    success = QtCore.pyqtSignal(Endpoint, list, list)
-    error = QtCore.pyqtSignal(Endpoint, str, bool)
+    success = QtCore.pyqtSignal(Keylist, list, list)
+    error = QtCore.pyqtSignal(Keylist, str, bool)
 
-    def __init__(self, common, refresh_interval, q, endpoint, force=False):
+    def __init__(self, common, refresh_interval, q, keylist, force=False):
         super(Refresher, self).__init__()
         self.c = common
         self.c.log("Refresher", "__init__")
@@ -400,7 +400,7 @@ class Refresher(QtCore.QThread):
         # this should be safe to cast directly to a float since it passed the input test
         self.refresh_interval = float(refresh_interval)
         self.q = q
-        self.e = endpoint
+        self.e = keylist
         self.force = force
 
         self.should_cancel = False

@@ -24,8 +24,8 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 
 from .systray import SysTray
 from .settings_dialog import SettingsDialog
-from .endpoint_dialog import EndpointDialog
-from .endpoint_list import EndpointList
+from .keylist_dialog import KeylistDialog
+from .keylist_list import KeylistList
 
 
 class GPGSync(QtWidgets.QMainWindow):
@@ -37,7 +37,7 @@ class GPGSync(QtWidgets.QMainWindow):
         self.c.log("GPGSync", "__init__")
 
         self.system = platform.system()
-        self.unconfigured_endpoint = None
+        self.unconfigured_keylist = None
 
         version_file = self.c.get_resource_path('version')
         self.version = parse(open(version_file).read().strip())
@@ -57,9 +57,9 @@ class GPGSync(QtWidgets.QMainWindow):
                 self.c.alert('GnuPG doesn\'t seem to be installed. Install <a href="http://gpg4win.org/">Gpg4win</a>.')
             sys.exit()
 
-        # Initialize endpoints
+        # Initialize keylists
         try:
-            for e in self.c.settings.endpoints:
+            for e in self.c.settings.keylists:
                 self.c.gpg.import_pubkey_from_disk(e.fingerprint)
                 e.sync_finished.connect(self.update_ui)
         except:
@@ -68,7 +68,7 @@ class GPGSync(QtWidgets.QMainWindow):
         # Initialize the system tray icon
         self.systray = SysTray(self.c, self.version)
         self.systray.show_signal.connect(self.toggle_show_window)
-        self.systray.sync_now_signal.connect(self.sync_all_endpoints)
+        self.systray.sync_now_signal.connect(self.sync_all_keylists)
         if self.system != 'Linux':
             self.checking_for_updates = False
             self.systray.check_updates_now_signal.connect(self.force_check_for_updates)
@@ -87,13 +87,13 @@ class GPGSync(QtWidgets.QMainWindow):
         logo_layout.addWidget(logo_label)
         logo_layout.addStretch()
 
-        # Endpoints list
-        self.endpoint_list = EndpointList(self.c)
-        self.endpoint_list.refresh.connect(self.update_ui)
+        # Keylists list
+        self.keylist_list = KeylistList(self.c)
+        self.keylist_list.refresh.connect(self.update_ui)
 
         # Add button
         self.add_button = QtWidgets.QPushButton()
-        self.add_button.clicked.connect(self.add_endpoint)
+        self.add_button.clicked.connect(self.add_keylist)
         add_button_layout = QtWidgets.QHBoxLayout()
         add_button_layout.addStretch()
         add_button_layout.addWidget(self.add_button)
@@ -102,7 +102,7 @@ class GPGSync(QtWidgets.QMainWindow):
         # Layout
         layout = QtWidgets.QVBoxLayout()
         layout.addLayout(logo_layout)
-        layout.addWidget(self.endpoint_list)
+        layout.addWidget(self.keylist_list)
         layout.addStretch()
         layout.addLayout(add_button_layout)
         central_widget = QtWidgets.QWidget()
@@ -120,7 +120,7 @@ class GPGSync(QtWidgets.QMainWindow):
         self.global_timer.start(60000) # 1 minute
 
         # Decide if window should start out shown or hidden
-        if len(self.c.settings.endpoints) == 0:
+        if len(self.c.settings.keylists) == 0:
             self.show()
             self.systray.set_window_show(True)
         else:
@@ -132,7 +132,7 @@ class GPGSync(QtWidgets.QMainWindow):
         self.app.applicationStateChanged.connect(self.application_state_change)
 
     def run_interval_tasks(self):
-        self.sync_all_endpoints(False)
+        self.sync_all_keylists(False)
 
         if self.system != 'Linux' and self.c.settings.run_autoupdate:
             self.check_for_updates(False)
@@ -189,34 +189,34 @@ class GPGSync(QtWidgets.QMainWindow):
         self.systray.update_icon()
 
         # Add button
-        if len(self.c.settings.endpoints) == 0:
+        if len(self.c.settings.keylists) == 0:
             self.add_button.setText("Add First GPG Sync Keylist")
             self.add_button.setStyleSheet(self.c.css['GPGSync add_button_first'])
         else:
             self.add_button.setText("Add Keylist")
             self.add_button.setStyleSheet(self.c.css['GPGSync add_button'])
 
-        # Update the endpoint list
-        self.endpoint_list.update_ui()
+        # Update the keylist list
+        self.keylist_list.update_ui()
 
         # Set new window size
-        height = len(self.c.settings.endpoints)*80 + 140
+        height = len(self.c.settings.keylists)*80 + 140
         self.setMinimumSize(480, height)
         self.setMaximumSize(480, height)
 
-    def add_endpoint(self):
-        d = EndpointDialog(self.c)
-        d.saved.connect(self.add_endpoint_saved)
+    def add_keylist(self):
+        d = KeylistDialog(self.c)
+        d.saved.connect(self.add_keylist_saved)
         d.exec_()
 
-    def add_endpoint_saved(self, e):
+    def add_keylist_saved(self, e):
         e.sync_finished.connect(self.update_ui)
         self.update_ui()
 
-    def sync_all_endpoints(self, force=False):
-        self.c.log("GPGSync", "sync_all_endpoints", "force={}".format(force))
+    def sync_all_keylists(self, force=False):
+        self.c.log("GPGSync", "sync_all_keylists", "force={}".format(force))
 
-        for e in self.c.settings.endpoints:
+        for e in self.c.settings.keylists:
             e.start_syncing(force)
         self.update_ui()
 

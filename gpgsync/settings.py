@@ -25,7 +25,7 @@ import platform
 import shutil
 import dateutil.parser as date_parser
 
-from .endpoint import Endpoint
+from .keylist import Keylist
 
 
 class Settings(object):
@@ -61,10 +61,10 @@ class Settings(object):
                 self.c.log("Settings", "load", "settings loaded from {}".format(settings_file))
 
                 # Copy json settings into self
-                if 'endpoints' in self.settings:
-                    self.endpoints = [Endpoint(self.c).load(e) for e in self.settings['endpoints']]
+                if 'keylists' in self.settings:
+                    self.keylists = [Keylist(self.c).load(e) for e in self.settings['keylists']]
                 else:
-                    self.endpoints = []
+                    self.keylists = []
                 if 'run_automatically' in self.settings:
                     self.run_automatically = self.settings['run_automatically']
                 else:
@@ -118,7 +118,7 @@ class Settings(object):
 
         # Default settings
         if start_new_settings:
-            self.endpoints = []
+            self.keylists = []
             self.run_automatically = True
             self.run_autoupdate = True
             self.last_update_check = None
@@ -133,7 +133,7 @@ class Settings(object):
     def save(self):
         self.c.log("Settings", "save")
         self.settings = {
-            'endpoints': [e.serialize() for e in self.endpoints],
+            'keylists': [e.serialize() for e in self.keylists],
             'run_automatically': self.run_automatically,
             'run_autoupdate': self.run_autoupdate,
             'last_update_check': self.last_update_check,
@@ -214,7 +214,7 @@ class Settings(object):
                 if 'endpoints' in settings:
                     self.endpoints = []
                     for old_e in settings['endpoints']:
-                        e = Endpoint(self.c)
+                        e = Keylist(self.c)
                         e.verified = old_e.verified
                         e.fingerprint = old_e.fingerprint
                         e.url = old_e.url

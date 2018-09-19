@@ -22,15 +22,15 @@ import platform
 import queue
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-from .endpoint import Endpoint, RefresherMessageQueue
-from .endpoint_dialog import EndpointDialog
+from .keylist import Keylist, RefresherMessageQueue
+from .keylist_dialog import KeylistDialog
 
 
-class EndpointList(QtWidgets.QWidget):
+class KeylistList(QtWidgets.QWidget):
     refresh = QtCore.pyqtSignal()
 
     def __init__(self, common):
-        super(EndpointList, self).__init__()
+        super(KeylistList, self).__init__()
         self.c = common
 
         self.layout = QtWidgets.QVBoxLayout()
@@ -45,50 +45,50 @@ class EndpointList(QtWidgets.QWidget):
         for i in reversed(range(self.layout.count())):
             self.layout.itemAt(i).widget().setParent(None)
 
-        # Add new endpoint widgets
-        for e in self.c.settings.endpoints:
-            widget = EndpointWidget(self.c, e)
+        # Add new keylist widgets
+        for e in self.c.settings.keylists:
+            widget = KeylistWidget(self.c, e)
             widget.refresh.connect(self.refresh.emit)
             self.layout.addWidget(widget)
 
         self.adjustSize()
 
 
-class EndpointWidget(QtWidgets.QWidget):
+class KeylistWidget(QtWidgets.QWidget):
     refresh = QtCore.pyqtSignal()
 
-    def __init__(self, common, endpoint):
-        super(EndpointWidget, self).__init__()
+    def __init__(self, common, keylist):
+        super(KeylistWidget, self).__init__()
         self.c = common
-        self.endpoint = endpoint
+        self.keylist = keylist
 
-        self.c.log("EndpointWidget", "__init__")
+        self.c.log("KeylistWidget", "__init__")
 
         # Authority Key user ID
-        uid = self.c.gpg.get_uid(self.endpoint.fingerprint)
+        uid = self.c.gpg.get_uid(self.keylist.fingerprint)
         uid_label = QtWidgets.QLabel(uid)
         uid_label.setMinimumSize(440, 30)
         uid_label.setMaximumSize(440, 30)
-        uid_label.setStyleSheet(self.c.css['EndpointWidget uid_label'])
+        uid_label.setStyleSheet(self.c.css['KeylistWidget uid_label'])
 
         # Status
-        if self.endpoint.syncing:
+        if self.keylist.syncing:
             status_text = "Syncing now..."
-            status_css = self.c.css['EndpointWidget status_label']
+            status_css = self.c.css['KeylistWidget status_label']
         else:
-            if self.endpoint.error:
+            if self.keylist.error:
                 status_text = 'Error syncing'
-                status_css = self.c.css['EndpointWidget status_label_error']
+                status_css = self.c.css['KeylistWidget status_label_error']
             else:
-                if self.endpoint.last_synced:
-                    status = self.endpoint.last_synced.strftime("%B %d, %I:%M %p")
+                if self.keylist.last_synced:
+                    status = self.keylist.last_synced.strftime("%B %d, %I:%M %p")
                 else:
                     status = "Never"
                 status_text = "Synced {}".format(status)
-                if self.endpoint.warning:
-                    status_css = self.c.css['EndpointWidget status_label_warning']
+                if self.keylist.warning:
+                    status_css = self.c.css['KeylistWidget status_label_warning']
                 else:
-                    status_css = self.c.css['EndpointWidget status_label']
+                    status_css = self.c.css['KeylistWidget status_label']
         self.status_label = QtWidgets.QLabel(status_text)
         self.status_label.setStyleSheet(status_css)
         self.status_label.setMinimumSize(440, 20)
@@ -103,22 +103,22 @@ class EndpointWidget(QtWidgets.QWidget):
         # Buttons
         info_button = QtWidgets.QPushButton("Info")
         info_button.clicked.connect(self.details_clicked)
-        info_button.setStyleSheet(self.c.css['EndpointWidget button'])
+        info_button.setStyleSheet(self.c.css['KeylistWidget button'])
         sync_button = QtWidgets.QPushButton("Sync Now")
         sync_button.clicked.connect(self.sync_clicked)
-        sync_button.setStyleSheet(self.c.css['EndpointWidget button'])
+        sync_button.setStyleSheet(self.c.css['KeylistWidget button'])
         edit_button = QtWidgets.QPushButton("Edit")
         edit_button.clicked.connect(self.edit_clicked)
-        edit_button.setStyleSheet(self.c.css['EndpointWidget button'])
+        edit_button.setStyleSheet(self.c.css['KeylistWidget button'])
         delete_button = QtWidgets.QPushButton("Delete")
         delete_button.clicked.connect(self.delete_clicked)
-        delete_button.setStyleSheet(self.c.css['EndpointWidget button'])
+        delete_button.setStyleSheet(self.c.css['KeylistWidget button'])
         #delete_button.setMinimumHeight(30)
         self.cancel_sync_button = QtWidgets.QPushButton("Cancel Sync")
         self.cancel_sync_button.clicked.connect(self.cancel_sync_clicked)
-        self.cancel_sync_button.setStyleSheet(self.c.css['EndpointWidget button'])
+        self.cancel_sync_button.setStyleSheet(self.c.css['KeylistWidget button'])
 
-        if self.endpoint.syncing:
+        if self.keylist.syncing:
             info_button.hide()
             sync_button.hide()
             edit_button.hide()
@@ -126,7 +126,7 @@ class EndpointWidget(QtWidgets.QWidget):
         else:
             self.cancel_sync_button.hide()
 
-            if self.endpoint.error or self.endpoint.warning:
+            if self.keylist.error or self.keylist.warning:
                 info_button.show()
             else:
                 info_button.hide()
@@ -158,46 +158,46 @@ class EndpointWidget(QtWidgets.QWidget):
         self.update_ui_timer.start(100) # 0.1 seconds
 
     def details_clicked(self):
-        self.c.log("EndpointWidget", "details_clicked")
-        if self.endpoint.error:
-            self.c.alert("Sync error:\n\n{}".format(self.endpoint.error), icon=QtWidgets.QMessageBox.Critical)
-        elif self.endpoint.warning:
-            self.c.alert("Sync warning:\n\n{}".format(self.endpoint.warning), icon=QtWidgets.QMessageBox.Warning)
+        self.c.log("KeylistWidget", "details_clicked")
+        if self.keylist.error:
+            self.c.alert("Sync error:\n\n{}".format(self.keylist.error), icon=QtWidgets.QMessageBox.Critical)
+        elif self.keylist.warning:
+            self.c.alert("Sync warning:\n\n{}".format(self.keylist.warning), icon=QtWidgets.QMessageBox.Warning)
 
     def sync_clicked(self):
-        self.c.log("EndpointWidget", "sync_clicked")
-        self.endpoint.start_syncing(force=True)
+        self.c.log("KeylistWidget", "sync_clicked")
+        self.keylist.start_syncing(force=True)
         self.refresh.emit()
 
     def cancel_sync_clicked(self):
-        self.c.log("EndpointWidget", "cancel_sync_clicked")
+        self.c.log("KeylistWidget", "cancel_sync_clicked")
         self.cancel_sync_button.setText("Canceling...")
         self.cancel_sync_button.setEnabled(False)
-        self.endpoint.refresher.cancel_early()
+        self.keylist.refresher.cancel_early()
 
     def edit_clicked(self):
-        self.c.log("EndpointWidget", "edit_clicked")
-        d = EndpointDialog(self.c, endpoint=self.endpoint)
+        self.c.log("KeylistWidget", "edit_clicked")
+        d = KeylistDialog(self.c, keylist=self.keylist)
         d.saved.connect(self.refresh.emit)
         d.exec_()
 
     def delete_clicked(self):
-        self.c.log("EndpointWidget", "delete_clicked")
-        uid = self.c.gpg.get_uid(self.endpoint.fingerprint)
+        self.c.log("KeylistWidget", "delete_clicked")
+        uid = self.c.gpg.get_uid(self.keylist.fingerprint)
         alert_text = "Are you sure you want to delete this keylist?<br><br><b>{}</b>".format(uid)
         reply = self.c.alert(alert_text, icon=QtWidgets.QMessageBox.Critical, question=True)
         if reply == 0:
             # Delete
-            self.c.settings.endpoints.remove(self.endpoint)
+            self.c.settings.keylists.remove(self.keylist)
             self.c.settings.save()
             self.refresh.emit()
 
     def update_ui(self):
-        # Only need to update the UI if the endpoint is syncing
-        if self.endpoint.syncing:
+        # Only need to update the UI if the keylist is syncing
+        if self.keylist.syncing:
             # Process the last event in the LIFO queue, ignore the rest
             try:
-                event = self.endpoint.q.get(False)
+                event = self.keylist.q.get(False)
                 if event['status'] == RefresherMessageQueue.STATUS_IN_PROGRESS:
                     self.status_label.hide()
                     self.progress_bar.show()

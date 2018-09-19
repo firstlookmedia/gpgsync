@@ -22,26 +22,26 @@ import platform
 import queue
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-from .endpoint import Endpoint, Verifier, VerifierMessageQueue
+from .keylist import Keylist, Verifier, VerifierMessageQueue
 
 
-class EndpointDialog(QtWidgets.QDialog):
-    saved = QtCore.pyqtSignal(Endpoint)
+class KeylistDialog(QtWidgets.QDialog):
+    saved = QtCore.pyqtSignal(Keylist)
 
-    def __init__(self, common, endpoint=None):
-        super(EndpointDialog, self).__init__()
+    def __init__(self, common, keylist=None):
+        super(KeylistDialog, self).__init__()
         self.c = common
 
-        # If endpoint == None, this is an add endpoint dialog. Otherwise, this
-        # is an edit endpoint dialog
-        if endpoint:
+        # If keylist == None, this is an add keylist dialog. Otherwise, this
+        # is an edit keylist dialog
+        if keylist:
             self.setWindowTitle('Edit Keylist')
-            self.endpoint = endpoint
-            self.new_endpoint = False
+            self.keylist = keylist
+            self.new_keylist = False
         else:
             self.setWindowTitle('Add Keylist')
-            self.endpoint = Endpoint(self.c)
-            self.new_endpoint = True
+            self.keylist = Keylist(self.c)
+            self.new_keylist = True
         self.setWindowIcon(self.c.icon)
         self.setMinimumWidth(400)
 
@@ -55,7 +55,7 @@ class EndpointDialog(QtWidgets.QDialog):
         self.url_edit.setPlaceholderText("https://")
         self.url_edit.textChanged.connect(self.update_sig_url)
         self.sig_url = QtWidgets.QLabel()
-        self.sig_url.setStyleSheet(self.c.css['EndpointDialog sig_url'])
+        self.sig_url.setStyleSheet(self.c.css['KeylistDialog sig_url'])
 
         # Keyserver
         keyserver_label = QtWidgets.QLabel("Key server")
@@ -83,7 +83,7 @@ class EndpointDialog(QtWidgets.QDialog):
         # Advanced settings button
         self.advanced_button = QtWidgets.QPushButton()
         self.advanced_button.setFlat(True)
-        self.advanced_button.setStyleSheet(self.c.css['EndpointDialog advanced_button'])
+        self.advanced_button.setStyleSheet(self.c.css['KeylistDialog advanced_button'])
         self.advanced_button.clicked.connect(self.toggle_advanced)
 
         # Advanced settings group
@@ -116,16 +116,16 @@ class EndpointDialog(QtWidgets.QDialog):
         layout.addLayout(buttons_layout)
         self.setLayout(layout)
 
-        # Populate the widgets with endpoint data
-        self.fingerprint_edit.setText(self.endpoint.fingerprint.decode())
-        self.url_edit.setText(self.endpoint.url.decode())
-        self.keyserver_edit.setText(self.endpoint.keyserver.decode())
-        if self.endpoint.use_proxy:
+        # Populate the widgets with keylist data
+        self.fingerprint_edit.setText(self.keylist.fingerprint.decode())
+        self.url_edit.setText(self.keylist.url.decode())
+        self.keyserver_edit.setText(self.keylist.keyserver.decode())
+        if self.keylist.use_proxy:
             self.use_proxy.setCheckState(QtCore.Qt.Checked)
         else:
             self.use_proxy.setCheckState(QtCore.Qt.Unchecked)
-        self.proxy_host_edit.setText(self.endpoint.proxy_host.decode())
-        self.proxy_port_edit.setText(self.endpoint.proxy_port.decode())
+        self.proxy_host_edit.setText(self.keylist.proxy_host.decode())
+        self.proxy_port_edit.setText(self.keylist.proxy_port.decode())
 
         # Initially update the widgets
         self.update_sig_url(self.url_edit.text())
@@ -169,24 +169,24 @@ class EndpointDialog(QtWidgets.QDialog):
         self.close()
 
     def verified(self):
-        # Update the endpoint values
-        self.endpoint.fingerprint = self.fingerprint_edit.text().encode()
-        self.endpoint.url = self.url_edit.text().encode()
-        self.endpoint.sig_url = self.endpoint.url + b'.sig'
-        self.endpoint.keyserver = self.keyserver_edit.text().encode()
-        self.endpoint.use_proxy = self.use_proxy.isChecked()
-        self.endpoint.proxy_host = self.proxy_host_edit.text().encode()
-        self.endpoint.proxy_port = self.proxy_port_edit.text().encode()
+        # Update the keylist values
+        self.keylist.fingerprint = self.fingerprint_edit.text().encode()
+        self.keylist.url = self.url_edit.text().encode()
+        self.keylist.sig_url = self.keylist.url + b'.sig'
+        self.keylist.keyserver = self.keyserver_edit.text().encode()
+        self.keylist.use_proxy = self.use_proxy.isChecked()
+        self.keylist.proxy_host = self.proxy_host_edit.text().encode()
+        self.keylist.proxy_port = self.proxy_port_edit.text().encode()
 
-        # Add the endpoint, if necessary
-        if self.new_endpoint:
-            self.c.log("EndpointDialog", "verifier_success", "adding endpoint")
-            self.c.settings.endpoints.append(self.endpoint)
+        # Add the keylist, if necessary
+        if self.new_keylist:
+            self.c.log("KeylistDialog", "verifier_success", "adding keylist")
+            self.c.settings.keylists.append(self.keylist)
 
         # Save settings
         self.c.settings.save()
 
-        self.saved.emit(self.endpoint)
+        self.saved.emit(self.keylist)
         self.close()
 
 
