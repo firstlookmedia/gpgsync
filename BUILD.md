@@ -98,7 +98,7 @@ This will prompt you to codesign three binaries and execute one unsigned binary.
 Install dependencies:
 
 ```sh
-sudo apt install -y python3-pyqt5 python3-nose python3-stdeb python3-requests python3-socks python3-packaging python3-dateutil gnupg2
+sudo apt install -y python3-pyqt5 python3-pytest python3-pytest-runner python3-stdeb python3-requests python3-socks python3-packaging python3-dateutil gnupg2
 ```
 
 Make and install a .deb:
@@ -113,7 +113,7 @@ sudo dpkg -i deb_dist/gpgsync_*.deb
 Install dependencies:
 
 ```sh
-sudo dnf install -y rpm-build python3-qt5 python3-requests python3-nose python3-packaging python3-dateutil gnupg2
+sudo dnf install -y rpm-build python3-qt5 python3-requests python3-pytest-runner python3-packaging python3-dateutil gnupg2
 ```
 
 Make and install a .rpm:
