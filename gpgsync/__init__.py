@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import sys
 import platform
+import signal
+import argparse
 from PyQt5 import QtCore, QtWidgets
 
 from .gpgsync import GPGSync
@@ -39,20 +41,35 @@ def main():
     if getattr(sys, 'frozen', False):
         os.environ["REQUESTS_CA_BUNDLE"] = os.path.join(os.path.dirname(sys.executable), 'cacert.pem')
 
-    debug = False
-    if '--debug' in sys.argv:
-        debug = True
+    # Allow Ctrl-C to smoothly quit the program instead of throwing an exception
+    # https://stackoverflow.com/questions/42814093/how-to-handle-ctrlc-in-python-app-with-pyqt
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-    app = Application()
-    common = Common(debug)
-    gui = GPGSync(app, common)
+    # Parse arguments
+    parser = argparse.ArgumentParser(formatter_class=lambda prog: argparse.HelpFormatter(prog,max_help_position=48))
+    parser.add_argument('--debug', action='store_true', dest='debug', help="Log debug output to stdout")
+    parser.add_argument('--sync', action='store_true', dest='sync', help="Sync all keylists without loading the GUI")
+    args = parser.parse_args()
 
-    # Clean up when app quits
-    def shutdown():
-        gui.shutdown()
-    app.aboutToQuit.connect(shutdown)
+    debug = args.debug
+    sync = args.sync
 
-    sys.exit(app.exec_())
+    # If we only want to sync keylists
+    if sync:
+        print("not implemented yet")
+
+    else:
+        # Otherwise, start the GUI
+        app = Application()
+        common = Common(debug)
+        gui = GPGSync(app, common)
+
+        # Clean up when app quits
+        def shutdown():
+            gui.shutdown()
+        app.aboutToQuit.connect(shutdown)
+
+        sys.exit(app.exec_())
 
 if __name__ == '__main__':
     main()
