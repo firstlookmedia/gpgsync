@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import queue
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-from .keylist import Keylist, RefresherMessageQueue
 from .keylist_dialog import KeylistDialog
+from ..keylist import Keylist, RefresherMessageQueue
 
 
 class KeylistList(QtWidgets.QWidget):

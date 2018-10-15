@@ -22,7 +22,7 @@ import sys
 from PyQt5 import QtCore, QtWidgets
 
 from .gui_common import GuiCommon
-from ..gpgsync import GPGSync
+from .gpgsync import GPGSync
 
 
 class Application(QtWidgets.QApplication):

@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import queue
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-from .keylist import Keylist, Verifier, VerifierMessageQueue
+from ..keylist import Keylist, Verifier, VerifierMessageQueue
 
 
 class KeylistDialog(QtWidgets.QDialog):
