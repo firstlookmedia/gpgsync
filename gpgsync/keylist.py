@@ -56,7 +56,6 @@ class Keylist(QtCore.QObject):
 
         self.fingerprint = b''
         self.url = b''
-        self.sig_url = b'https://.sig'
         self.keyserver = b'hkps://hkps.pool.sks-keyservers.net'
         self.use_proxy = False
         self.proxy_host = b'127.0.0.1'
@@ -77,7 +76,6 @@ class Keylist(QtCore.QObject):
     def load(self, e):
         self.fingerprint = str.encode(e['fingerprint'])
         self.url = str.encode(e['url'])
-        self.sig_url = str.encode(e['sig_url'])
         self.keyserver = str.encode(e['keyserver'])
         self.use_proxy = e['use_proxy']
         self.proxy_host = str.encode(e['proxy_host'])
@@ -119,7 +117,7 @@ class Keylist(QtCore.QObject):
         return self.fetch_url(self.url)
 
     def fetch_msg_sig_url(self):
-        return self.fetch_url(self.sig_url)
+        return self.fetch_url(self.url + b'.sig')
 
     def fetch_url(self, url):
         try:
@@ -245,7 +243,6 @@ class Verifier(QtCore.QThread):
         self.q = q
         self.fingerprint = fingerprint
         self.url = url
-        self.sig_url = self.url + b'.sig'
         self.keyserver = keyserver
         self.use_proxy = use_proxy
         self.proxy_host = proxy_host
@@ -265,7 +262,6 @@ class Verifier(QtCore.QThread):
         e = Keylist(self.c)
         e.fingerprint = self.fingerprint
         e.url = self.url
-        e.sig_url = self.sig_url
         e.keyserver = self.keyserver
         e.use_proxy = self.use_proxy
         e.proxy_host = self.proxy_host
@@ -289,7 +285,7 @@ class Verifier(QtCore.QThread):
         # Test loading signature URL
         success = False
         try:
-            self.log('run', 'Testing downloading URL {}'.format(self.sig_url.decode()), 1)
+            self.log('run', 'Testing downloading URL {}'.format((self.url + b'.sig').decode()), 1)
             msg_sig_bytes = e.fetch_msg_sig_url()
         except ProxyURLDownloadError as e:
             self.alert_error.emit('URL failed to download: Check your internet connection and proxy settings.', str(e))
@@ -466,7 +462,7 @@ class Refresher(QtCore.QThread):
         # Download signature URL
         success = False
         try:
-            self.log('run', 'Downloading URL {}'.format(self.e.sig_url.decode()))
+            self.log('run', 'Downloading URL {}'.format((self.e.url + b'.sig').decode()))
             msg_sig_bytes = self.e.fetch_msg_sig_url()
         except URLDownloadError as e:
             err = 'Failed to download: Check your internet connection'
