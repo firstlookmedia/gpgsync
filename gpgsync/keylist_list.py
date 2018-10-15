@@ -18,7 +18,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import platform
 import queue
 from PyQt5 import QtCore, QtWidgets, QtGui
 
@@ -69,16 +68,16 @@ class KeylistWidget(QtWidgets.QWidget):
         uid_label = QtWidgets.QLabel(uid)
         uid_label.setMinimumSize(440, 30)
         uid_label.setMaximumSize(440, 30)
-        uid_label.setStyleSheet(self.c.css['KeylistWidget uid_label'])
+        uid_label.setStyleSheet(self.c.gui.css['KeylistWidget uid_label'])
 
         # Status
         if self.keylist.syncing:
             status_text = "Syncing now..."
-            status_css = self.c.css['KeylistWidget status_label']
+            status_css = self.c.gui.css['KeylistWidget status_label']
         else:
             if self.keylist.error:
                 status_text = 'Error syncing'
-                status_css = self.c.css['KeylistWidget status_label_error']
+                status_css = self.c.gui.css['KeylistWidget status_label_error']
             else:
                 if self.keylist.last_synced:
                     status = self.keylist.last_synced.strftime("%B %d, %I:%M %p")
@@ -86,9 +85,9 @@ class KeylistWidget(QtWidgets.QWidget):
                     status = "Never"
                 status_text = "Synced {}".format(status)
                 if self.keylist.warning:
-                    status_css = self.c.css['KeylistWidget status_label_warning']
+                    status_css = self.c.gui.css['KeylistWidget status_label_warning']
                 else:
-                    status_css = self.c.css['KeylistWidget status_label']
+                    status_css = self.c.gui.css['KeylistWidget status_label']
         self.status_label = QtWidgets.QLabel(status_text)
         self.status_label.setStyleSheet(status_css)
         self.status_label.setMinimumSize(440, 20)
@@ -103,20 +102,20 @@ class KeylistWidget(QtWidgets.QWidget):
         # Buttons
         info_button = QtWidgets.QPushButton("Info")
         info_button.clicked.connect(self.details_clicked)
-        info_button.setStyleSheet(self.c.css['KeylistWidget button'])
+        info_button.setStyleSheet(self.c.gui.css['KeylistWidget button'])
         sync_button = QtWidgets.QPushButton("Sync Now")
         sync_button.clicked.connect(self.sync_clicked)
-        sync_button.setStyleSheet(self.c.css['KeylistWidget button'])
+        sync_button.setStyleSheet(self.c.gui.css['KeylistWidget button'])
         edit_button = QtWidgets.QPushButton("Edit")
         edit_button.clicked.connect(self.edit_clicked)
-        edit_button.setStyleSheet(self.c.css['KeylistWidget button'])
+        edit_button.setStyleSheet(self.c.gui.css['KeylistWidget button'])
         delete_button = QtWidgets.QPushButton("Delete")
         delete_button.clicked.connect(self.delete_clicked)
-        delete_button.setStyleSheet(self.c.css['KeylistWidget button'])
+        delete_button.setStyleSheet(self.c.gui.css['KeylistWidget button'])
         #delete_button.setMinimumHeight(30)
         self.cancel_sync_button = QtWidgets.QPushButton("Cancel Sync")
         self.cancel_sync_button.clicked.connect(self.cancel_sync_clicked)
-        self.cancel_sync_button.setStyleSheet(self.c.css['KeylistWidget button'])
+        self.cancel_sync_button.setStyleSheet(self.c.gui.css['KeylistWidget button'])
 
         if self.keylist.syncing:
             info_button.hide()
@@ -160,9 +159,9 @@ class KeylistWidget(QtWidgets.QWidget):
     def details_clicked(self):
         self.c.log("KeylistWidget", "details_clicked")
         if self.keylist.error:
-            self.c.alert("Sync error:\n\n{}".format(self.keylist.error), icon=QtWidgets.QMessageBox.Critical)
+            self.c.gui.alert("Sync error:\n\n{}".format(self.keylist.error), icon=QtWidgets.QMessageBox.Critical)
         elif self.keylist.warning:
-            self.c.alert("Sync warning:\n\n{}".format(self.keylist.warning), icon=QtWidgets.QMessageBox.Warning)
+            self.c.gui.alert("Sync warning:\n\n{}".format(self.keylist.warning), icon=QtWidgets.QMessageBox.Warning)
 
     def sync_clicked(self):
         self.c.log("KeylistWidget", "sync_clicked")
@@ -185,7 +184,7 @@ class KeylistWidget(QtWidgets.QWidget):
         self.c.log("KeylistWidget", "delete_clicked")
         uid = self.c.gpg.get_uid(self.keylist.fingerprint)
         alert_text = "Are you sure you want to delete this keylist?<br><br><b>{}</b>".format(uid)
-        reply = self.c.alert(alert_text, icon=QtWidgets.QMessageBox.Critical, question=True)
+        reply = self.c.gui.alert(alert_text, icon=QtWidgets.QMessageBox.Critical, question=True)
         if reply == 0:
             # Delete
             self.c.settings.keylists.remove(self.keylist)

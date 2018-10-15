@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import json
 import pickle
-import platform
 import shutil
 import dateutil.parser as date_parser
 
@@ -32,7 +31,7 @@ class Settings(object):
     def __init__(self, common):
         self.c = common
 
-        self.system = platform.system()
+        self.system = self.c.os
         if self.system == 'Windows':
             appdata = os.environ['APPDATA']
             self.appdata_path = '{0}\\gpgsync'.format(appdata)

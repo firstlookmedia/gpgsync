@@ -26,7 +26,6 @@ import platform
 import inspect
 import requests
 import socket
-from PyQt5 import QtCore, QtWidgets, QtGui
 
 from .gnupg import GnuPG
 from .settings import Settings
@@ -39,87 +38,14 @@ class Common(object):
     def __init__(self, debug):
         self.debug = debug
 
+        # Define the OS
+        self.os = platform.system()
+
         # Load settings
         self.settings = Settings(self)
 
         # Initialize GnuPG
         self.gpg = GnuPG(self, appdata_path=self.settings.get_appdata_path())
-
-        # Preload icons
-        self.icon = QtGui.QIcon(self.get_resource_path('gpgsync.png'))
-        if platform.system() == 'Darwin':
-            self.systray_icon = QtGui.QIcon(self.get_resource_path('gpgsync-bw.png'))
-            self.systray_syncing_icon = QtGui.QIcon(self.get_resource_path('syncing-bw.png'))
-        else:
-            self.systray_icon = QtGui.QIcon(self.get_resource_path('gpgsync.png'))
-            self.systray_syncing_icon = QtGui.QIcon(self.get_resource_path('syncing.png'))
-
-        # Stylesheets
-        self.css = {
-            'GPGSync add_button': """
-                QPushButton {
-                    font-weight: normal;
-                }
-                """,
-
-            'GPGSync add_button_first': """
-                QPushButton {
-                    font-weight: bold;
-                }
-                """,
-
-            'KeylistDialog sig_url': """
-                QLabel {
-                    font-style: italic;
-                    color: #666666;
-                    font-size: 11px;
-                }
-                """,
-
-            'KeylistDialog advanced_button': """
-                QPushButton {
-                    text-decoration: underline;
-                    color: #225dbf;
-                }
-                """,
-
-            'KeylistWidget uid_label': """
-                QLabel {
-                    font-weight: bold;
-                    font-size: 14px;
-                }
-                """,
-
-            'KeylistWidget status_label': """
-                QLabel {
-                    font-size: 11px;
-                    font-style: italic;
-                    color: #666666;
-                }
-                """,
-
-            'KeylistWidget status_label_error': """
-                QLabel {
-                    font-size: 11px;
-                    font-style: italic;
-                    color: #cc0000;
-                }
-                """,
-
-            'KeylistWidget status_label_warning': """
-                QLabel {
-                    font-size: 11px;
-                    font-style: italic;
-                    color: #cc8400;
-                }
-                """,
-
-            'KeylistWidget button': """
-                QPushButton {
-                    font-size: 11px;
-                }
-                """
-        }
 
     def log(self, module, func, msg=''):
         if self.debug:
@@ -127,39 +53,6 @@ class Common(object):
             if msg:
                 final_msg = "{}: {}".format(final_msg, msg)
             print(final_msg)
-
-    def alert(self, msg, details='', icon=QtWidgets.QMessageBox.Warning, question=False):
-        d = QtWidgets.QMessageBox()
-        d.setWindowTitle('GPG Sync')
-        d.setText(msg)
-        d.setWindowIcon(self.icon)
-
-        if details:
-            d.setDetailedText(details)
-
-        if question:
-            yes_button = d.addButton("Yes", QtWidgets.QMessageBox.YesRole)
-            cancel_button = d.addButton("Cancel", QtWidgets.QMessageBox.NoRole)
-            d.setDefaultButton(cancel_button)
-
-        d.setIcon(icon)
-        return d.exec_()
-
-    def update_alert(self, curr_version, latest_version, url):
-        d = QtWidgets.QMessageBox()
-        d.setWindowTitle('GPG Sync')
-        d.setText('GPG Sync v{} is now available.<span style="font-weight:normal;">' \
-                  '<br><br>You are currently running v{}. Click Update to' \
-                  ' download the latest version </span>'.format(latest_version, curr_version))
-
-        d.addButton(QtWidgets.QPushButton('Cancel'), QtWidgets.QMessageBox.NoRole)
-        d.addButton(QtWidgets.QPushButton('Update'), QtWidgets.QMessageBox.YesRole)
-
-        d.setIconPixmap(QtGui.QPixmap(self.get_resource_path('gpgsync.png')))
-        res = d.exec_()
-
-        if res == 1:
-            QtGui.QDesktopServices.openUrl(QtCore.QUrl(url))
 
     def clean_fp(self, fp):
         if type(fp) == bytes:
@@ -188,7 +81,7 @@ class Common(object):
         elif getattr(sys, 'frozen', False):
             prefix = os.path.join(os.path.dirname(sys.executable), 'share')
 
-        elif platform.system() == 'Linux':
+        elif self.os == 'Linux':
             prefix = os.path.join(sys.prefix, 'share/gpgsync')
 
         resource_path = os.path.join(prefix, filename)
@@ -199,9 +92,9 @@ class Common(object):
         # the location of cacerts.pem. Here's a hack to let it know where it is.
         # https://stackoverflow.com/questions/17158529/fixing-ssl-certificate-error-in-exe-compiled-with-py2exe-or-pyinstaller
         if getattr(sys, 'frozen', False):
-            if platform.system() == 'Darwin':
+            if self.os == 'Darwin':
                 verify = os.path.join(os.path.dirname(os.path.dirname(sys.executable)), 'Resources/certifi/cacert.pem')
-            elif platform.system() == 'Windows':
+            elif self.os == 'Windows':
                 verify = os.path.join(os.path.dirname(sys.executable), 'certifi/cacert.pem')
             else:
                 verify = None

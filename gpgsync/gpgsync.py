@@ -36,7 +36,7 @@ class GPGSync(QtWidgets.QMainWindow):
 
         self.c.log("GPGSync", "__init__")
 
-        self.system = platform.system()
+        self.system = self.c.os
         self.unconfigured_keylist = None
 
         version_file = self.c.get_resource_path('version')
@@ -45,16 +45,16 @@ class GPGSync(QtWidgets.QMainWindow):
 
         # Initialize the window
         self.setWindowTitle('GPG Sync')
-        self.setWindowIcon(self.c.icon)
+        self.setWindowIcon(self.c.gui.icon)
 
         # Make sure gpg is available
         if not self.c.gpg.is_gpg_available():
             if self.system == 'Linux':
-                self.c.alert('GnuPG 2.x doesn\'t seem to be installed. Install your operating system\'s gnupg2 package.')
+                self.c.gui.alert('GnuPG 2.x doesn\'t seem to be installed. Install your operating system\'s gnupg2 package.')
             if self.system == 'Darwin':
-                self.c.alert('GnuPG doesn\'t seem to be installed. Install <a href="https://gpgtools.org/">GPGTools</a>.')
+                self.c.gui.alert('GnuPG doesn\'t seem to be installed. Install <a href="https://gpgtools.org/">GPGTools</a>.')
             if self.system == 'Windows':
-                self.c.alert('GnuPG doesn\'t seem to be installed. Install <a href="http://gpg4win.org/">Gpg4win</a>.')
+                self.c.gui.alert('GnuPG doesn\'t seem to be installed. Install <a href="http://gpg4win.org/">Gpg4win</a>.')
             sys.exit()
 
         # Initialize keylists
@@ -191,10 +191,10 @@ class GPGSync(QtWidgets.QMainWindow):
         # Add button
         if len(self.c.settings.keylists) == 0:
             self.add_button.setText("Add First GPG Sync Keylist")
-            self.add_button.setStyleSheet(self.c.css['GPGSync add_button_first'])
+            self.add_button.setStyleSheet(self.c.gui.css['GPGSync add_button_first'])
         else:
             self.add_button.setText("Add Keylist")
-            self.add_button.setStyleSheet(self.c.css['GPGSync add_button'])
+            self.add_button.setStyleSheet(self.c.gui.css['GPGSync add_button'])
 
         # Update the keylist list
         self.keylist_list.update_ui()
@@ -268,11 +268,11 @@ class GPGSync(QtWidgets.QMainWindow):
                     if self.saved_update_version < latest_version or force:
                         self.show_main_window()
 
-                        self.c.update_alert(self.version, latest_version, release['html_url'])
+                        self.c.gui.update_alert(self.version, latest_version, release['html_url'])
                         self.saved_update_version = latest_version
                 elif self.version >= latest_version and force:
                     self.show_main_window()
-                    self.c.alert('No updates available.<br><br><span style="font-weight:normal;">Version {} is the latest version.</span>'.format(latest_version))
+                    self.c.gui.alert('No updates available.<br><br><span style="font-weight:normal;">Version {} is the latest version.</span>'.format(latest_version))
                 self.c.settings.last_update_check_err = False
             elif release and 'tag_name' not in release:
                 if not self.c.settings.last_update_check_err or force:
@@ -281,7 +281,7 @@ class GPGSync(QtWidgets.QMainWindow):
                     for key, val in release.items():
                         details += '{}: {}\n\n'.format(key, val)
 
-                    self.c.alert('Error checking for updates.', details)
+                    self.c.gui.alert('Error checking for updates.', details)
                 self.c.settings.last_update_check_err = True
 
             self.c.settings.last_update_check = datetime.datetime.now()

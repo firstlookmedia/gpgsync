@@ -20,20 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import os
 import sys
-import platform
 import signal
 import argparse
-from PyQt5 import QtCore, QtWidgets
 
-from .gpgsync import GPGSync
 from .common import Common
-
-
-class Application(QtWidgets.QApplication):
-    def __init__(self):
-        if platform.system() == 'Linux':
-            self.setAttribute(QtCore.Qt.AA_X11InitThreads, True)
-        QtWidgets.QApplication.__init__(self, sys.argv)
 
 
 def main():
@@ -54,22 +44,17 @@ def main():
     debug = args.debug
     sync = args.sync
 
+    # Create the common object
+    common = Common(debug)
+
     # If we only want to sync keylists
     if sync:
         print("not implemented yet")
 
     else:
         # Otherwise, start the GUI
-        app = Application()
-        common = Common(debug)
-        gui = GPGSync(app, common)
-
-        # Clean up when app quits
-        def shutdown():
-            gui.shutdown()
-        app.aboutToQuit.connect(shutdown)
-
-        sys.exit(app.exec_())
+        from . import gui
+        gui.main(common)
 
 if __name__ == '__main__':
     main()

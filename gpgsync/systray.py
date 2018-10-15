@@ -19,7 +19,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import queue
-import platform
 from PyQt5 import QtCore, QtWidgets
 
 
@@ -32,7 +31,7 @@ class SysTray(QtWidgets.QSystemTrayIcon):
     clicked_applet_signal = QtCore.pyqtSignal()
 
     def __init__(self, common, version):
-        super(SysTray, self).__init__(common.systray_icon)
+        super(SysTray, self).__init__(common.gui.systray_icon)
         self.c = common
 
         self.show_text = 'Show GPG Sync'
@@ -46,7 +45,7 @@ class SysTray(QtWidgets.QSystemTrayIcon):
         self.show_act.triggered.connect(self.clicked_show)
         self.refresh_act = self.menu.addAction('Sync keylists')
         self.refresh_act.triggered.connect(self.clicked_refresh)
-        if platform.system() != 'Linux':
+        if self.c.os != 'Linux':
             self.update_act = self.menu.addAction('Check for updates')
             self.update_act.triggered.connect(self.clicked_update_now)
         self.settings_window = self.menu.addAction('Settings...')
@@ -63,7 +62,7 @@ class SysTray(QtWidgets.QSystemTrayIcon):
 
     def clicked_activated(self, reason):
         # Clicking the systray icon raises window in OSX and Windows
-        if platform.system() == 'Darwin' or platform.system() == 'Window':
+        if self.c.os == 'Darwin' or self.c.os == 'Window':
             self.clicked_applet_signal.emit()
             return
 
@@ -84,9 +83,9 @@ class SysTray(QtWidgets.QSystemTrayIcon):
             if e.syncing:
                 syncing = True
         if syncing:
-            self.setIcon(self.c.systray_syncing_icon)
+            self.setIcon(self.c.gui.systray_syncing_icon)
         else:
-            self.setIcon(self.c.systray_icon)
+            self.setIcon(self.c.gui.systray_icon)
 
     def clicked_show(self):
         self.show_signal.emit()

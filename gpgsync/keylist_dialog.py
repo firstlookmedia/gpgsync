@@ -18,7 +18,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import platform
 import queue
 from PyQt5 import QtCore, QtWidgets, QtGui
 
@@ -42,7 +41,7 @@ class KeylistDialog(QtWidgets.QDialog):
             self.setWindowTitle('Add Keylist')
             self.keylist = Keylist(self.c)
             self.new_keylist = True
-        self.setWindowIcon(self.c.icon)
+        self.setWindowIcon(self.c.gui.icon)
         self.setMinimumWidth(400)
 
         # Authority key fingerprint
@@ -55,7 +54,7 @@ class KeylistDialog(QtWidgets.QDialog):
         self.url_edit.setPlaceholderText("https://")
         self.url_edit.textChanged.connect(self.update_sig_url)
         self.sig_url = QtWidgets.QLabel()
-        self.sig_url.setStyleSheet(self.c.css['KeylistDialog sig_url'])
+        self.sig_url.setStyleSheet(self.c.gui.css['KeylistDialog sig_url'])
 
         # Keyserver
         keyserver_label = QtWidgets.QLabel("Key server")
@@ -83,7 +82,7 @@ class KeylistDialog(QtWidgets.QDialog):
         # Advanced settings button
         self.advanced_button = QtWidgets.QPushButton()
         self.advanced_button.setFlat(True)
-        self.advanced_button.setStyleSheet(self.c.css['KeylistDialog advanced_button'])
+        self.advanced_button.setStyleSheet(self.c.gui.css['KeylistDialog advanced_button'])
         self.advanced_button.clicked.connect(self.toggle_advanced)
 
         # Advanced settings group
@@ -198,7 +197,7 @@ class VerifierDialog(QtWidgets.QDialog):
         self.c = common
 
         self.setWindowTitle('Verifying Keylist')
-        self.setWindowIcon(self.c.icon)
+        self.setWindowIcon(self.c.gui.icon)
 
         # Label
         self.label = QtWidgets.QLabel("Verifying keylist")
@@ -238,7 +237,7 @@ class VerifierDialog(QtWidgets.QDialog):
             pass
 
     def verifier_alert_error(self, msg, details=''):
-        self.c.alert(msg, details, QtWidgets.QMessageBox.Warning)
+        self.c.gui.alert(msg, details, QtWidgets.QMessageBox.Warning)
 
     def verifier_success(self):
         self.success.emit()

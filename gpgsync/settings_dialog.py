@@ -18,7 +18,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import platform
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 
@@ -111,7 +110,7 @@ class SettingsLayout(QtWidgets.QVBoxLayout):
 
         self.addWidget(autostart_group)
         self.addWidget(update_interval_group)
-        if platform.system() != 'Linux':
+        if self.c.os != 'Linux':
             self.addWidget(autoupdate_group)
         self.addLayout(button_layout)
 
@@ -124,7 +123,7 @@ class SettingsLayout(QtWidgets.QVBoxLayout):
 
     def save_settings(self):
         self.settings.run_automatically = (self.run_automatically_checkbox.checkState() == QtCore.Qt.Checked)
-        if platform.system() != 'Linux':
+        if self.c.os != 'Linux':
             self.settings.run_autoupdate = (self.run_autoupdate_checkbox.checkState() == QtCore.Qt.Checked)
             self.settings.automatic_update_use_proxy = (self.use_proxy.checkState() == QtCore.Qt.Checked)
             self.settings.automatic_update_proxy_host = self.proxy_host_edit.text().strip().encode()

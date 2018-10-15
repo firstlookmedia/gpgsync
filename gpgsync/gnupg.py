@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import re
 import subprocess
 import os
-import platform
 import tempfile
 import shutil
 from urllib.parse import urlparse
@@ -71,7 +70,7 @@ class GnuPG(object):
         self.homedir = tempfile.mkdtemp()
         self.c.log("GnuPG", "__init__", "created homedir: {}".format(self.homedir))
 
-        self.system = platform.system()
+        self.system = self.c.os
         self.popen_startupinfo = None
         self.creationflags = 0
         if self.system == 'Darwin':
