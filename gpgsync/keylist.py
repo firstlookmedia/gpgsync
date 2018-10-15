@@ -91,13 +91,18 @@ class Keylist(QtCore.QObject):
     def serialize(self):
         tmp = {}
 
+        # Serialize only the attributes that should persist
+        keys = ['fingerprint', 'url', 'keyserver', 'use_proxy',  'proxy_host',
+                'proxy_port', 'last_checked', 'last_synced', 'last_failed',
+                'error', 'warning']
         for k, v in self.__dict__.items():
-            if isinstance(v, bytes):
-                tmp[k] = v.decode()
-            elif isinstance(v, datetime.datetime):
-                tmp[k] = v.isoformat()
-            else:
-                tmp[k] = v
+            if k in keys:
+                if isinstance(v, bytes):
+                    tmp[k] = v.decode()
+                elif isinstance(v, datetime.datetime):
+                    tmp[k] = v.isoformat()
+                else:
+                    tmp[k] = v
 
         return tmp
 
