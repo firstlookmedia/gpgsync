@@ -21,7 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import queue
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-from ..keylist import Keylist, Verifier, VerifierMessageQueue
+from ..keylist import Keylist, ValidatorMessageQueue
+from .threads import ValidatorThread
 
 
 class KeylistDialog(QtWidgets.QDialog):
@@ -159,15 +160,15 @@ class KeylistDialog(QtWidgets.QDialog):
         proxy_host = self.proxy_host_edit.text().encode()
         proxy_port = self.proxy_port_edit.text().encode()
 
-        # Open the verifier dialog
-        d = VerifierDialog(self.c, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
-        d.success.connect(self.verified)
+        # Open the validator dialog
+        d = ValidatorDialog(self.c, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
+        d.success.connect(self.validated)
         d.exec_()
 
     def cancel_clicked(self):
         self.close()
 
-    def verified(self):
+    def validated(self):
         # Update the keylist values
         self.keylist.fingerprint = self.fingerprint_edit.text().encode()
         self.keylist.url = self.url_edit.text().encode()
@@ -179,7 +180,7 @@ class KeylistDialog(QtWidgets.QDialog):
 
         # Add the keylist, if necessary
         if self.new_keylist:
-            self.c.log("KeylistDialog", "verifier_success", "adding keylist")
+            self.c.log("KeylistDialog", "validator_success", "adding keylist")
             self.c.settings.keylists.append(self.keylist)
 
         # Save settings
@@ -189,11 +190,11 @@ class KeylistDialog(QtWidgets.QDialog):
         self.close()
 
 
-class VerifierDialog(QtWidgets.QDialog):
+class ValidatorDialog(QtWidgets.QDialog):
     success = QtCore.pyqtSignal()
 
     def __init__(self, common, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port):
-        super(VerifierDialog, self).__init__()
+        super(ValidatorDialog, self).__init__()
         self.c = common
 
         self.setWindowTitle('Verifying Keylist')
@@ -218,13 +219,13 @@ class VerifierDialog(QtWidgets.QDialog):
         self.update_ui_timer.timeout.connect(self.update_ui)
         self.update_ui_timer.start(500) # 0.5 seconds
 
-        # Start the verifier
-        self.q = VerifierMessageQueue()
-        self.verifier = Verifier(self.c, self.q, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
-        self.verifier.alert_error.connect(self.verifier_alert_error)
-        self.verifier.success.connect(self.verifier_success)
-        self.verifier.finished.connect(self.verifier_finished)
-        self.verifier.start()
+        # Start the validator
+        self.q = ValidatorMessageQueue()
+        self.validator = ValidatorThread(self.c, self.q, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
+        self.validator.alert_error.connect(self.validator_alert_error)
+        self.validator.success.connect(self.validator_success)
+        self.validator.finished.connect(self.validator_finished)
+        self.validator.start()
 
     def update_ui(self):
         # Process the last event in the LIFO queue, ignore the rest
@@ -236,11 +237,11 @@ class VerifierDialog(QtWidgets.QDialog):
         except queue.Empty:
             pass
 
-    def verifier_alert_error(self, msg, details=''):
+    def validator_alert_error(self, msg, details=''):
         self.c.gui.alert(msg, details, QtWidgets.QMessageBox.Warning)
 
-    def verifier_success(self):
+    def validator_success(self):
         self.success.emit()
 
-    def verifier_finished(self):
+    def validator_finished(self):
         self.close()

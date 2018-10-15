@@ -46,8 +46,33 @@ class InvalidFingerprints(Exception):
         return str([s.decode() for s in self.fingerprints])
 
 
+class ValidatorMessageQueue(queue.LifoQueue):
+    def __init(self):
+        super(VerifierMessageQueue, self).__init__()
+
+    def add_message(self, msg, step):
+        self.put({
+            'msg': msg,
+            'step': step
+        })
+
+
+class RefresherMessageQueue(queue.LifoQueue):
+    STATUS_STARTING = 0
+    STATUS_IN_PROGRESS = 1
+
+    def __init(self):
+        super(RefresherMessageQueue, self).__init__()
+
+    def add_message(self, status, total_keys=0, current_key=0):
+        self.put({
+            'status': status,
+            'total_keys': total_keys,
+            'current_key': current_key
+        })
+
+
 class Keylist(QtCore.QObject):
-    fetched_public_key_signal = QtCore.pyqtSignal()
     sync_finished = QtCore.pyqtSignal()
 
     def __init__(self, common):
@@ -115,8 +140,6 @@ class Keylist(QtCore.QObject):
 
         # Save it to disk
         gpg.export_pubkey_to_disk(self.fingerprint)
-
-        self.fetched_public_key_signal.emit()
 
     def fetch_msg_url(self):
         return self.fetch_url(self.url)
@@ -226,167 +249,90 @@ class Keylist(QtCore.QObject):
 
         self.c.settings.save()
 
+    @staticmethod
+    def error_obj(message, exception=None):
+        return { "error": message, "exception": exception }
 
-class VerifierMessageQueue(queue.LifoQueue):
-    def __init(self):
-        super(VerifierMessageQueue, self).__init__()
+    @staticmethod
+    def validate_log(common, q, message, step=0):
+        common.log("Keylist", "validate", message)
+        q.add_message(message, step)
 
-    def add_message(self, msg, step):
-        self.put({
-            'msg': msg,
-            'step': step
-        })
+    @staticmethod
+    def validate(common, q, keylist):
+        """
+        This function validates that a keylist should work to sync.
+        q should be a ValidatorMessageQueue object, and keylist is the
+        keylist to validate.
 
-
-class Verifier(QtCore.QThread):
-    alert_error = QtCore.pyqtSignal(str, str)
-    success = QtCore.pyqtSignal(bytes, bytes, bytes, bool, bytes, bytes)
-
-    def __init__(self, common, q, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port):
-        super(Verifier, self).__init__()
-        self.c = common
-        self.q = q
-        self.fingerprint = fingerprint
-        self.url = url
-        self.keyserver = keyserver
-        self.use_proxy = use_proxy
-        self.proxy_host = proxy_host
-        self.proxy_port = proxy_port
-
-    def finish_with_failure(self):
-        self.finished.emit()
-
-    def log(self, func, message, step=0):
-        self.c.log("Verifier", func, message)
-        self.q.add_message(message, step)
-
-    def run(self):
-        print("Verifying keylist with authority key {}".format(self.fingerprint.decode()))
-
-        # Make an keylist
-        e = Keylist(self.c)
-        e.fingerprint = self.fingerprint
-        e.url = self.url
-        e.keyserver = self.keyserver
-        e.use_proxy = self.use_proxy
-        e.proxy_host = self.proxy_host
-        e.proxy_port = self.proxy_port
+        It returns True on success, and an object like this on failure:
+        { "error": "Error message", "exception": e }
+        """
+        common.log("Keylist", "validate", "Validating keylist {}".format(keylist.url.decode()))
 
         # Test loading URL
-        success = False
         try:
-            self.log('run', 'Testing downloading URL {}'.format(self.url.decode()), 0)
-            msg_bytes = e.fetch_msg_url()
+            Keylist.validate_log(common, q, 'Testing downloading URL {}'.format(keylist.url.decode()), 0)
+            msg_bytes = keylist.fetch_msg_url()
         except ProxyURLDownloadError as e:
-            self.alert_error.emit('URL failed to download: Check your internet connection and proxy settings.', str(e))
+            return Keylist.error_obj('URL failed to download: Check your internet connection and proxy settings.', e)
         except URLDownloadError as e:
-            self.alert_error.emit('URL failed to download: Check your internet connection.', str(e))
-        else:
-            success = True
-
-        if not success:
-            return self.finish_with_failure()
+            return Keylist.error_obj('URL failed to download: Check your internet connection.', e)
 
         # Test loading signature URL
-        success = False
         try:
-            self.log('run', 'Testing downloading URL {}'.format((self.url + b'.sig').decode()), 1)
-            msg_sig_bytes = e.fetch_msg_sig_url()
+            Keylist.validate_log(common, q, 'Testing downloading URL {}'.format((keylist.url + b'.sig').decode()), 1)
+            msg_sig_bytes = keylist.fetch_msg_sig_url()
         except ProxyURLDownloadError as e:
-            self.alert_error.emit('URL failed to download: Check your internet connection and proxy settings.', str(e))
+            return Keylist.error_obj('URL failed to download: Check your internet connection and proxy settings.', e)
         except URLDownloadError as e:
-            self.alert_error.emit('URL failed to download: Check your internet connection.', str(e))
-        else:
-            success = True
-
-        if not success:
-            return self.finish_with_failure()
+            return Keylist.error_obj('URL failed to download: Check your internet connection.', e)
 
         # Test fingerprint and keyserver, and that the key isn't revoked or expired
-        success = False
         try:
-            self.log('run', 'Downloading {} from keyserver {}'.format(self.c.fp_to_keyid(self.fingerprint).decode(), self.keyserver.decode()), 2)
-            e.fetch_public_key(self.c.gpg)
+            Keylist.validate_log(common, q, 'Downloading {} from keyserver {}'.format(keylist.c.fp_to_keyid(keylist.fingerprint).decode(), keylist.keyserver.decode()), 2)
+            keylist.fetch_public_key(common.gpg)
         except InvalidFingerprint:
-            self.alert_error.emit('Invalid signing key fingerprint.', '')
+            return Keylist.error_obj('Invalid signing key fingerprint.')
         except KeyserverError:
-            self.alert_error.emit('Error with keyserver {}.'.format(self.keyserver.decode()), '')
+            return Keylist.error_obj('Error with keyserver {}.'.format(keylist.keyserver.decode()))
         except NotFoundOnKeyserver:
-            self.alert_error.emit('Signing key is not found on keyserver. Upload signing key and try again.', '')
+            return Keylist.error_obj('Signing key is not found on keyserver. Upload signing key and try again.')
         except NotFoundInKeyring:
-            self.alert_error.emit('Signing key is not found in keyring. Something went wrong.', '')
+            return Keylist.error_obj('Signing key is not found in keyring. Something went wrong.')
         except RevokedKey:
-            self.alert_error.emit('The signing key is revoked.', '')
+            return Keylist.error_obj('The signing key is revoked.')
         except ExpiredKey:
-            self.alert_error.emit('The signing key is expired.', '')
-        else:
-            success = True
-
-        if not success:
-            return self.finish_with_failure()
+            return Keylist.error_obj('The signing key is expired.')
 
         # Make sure URL is in the right format
-        success = False
-        o = urlparse(self.url)
+        o = urlparse(keylist.url)
         if (o.scheme != b'http' and o.scheme != b'https') or o.netloc == '':
-            self.alert_error.emit('URL is invalid.', '')
-        else:
-            success = True
-
-        if not success:
-            return self.finish_with_failure()
+            return Keylist.error_obj('URL is invalid.')
 
         # After downloading URL, test that it's signed by signing key
-        success = False
         try:
-            self.log('run', 'Verifying signature', 3)
-            e.verify_fingerprints_sig(self.c.gpg, msg_sig_bytes, msg_bytes)
+            Keylist.validate_log(common, q, 'Verifying signature', 3)
+            keylist.verify_fingerprints_sig(common.gpg, msg_sig_bytes, msg_bytes)
         except VerificationError:
-            self.alert_error.emit('Signature does not verify.', '')
+            return Keylist.error_obj('Signature does not verify.')
         except BadSignature:
-            self.alert_error.emit('Bad signature.', '')
+            return Keylist.error_obj('Bad signature.')
         except RevokedKey:
-            self.alert_error.emit('The signing key is revoked.', '')
+            return Keylist.error_obj('The signing key is revoked.')
         except SignedWithWrongKey:
-            self.alert_error.emit('Valid signature, but signed with wrong signing key.', '')
-        else:
-            success = True
-
-        if not success:
-            return self.finish_with_failure()
+            return Keylist.error_obj('Valid signature, but signed with wrong signing key.')
 
         # Test that it's a list of fingerprints
-        success = False
         try:
-            self.log('run', 'Validating fingerprint list', 4)
-            e.get_fingerprint_list(msg_bytes)
+            Keylist.validate_log(common, q, 'Validating fingerprint list', 4)
+            keylist.get_fingerprint_list(msg_bytes)
         except InvalidFingerprints as e:
-            self.alert_error.emit('Invalid fingerprints', str(e))
-        else:
-            success = True
+            return Keylist.error_obj('Invalid fingerprints', e)
 
-        if not success:
-            return self.finish_with_failure()
+        Keylist.validate_log(common, q, 'Keylist saved', 5)
+        return True
 
-        self.log('run', 'Keylist saved', 5)
-
-        self.success.emit(self.fingerprint, self.url, self.keyserver, self.use_proxy, self.proxy_host, self.proxy_port)
-        self.finished.emit()
-
-
-class RefresherMessageQueue(queue.LifoQueue):
-    STATUS_STARTING = 0
-    STATUS_IN_PROGRESS = 1
-
-    def __init(self):
-        super(RefresherMessageQueue, self).__init__()
-
-    def add_message(self, status, total_keys=0, current_key=0):
-        self.put({
-            'status': status,
-            'total_keys': total_keys,
-            'current_key': current_key
-        })
 
 
 class Refresher(QtCore.QThread):
