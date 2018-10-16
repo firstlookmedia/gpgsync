@@ -39,13 +39,13 @@ class GuiCommon(object):
 
         # Stylesheets
         self.css = {
-            'GPGSync add_button': """
+            'MainWindow add_button': """
                 QPushButton {
                     font-weight: normal;
                 }
                 """,
 
-            'GPGSync add_button_first': """
+            'MainWindow add_button_first': """
                 QPushButton {
                     font-weight: bold;
                 }

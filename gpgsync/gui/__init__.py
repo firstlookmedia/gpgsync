@@ -22,7 +22,7 @@ import sys
 from PyQt5 import QtCore, QtWidgets
 
 from .gui_common import GuiCommon
-from .gpgsync import GPGSync
+from .main_window import MainWindow
 
 
 class Application(QtWidgets.QApplication):
@@ -40,7 +40,7 @@ def main(common):
     common.gui = GuiCommon(common)
 
     # Now create the main window
-    main_window = GPGSync(app, common)
+    main_window = MainWindow(app, common)
 
     # Clean up when app quits
     def shutdown():

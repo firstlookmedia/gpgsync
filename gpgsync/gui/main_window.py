@@ -29,13 +29,13 @@ from .keylist_list import KeylistList
 from .threads import RefresherThread
 
 
-class GPGSync(QtWidgets.QMainWindow):
+class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, app, common):
-        super(GPGSync, self).__init__()
+        super(MainWindow, self).__init__()
         self.app = app
         self.c = common
 
-        self.c.log("GPGSync", "__init__")
+        self.c.log("MainWindow", "__init__")
 
         self.system = self.c.os
         self.unconfigured_keylist = None
@@ -191,10 +191,10 @@ class GPGSync(QtWidgets.QMainWindow):
         # Add button
         if len(self.c.settings.keylists) == 0:
             self.add_button.setText("Add First GPG Sync Keylist")
-            self.add_button.setStyleSheet(self.c.gui.css['GPGSync add_button_first'])
+            self.add_button.setStyleSheet(self.c.gui.css['MainWindow add_button_first'])
         else:
             self.add_button.setText("Add Keylist")
-            self.add_button.setStyleSheet(self.c.gui.css['GPGSync add_button'])
+            self.add_button.setStyleSheet(self.c.gui.css['MainWindow add_button'])
 
         # Update the keylist list
         self.keylist_list.update_ui()
@@ -210,7 +210,7 @@ class GPGSync(QtWidgets.QMainWindow):
         d.exec_()
 
     def sync_all_keylists(self, force=False):
-        self.c.log("GPGSync", "sync_all_keylists", "force={}".format(force))
+        self.c.log("MainWindow", "sync_all_keylists", "force={}".format(force))
 
         for keylist in self.c.settings.keylists:
             refresher = RefresherThread(self.c, keylist)
@@ -219,7 +219,7 @@ class GPGSync(QtWidgets.QMainWindow):
         self.update_ui()
 
     def check_for_updates(self, force=False):
-        self.c.log("GPGSync", "check_for_updates", "force={}".format(force))
+        self.c.log("MainWindow", "check_for_updates", "force={}".format(force))
 
         one_day = 60*60*24 # One day
         run_update = False
@@ -239,7 +239,7 @@ class GPGSync(QtWidgets.QMainWindow):
             try:
                 url = 'https://api.github.com/repos/firstlookmedia/gpgsync/releases/latest'
 
-                self.c.log("GPGSync", "check_for_updates", "loading {}".format(url))
+                self.c.log("MainWindow", "check_for_updates", "loading {}".format(url))
                 if self.c.settings.automatic_update_use_proxy:
                     socks5_address = 'socks5://{}:{}'.format(self.c.settings.automatic_update_proxy_host.decode(), self.c.settings.automatic_update_proxy_port.decode())
 
@@ -254,13 +254,13 @@ class GPGSync(QtWidgets.QMainWindow):
 
                 release = r.json()
             except (requests.exceptions.RequestException, requests.exceptions.ConnectionError) as e:
-                self.c.log("GPGSync", "check_for_updates", "exception making http request: {}".format(e))
+                self.c.log("MainWindow", "check_for_updates", "exception making http request: {}".format(e))
                 self.checking_for_updates = False
                 return
 
             if release and 'tag_name' in release:
                 latest_version = parse(release['tag_name'])
-                self.c.log("GPGSync", "check_for_updates", "latest version = {}".format(latest_version))
+                self.c.log("MainWindow", "check_for_updates", "latest version = {}".format(latest_version))
 
                 if self.version < latest_version:
                     if self.saved_update_version < latest_version or force:
@@ -294,8 +294,8 @@ class GPGSync(QtWidgets.QMainWindow):
             self.force_check_for_updates()
 
     def shutdown(self):
-        self.c.log("GPGSync", "shutdown")
+        self.c.log("MainWindow", "shutdown")
 
     def quit(self):
-        self.c.log("GPGSync", "quit")
+        self.c.log("MainWindow", "quit")
         self.app.quit()
