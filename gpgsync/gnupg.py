@@ -340,7 +340,12 @@ class GnuPG(object):
         (out, err) = p.communicate(input)
 
         if out != '':
-            self.c.log("GnuPG", "_gpg", "stdout: {}".format(out))
+            # Only display the first 512 bytes
+            if len(out) >= 512:
+                display_out = out[0:512] + b'...';
+            else:
+                display_out = out
+            self.c.log("GnuPG", "_gpg", "stdout: {}".format(display_out))
         if err != '':
             self.c.log("GnuPG", "_gpg", "stderr: {}".format(err))
         return out, err
