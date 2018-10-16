@@ -350,22 +350,21 @@ class Keylist(object):
             return Keylist.result_object('cancel')
 
         # Fetch signing key from keyserver, make sure it's not expired or revoked
-        reset_last_checked = True
         try:
             common.log('run', 'Fetching public key {} {}'.format(common.fp_to_keyid(keylist.fingerprint).decode(), common.gpg.get_uid(keylist.fingerprint)))
             keylist.fetch_public_key(common.gpg)
         except InvalidFingerprint:
-            return Keylist.result_object('error', 'Invalid signing key fingerprint')
+            return Keylist.result_object('error', 'Invalid signing key fingerprint', data={"reset_last_checked": True})
         except NotFoundOnKeyserver:
-            return Keylist.result_object('error', 'Signing key is not found on keyserver')
+            return Keylist.result_object('error', 'Signing key is not found on keyserver', data={"reset_last_checked": True})
         except NotFoundInKeyring:
-            return Keylist.result_object('error', 'Signing key is not found in keyring')
+            return Keylist.result_object('error', 'Signing key is not found in keyring', data={"reset_last_checked": True})
         except RevokedKey:
-            return Keylist.result_object('error', 'The signing key is revoked')
+            return Keylist.result_object('error', 'The signing key is revoked', data={"reset_last_checked": True})
         except ExpiredKey:
-            return Keylist.result_object('error', 'The signing key is expired')
+            return Keylist.result_object('error', 'The signing key is expired', data={"reset_last_checked": True})
         except KeyserverError:
-            return Keylist.result_object('error', 'Error connecting to keyserver', data={"reset_last_checked": True})
+            return Keylist.result_object('error', 'Error connecting to keyserver', data={"reset_last_checked": False})
 
         if cancel_q.qsize() > 0:
             return Keylist.result_object('cancel')

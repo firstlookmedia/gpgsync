@@ -19,6 +19,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import queue
+import datetime
 from PyQt5 import QtCore, QtWidgets
 from ..keylist import Keylist, ValidatorMessageQueue, RefresherMessageQueue
 
@@ -105,10 +106,10 @@ class RefresherThread(QtCore.QThread):
                     warnings.append('Fingerprints not found: {}'.format(', '.join([x.decode() for x in result['data']['notfound_fingerprints']])))
                 warning = ', '.join(warnings)
 
-            keylist.last_checked = datetime.datetime.now()
-            keylist.last_synced = datetime.datetime.now()
-            keylist.warning = warning
-            keylist.error = None
+            self.keylist.last_checked = datetime.datetime.now()
+            self.keylist.last_synced = datetime.datetime.now()
+            self.keylist.warning = warning
+            self.keylist.error = None
 
             self.c.settings.save()
 
@@ -116,10 +117,10 @@ class RefresherThread(QtCore.QThread):
             self.c.log("RefresherThread", "run", "refresh error")
 
             if result['data']['reset_last_checked']:
-                keylist.last_checked = datetime.datetime.now()
-            keylist.last_failed = datetime.datetime.now()
-            keylist.warning = None
-            keylist.error = err
+                self.keylist.last_checked = datetime.datetime.now()
+            self.keylist.last_failed = datetime.datetime.now()
+            self.keylist.warning = None
+            self.keylist.error = result['data']['message']
 
             self.c.settings.save()
 
