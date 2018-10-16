@@ -373,7 +373,7 @@ class Keylist(object):
         # Verifiy signature
         try:
             common.log('run', 'Verifying signature')
-            keylist.verify_fingerprints_sig(keylist.gpg, msg_sig_bytes, msg_bytes)
+            keylist.verify_fingerprints_sig(common.gpg, msg_sig_bytes, msg_bytes)
         except VerificationError:
             return Keylist.result_object('error', 'Signature does not verify')
         except BadSignature:

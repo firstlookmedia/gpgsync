@@ -90,7 +90,7 @@ class RefresherThread(QtCore.QThread):
             return
         self.keylist.syncing = True
 
-        result = Keylist.refresh(self.c, self.cancel_q, self.keylist)
+        result = Keylist.refresh(self.c, self.cancel_q, self.keylist, force=self.force)
 
         if result['type'] == "success":
             self.c.log("RefresherThread", "run", "refresh success")
