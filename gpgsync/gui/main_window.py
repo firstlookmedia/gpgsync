@@ -207,7 +207,7 @@ class MainWindow(QtWidgets.QMainWindow):
         for keylist in self.c.settings.keylists:
             if not hasattr(keylist, 'refresher') or keylist.refresher.is_finished:
                 keylist.refresher = RefresherThread(self.c, keylist)
-                keylist.refresher.finished.connect(self.update_ui)
+                #keylist.refresher.finished.connect(self.update_ui)
                 keylist.refresher.start()
         self.update_ui()
 

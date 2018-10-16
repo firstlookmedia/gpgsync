@@ -76,12 +76,6 @@ class RefresherThread(QtCore.QThread):
         self.cancel_q.put(True)
         self.quit()
 
-    def finish_with_failure(self, err, reset_last_checked=True):
-        self.error.emit(self.e, err, reset_last_checked)
-
-    def finish_with_cancel(self):
-        self.finish_with_failure("Canceled")
-
     def log(self, func, message):
         self.c.log("Refresher", func, message)
 
@@ -115,6 +109,9 @@ class RefresherThread(QtCore.QThread):
 
             self.c.settings.save()
 
+        elif result['type'] == "cancel":
+            self.c.log("RefresherThread", "run", "refresh canceled")
+
         elif result['type'] == "error":
             self.c.log("RefresherThread", "run", "refresh error")
 
@@ -128,4 +125,5 @@ class RefresherThread(QtCore.QThread):
 
         self.keylist.syncing = False
         self.is_finished = True
+        self.c.log("RefresherThread", "run", "thread finished")
         self.finished.emit()
