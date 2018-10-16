@@ -37,9 +37,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.c.log("MainWindow", "__init__")
 
-        self.system = self.c.os
-        self.unconfigured_keylist = None
-
         version_file = self.c.get_resource_path('version')
         self.version = parse(open(version_file).read().strip())
         self.saved_update_version = self.version
@@ -50,11 +47,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Make sure gpg is available
         if not self.c.gpg.is_gpg_available():
-            if self.system == 'Linux':
+            if self.c.os == 'Linux':
                 self.c.gui.alert('GnuPG 2.x doesn\'t seem to be installed. Install your operating system\'s gnupg2 package.')
-            if self.system == 'Darwin':
+            if self.c.os == 'Darwin':
                 self.c.gui.alert('GnuPG doesn\'t seem to be installed. Install <a href="https://gpgtools.org/">GPGTools</a>.')
-            if self.system == 'Windows':
+            if self.c.os == 'Windows':
                 self.c.gui.alert('GnuPG doesn\'t seem to be installed. Install <a href="http://gpg4win.org/">Gpg4win</a>.')
             sys.exit()
 
@@ -69,7 +66,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.systray = SysTray(self.c, self.version)
         self.systray.show_signal.connect(self.toggle_show_window)
         self.systray.sync_now_signal.connect(self.sync_all_keylists)
-        if self.system != 'Linux':
+        if self.c.os != 'Linux':
             self.checking_for_updates = False
             self.systray.check_updates_now_signal.connect(self.force_check_for_updates)
         self.systray.quit_signal.connect(self.quit)
@@ -87,7 +84,7 @@ class MainWindow(QtWidgets.QMainWindow):
         logo_layout.addWidget(logo_label)
         logo_layout.addStretch()
 
-        # Keylists list
+        # List of keylists
         self.keylist_list = KeylistList(self.c)
         self.keylist_list.refresh.connect(self.update_ui)
 
@@ -134,7 +131,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def run_interval_tasks(self):
         self.sync_all_keylists(False)
 
-        if self.system != 'Linux' and self.c.settings.run_autoupdate:
+        if self.c.os != 'Linux' and self.c.settings.run_autoupdate:
             self.check_for_updates(False)
 
     def application_state_change(self, state):
