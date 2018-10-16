@@ -196,6 +196,45 @@ class Keylist(object):
 
         return fingerprints
 
+    def interpret_result(self, result):
+        """
+        After syncing, depending on how the refresh went, update timestamps
+        and warning in the keylist and saving settings if necessary.
+        """
+        if result['type'] == "success":
+            self.c.log("Keylist", "interpret_result", "refresh success")
+
+            if len(result['data']['invalid_fingerprints']) == 0 and len(result['data']['notfound_fingerprints']) == 0:
+                warning = False
+            else:
+                warnings = []
+                if len(result['data']['invalid_fingerprints']) > 0:
+                    warning.append('Invalid fingerprints: {}'.format(', '.join([x.decode() for x in result['data']['invalid_fingerprints']])))
+                if len(result['data']['notfound_fingerprints']) > 0:
+                    warnings.append('Fingerprints not found: {}'.format(', '.join([x.decode() for x in result['data']['notfound_fingerprints']])))
+                warning = ', '.join(warnings)
+
+            self.last_checked = datetime.datetime.now()
+            self.last_synced = datetime.datetime.now()
+            self.warning = warning
+            self.error = None
+
+            self.c.settings.save()
+
+        elif result['type'] == "cancel":
+            self.c.log("Keylist", "interpret_result", "refresh canceled")
+
+        elif result['type'] == "error":
+            self.c.log("Keylist", "interpret_result", "refresh error")
+
+            if result['data']['reset_last_checked']:
+                self.last_checked = datetime.datetime.now()
+            self.last_failed = datetime.datetime.now()
+            self.warning = None
+            self.error = result['data']['message']
+
+            self.c.settings.save()
+
     @staticmethod
     def result_object(type, message=None, exception=None, data=None):
         return {

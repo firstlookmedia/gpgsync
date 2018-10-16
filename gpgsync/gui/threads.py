@@ -88,40 +88,7 @@ class RefresherThread(QtCore.QThread):
         self.keylist.syncing = True
 
         result = Keylist.refresh(self.c, self.cancel_q, self.keylist, force=self.force)
-
-        if result['type'] == "success":
-            self.c.log("RefresherThread", "run", "refresh success")
-
-            if len(result['data']['invalid_fingerprints']) == 0 and len(result['data']['notfound_fingerprints']) == 0:
-                warning = False
-            else:
-                warnings = []
-                if len(result['data']['invalid_fingerprints']) > 0:
-                    warning.append('Invalid fingerprints: {}'.format(', '.join([x.decode() for x in result['data']['invalid_fingerprints']])))
-                if len(result['data']['notfound_fingerprints']) > 0:
-                    warnings.append('Fingerprints not found: {}'.format(', '.join([x.decode() for x in result['data']['notfound_fingerprints']])))
-                warning = ', '.join(warnings)
-
-            self.keylist.last_checked = datetime.datetime.now()
-            self.keylist.last_synced = datetime.datetime.now()
-            self.keylist.warning = warning
-            self.keylist.error = None
-
-            self.c.settings.save()
-
-        elif result['type'] == "cancel":
-            self.c.log("RefresherThread", "run", "refresh canceled")
-
-        elif result['type'] == "error":
-            self.c.log("RefresherThread", "run", "refresh error")
-
-            if result['data']['reset_last_checked']:
-                self.keylist.last_checked = datetime.datetime.now()
-            self.keylist.last_failed = datetime.datetime.now()
-            self.keylist.warning = None
-            self.keylist.error = result['data']['message']
-
-            self.c.settings.save()
+        self.keylist.interpret_result(result)
 
         self.keylist.syncing = False
         self.is_finished = True
