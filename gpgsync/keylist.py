@@ -335,6 +335,7 @@ class Keylist(object):
             return Keylist.result_object('error', 'Failed to download: Check your internet connection and proxy configuration')
 
         if cancel_q.qsize() > 0:
+            common.log("Keylist", "refresh", "canceling early {}".format(keylist.url.decode()))
             return Keylist.result_object('cancel')
 
         # Download signature URL
@@ -347,6 +348,7 @@ class Keylist(object):
             return Keylist.result_object('error', 'Failed to download: Check your internet connection and proxy configuration')
 
         if cancel_q.qsize() > 0:
+            common.log("Keylist", "refresh", "canceling early {}".format(keylist.url.decode()))
             return Keylist.result_object('cancel')
 
         # Fetch signing key from keyserver, make sure it's not expired or revoked
@@ -367,6 +369,7 @@ class Keylist(object):
             return Keylist.result_object('error', 'Error connecting to keyserver', data={"reset_last_checked": False})
 
         if cancel_q.qsize() > 0:
+            common.log("Keylist", "refresh", "canceling early {}".format(keylist.url.decode()))
             return Keylist.result_object('cancel')
 
         # Verifiy signature
@@ -383,6 +386,7 @@ class Keylist(object):
             return Keylist.result_object('error', 'Valid signature, but signed with wrong signing key')
 
         if cancel_q.qsize() > 0:
+            common.log("Keylist", "refresh", "canceling early {}".format(keylist.url.decode()))
             return Keylist.result_object('cancel')
 
         # Get fingerprint list
@@ -393,6 +397,7 @@ class Keylist(object):
             return Keylist.result_object('error', 'Invalid fingerprints: {}'.format(e))
 
         if cancel_q.qsize() > 0:
+            common.log("Keylist", "refresh", "canceling early {}".format(keylist.url.decode()))
             return Keylist.result_object('cancel')
 
         # Build list of fingerprints to fetch
@@ -433,6 +438,7 @@ class Keylist(object):
             keylist.q.add_message(RefresherMessageQueue.STATUS_IN_PROGRESS, total_keys, current_key)
 
             if cancel_q.qsize() > 0:
+                common.log("Keylist", "refresh", "canceling early {}".format(keylist.url.decode()))
                 return Keylist.result_object('cancel')
 
         # All done

@@ -19,6 +19,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import queue
+import time
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 from .keylist_dialog import KeylistDialog
@@ -32,6 +33,7 @@ class KeylistList(QtWidgets.QWidget):
     def __init__(self, common):
         super(KeylistList, self).__init__()
         self.c = common
+        self.c.log('KeylistList', '__init__')
 
         self.layout = QtWidgets.QVBoxLayout()
         self.layout.setSpacing(10)
@@ -40,15 +42,17 @@ class KeylistList(QtWidgets.QWidget):
         self.update_ui()
 
     def update_ui(self):
+        self.c.log('KeylistList', 'update_ui')
         # Delete all widgets from the layout
         # https://stackoverflow.com/questions/4528347/clear-all-widgets-in-a-layout-in-pyqt
         for i in reversed(range(self.layout.count())):
             self.layout.itemAt(i).widget().setParent(None)
 
         # Add new keylist widgets
-        for e in self.c.settings.keylists:
-            widget = KeylistWidget(self.c, e)
+        for keylist in self.c.settings.keylists:
+            widget = KeylistWidget(self.c, keylist)
             widget.refresh.connect(self.refresh.emit)
+            widget.refresh.connect(self.update_ui)
             self.layout.addWidget(widget)
 
         self.adjustSize()
@@ -60,6 +64,7 @@ class KeylistWidget(QtWidgets.QWidget):
     def __init__(self, common, keylist):
         super(KeylistWidget, self).__init__()
         self.c = common
+        self.c.log('KeylistWidget', '__init__')
         self.keylist = keylist
 
         self.c.log("KeylistWidget", "__init__")
@@ -113,7 +118,6 @@ class KeylistWidget(QtWidgets.QWidget):
         delete_button = QtWidgets.QPushButton("Delete")
         delete_button.clicked.connect(self.delete_clicked)
         delete_button.setStyleSheet(self.c.gui.css['KeylistWidget button'])
-        #delete_button.setMinimumHeight(30)
         self.cancel_sync_button = QtWidgets.QPushButton("Cancel Sync")
         self.cancel_sync_button.clicked.connect(self.cancel_sync_clicked)
         self.cancel_sync_button.setStyleSheet(self.c.gui.css['KeylistWidget button'])
@@ -167,8 +171,10 @@ class KeylistWidget(QtWidgets.QWidget):
     def sync_clicked(self):
         self.c.log("KeylistWidget", "sync_clicked")
 
-        refresher = RefresherThread(self.c, self.keylist, force=True)
-        refresher.start()
+        self.keylist.refresher = RefresherThread(self.c, self.keylist, force=True)
+        self.keylist.refresher.finished.connect(self.refresh.emit)
+        self.keylist.refresher.start()
+        time.sleep(0.1) # wait for thread to start
 
         self.refresh.emit()
 

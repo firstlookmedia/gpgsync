@@ -191,9 +191,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.add_button.setText("Add Keylist")
             self.add_button.setStyleSheet(self.c.gui.css['MainWindow add_button'])
 
-        # Update the keylist list
-        self.keylist_list.update_ui()
-
         # Set new window size
         height = len(self.c.settings.keylists)*80 + 140
         self.setMinimumSize(480, height)
@@ -208,9 +205,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.c.log("MainWindow", "sync_all_keylists", "force={}".format(force))
 
         for keylist in self.c.settings.keylists:
-            refresher = RefresherThread(self.c, keylist)
-            refresher.finished.connect(self.update_ui)
-            refresher.start()
+            if not hasattr(keylist, 'refresher') or keylist.refresher.is_finished:
+                keylist.refresher = RefresherThread(self.c, keylist)
+                keylist.refresher.finished.connect(self.update_ui)
+                keylist.refresher.start()
         self.update_ui()
 
     def check_for_updates(self, force=False):

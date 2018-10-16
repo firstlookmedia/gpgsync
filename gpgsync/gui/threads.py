@@ -70,6 +70,8 @@ class RefresherThread(QtCore.QThread):
         self.keylist.q = RefresherMessageQueue()
         self.cancel_q = queue.Queue()
 
+        self.is_finished = False
+
     def cancel_early(self):
         self.cancel_q.put(True)
         self.quit()
@@ -125,4 +127,5 @@ class RefresherThread(QtCore.QThread):
             self.c.settings.save()
 
         self.keylist.syncing = False
+        self.is_finished = True
         self.finished.emit()
