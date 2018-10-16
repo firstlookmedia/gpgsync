@@ -191,6 +191,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.add_button.setText("Add Keylist")
             self.add_button.setStyleSheet(self.c.gui.css['MainWindow add_button'])
 
+        # Add or delete keylists, if necessary
+        self.keylist_list.update_keylist_widgets()
+
         # Set new window size
         height = len(self.c.settings.keylists)*80 + 140
         self.setMinimumSize(480, height)

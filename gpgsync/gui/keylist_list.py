@@ -39,16 +39,38 @@ class KeylistList(QtWidgets.QWidget):
         self.layout.setSpacing(10)
         self.setLayout(self.layout)
 
-        self.update_ui()
+        self.keylist_widgets = {}
+        self.update_keylist_widgets()
 
-    def update_ui(self):
-        self.c.log('KeylistList', 'update_ui')
+    def update_keylist_widgets(self):
+        self.c.log('KeylistList', 'update_keylist_widgets', 'keylist_widgets: {}'.format(list(self.keylist_widgets)))
 
-        # Add new keylist widgets
+        # Add new widgets, if necessary
+        valid_ids = []
         for keylist in self.c.settings.keylists:
-            widget = KeylistWidget(self.c, keylist)
-            widget.refresh.connect(self.refresh.emit)
-            self.layout.addWidget(widget)
+            id = keylist.fingerprint + b':' + keylist.url
+            valid_ids.append(id)
+
+            if id not in self.keylist_widgets:
+                self.c.log('KeylistList', 'update_keylist_widgets', 'adding keylist to UI: {}'.format(id))
+                widget = KeylistWidget(self.c, keylist)
+                widget.id = id
+                widget.refresh.connect(self.refresh.emit)
+                widget.refresh.connect(self.update_keylist_widgets)
+                self.layout.addWidget(widget)
+
+                self.keylist_widgets[id] = widget
+
+        # Delete any extra widgets
+        for i in reversed(range(self.layout.count())):
+            widget = self.layout.itemAt(i).widget()
+            if widget.id not in valid_ids:
+                # Delete this widget
+                self.c.log('KeylistList', 'update_keylist_widgets', 'deleting keylist from UI: {}'.format(widget.id))
+                widget.setParent(None)
+                widget.close()
+
+                del self.keylist_widgets[widget.id]
 
         self.adjustSize()
 
@@ -115,6 +137,8 @@ class KeylistWidget(QtWidgets.QWidget):
         layout.addWidget(uid_label)
         layout.addLayout(hlayout)
         self.setLayout(layout)
+
+        self.update_ui()
 
         # Size
         self.setMinimumSize(440, 70)
