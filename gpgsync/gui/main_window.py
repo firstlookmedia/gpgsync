@@ -110,8 +110,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.update_ui()
 
         # Timed tasks intialize
-        self.currently_syncing = False
-        self.syncing_errors = []
         self.global_timer = QtCore.QTimer()
         self.global_timer.timeout.connect(self.run_interval_tasks)
         self.global_timer.start(60000) # 1 minute
