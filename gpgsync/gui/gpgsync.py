@@ -61,7 +61,7 @@ class GPGSync(QtWidgets.QMainWindow):
         # Initialize keylists
         try:
             for keylist in self.c.settings.keylists:
-                self.c.gpg.import_pubkey_from_disk(e.fingerprint)
+                self.c.gpg.import_pubkey_from_disk(keylist.fingerprint)
         except:
             pass
 
