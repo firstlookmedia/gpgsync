@@ -26,6 +26,7 @@ from .systray import SysTray
 from .settings_dialog import SettingsDialog
 from .keylist_dialog import KeylistDialog
 from .keylist_list import KeylistList
+from .threads import RefresherThread
 
 
 class GPGSync(QtWidgets.QMainWindow):
@@ -59,9 +60,8 @@ class GPGSync(QtWidgets.QMainWindow):
 
         # Initialize keylists
         try:
-            for e in self.c.settings.keylists:
+            for keylist in self.c.settings.keylists:
                 self.c.gpg.import_pubkey_from_disk(e.fingerprint)
-                e.sync_finished.connect(self.update_ui)
         except:
             pass
 
@@ -206,18 +206,16 @@ class GPGSync(QtWidgets.QMainWindow):
 
     def add_keylist(self):
         d = KeylistDialog(self.c)
-        d.saved.connect(self.add_keylist_saved)
+        d.saved.connect(self.update_ui)
         d.exec_()
-
-    def add_keylist_saved(self, e):
-        e.sync_finished.connect(self.update_ui)
-        self.update_ui()
 
     def sync_all_keylists(self, force=False):
         self.c.log("GPGSync", "sync_all_keylists", "force={}".format(force))
 
-        for e in self.c.settings.keylists:
-            e.start_syncing(force)
+        for keylist in self.c.settings.keylists:
+            refresher = RefresherThread(self.c, keylist)
+            refresher.finished.connect(self.update_ui)
+            refresher.start()
         self.update_ui()
 
     def check_for_updates(self, force=False):

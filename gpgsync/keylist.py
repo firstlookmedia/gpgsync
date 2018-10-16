@@ -25,7 +25,6 @@ import datetime
 import dateutil.parser as date_parser
 import queue
 from io import BytesIO
-from PyQt5 import QtCore, QtWidgets
 
 from .gnupg import *
 
@@ -72,9 +71,7 @@ class RefresherMessageQueue(queue.LifoQueue):
         })
 
 
-class Keylist(QtCore.QObject):
-    sync_finished = QtCore.pyqtSignal()
-
+class Keylist(object):
     def __init__(self, common):
         super(Keylist, self).__init__()
         self.c = common
@@ -199,59 +196,14 @@ class Keylist(QtCore.QObject):
 
         return fingerprints
 
-    def start_syncing(self, force=False):
-        if self.syncing:
-            return
-
-        self.syncing = True
-
-        # Start the Refresher
-        self.q = RefresherMessageQueue()
-        self.refresher = Refresher(self.c, self.c.settings.update_interval_hours, self.q, self, force)
-        self.refresher.finished.connect(self.refresher_finished)
-        self.refresher.success.connect(self.refresher_success)
-        self.refresher.error.connect(self.refresher_error)
-        self.refresher.start()
-
-    def refresher_finished(self):
-        self.c.log("Keylist", "refresher_finished")
-        self.syncing = False
-        self.sync_finished.emit()
-
-    def refresher_success(self, e, invalid_fingerprints, notfound_fingerprints):
-        self.c.log("Keylist", "refresher_success")
-
-        if len(invalid_fingerprints) == 0 and len(notfound_fingerprints) == 0:
-            warning = False
-        else:
-            warnings = []
-            if len(invalid_fingerprints) > 0:
-                warning.append('Invalid fingerprints: {}'.format(', '.join([x.decode() for x in invalid_fingerprints])))
-            if len(notfound_fingerprints) > 0:
-                warnings.append('Fingerprints not found: {}'.format(', '.join([x.decode() for x in notfound_fingerprints])))
-            warning = ', '.join(warnings)
-
-        e.last_checked = datetime.datetime.now()
-        e.last_synced = datetime.datetime.now()
-        e.warning = warning
-        e.error = None
-
-        self.c.settings.save()
-
-    def refresher_error(self, e, err, reset_last_checked=True):
-        self.c.log("Keylist", "refresher_error")
-
-        if reset_last_checked:
-            e.last_checked = datetime.datetime.now()
-        e.last_failed = datetime.datetime.now()
-        e.warning = None
-        e.error = err
-
-        self.c.settings.save()
-
     @staticmethod
-    def error_obj(message, exception=None):
-        return { "error": message, "exception": exception }
+    def result_object(type, message=None, exception=None, data=None):
+        return {
+            "type": type,
+            "message": message,
+            "exception": exception,
+            "data": data
+        }
 
     @staticmethod
     def validate_log(common, q, message, step=0):
@@ -259,247 +211,197 @@ class Keylist(QtCore.QObject):
         q.add_message(message, step)
 
     @staticmethod
-    def validate(common, q, keylist):
+    def validate(common, keylist):
         """
         This function validates that a keylist should work to sync.
         q should be a ValidatorMessageQueue object, and keylist is the
         keylist to validate.
 
-        It returns True on success, and an object like this on failure:
-        { "error": "Error message", "exception": e }
+        It returns a result object with type "error" on error and
+        "success" on success.
         """
         common.log("Keylist", "validate", "Validating keylist {}".format(keylist.url.decode()))
 
         # Test loading URL
         try:
-            Keylist.validate_log(common, q, 'Testing downloading URL {}'.format(keylist.url.decode()), 0)
+            Keylist.validate_log(common, keylist.q, 'Testing downloading URL {}'.format(keylist.url.decode()), 0)
             msg_bytes = keylist.fetch_msg_url()
         except ProxyURLDownloadError as e:
-            return Keylist.error_obj('URL failed to download: Check your internet connection and proxy settings.', e)
+            return Keylist.result_object('error', 'URL failed to download: Check your internet connection and proxy settings.', e)
         except URLDownloadError as e:
-            return Keylist.error_obj('URL failed to download: Check your internet connection.', e)
+            return Keylist.result_object('error', 'URL failed to download: Check your internet connection.', e)
 
         # Test loading signature URL
         try:
-            Keylist.validate_log(common, q, 'Testing downloading URL {}'.format((keylist.url + b'.sig').decode()), 1)
+            Keylist.validate_log(common, keylist.q, 'Testing downloading URL {}'.format((keylist.url + b'.sig').decode()), 1)
             msg_sig_bytes = keylist.fetch_msg_sig_url()
         except ProxyURLDownloadError as e:
-            return Keylist.error_obj('URL failed to download: Check your internet connection and proxy settings.', e)
+            return Keylist.result_object('error', 'URL failed to download: Check your internet connection and proxy settings.', e)
         except URLDownloadError as e:
-            return Keylist.error_obj('URL failed to download: Check your internet connection.', e)
+            return Keylist.result_object('error', 'URL failed to download: Check your internet connection.', e)
 
         # Test fingerprint and keyserver, and that the key isn't revoked or expired
         try:
-            Keylist.validate_log(common, q, 'Downloading {} from keyserver {}'.format(keylist.c.fp_to_keyid(keylist.fingerprint).decode(), keylist.keyserver.decode()), 2)
+            Keylist.validate_log(common, keylist.q, 'Downloading {} from keyserver {}'.format(keylist.c.fp_to_keyid(keylist.fingerprint).decode(), keylist.keyserver.decode()), 2)
             keylist.fetch_public_key(common.gpg)
         except InvalidFingerprint:
-            return Keylist.error_obj('Invalid signing key fingerprint.')
+            return Keylist.result_object('error', 'Invalid signing key fingerprint.')
         except KeyserverError:
-            return Keylist.error_obj('Error with keyserver {}.'.format(keylist.keyserver.decode()))
+            return Keylist.result_object('error', 'Error with keyserver {}.'.format(keylist.keyserver.decode()))
         except NotFoundOnKeyserver:
-            return Keylist.error_obj('Signing key is not found on keyserver. Upload signing key and try again.')
+            return Keylist.result_object('error', 'Signing key is not found on keyserver. Upload signing key and try again.')
         except NotFoundInKeyring:
-            return Keylist.error_obj('Signing key is not found in keyring. Something went wrong.')
+            return Keylist.result_object('error', 'Signing key is not found in keyring. Something went wrong.')
         except RevokedKey:
-            return Keylist.error_obj('The signing key is revoked.')
+            return Keylist.result_object('error', 'The signing key is revoked.')
         except ExpiredKey:
-            return Keylist.error_obj('The signing key is expired.')
+            return Keylist.result_object('error', 'The signing key is expired.')
 
         # Make sure URL is in the right format
         o = urlparse(keylist.url)
         if (o.scheme != b'http' and o.scheme != b'https') or o.netloc == '':
-            return Keylist.error_obj('URL is invalid.')
+            return Keylist.result_object('error', 'URL is invalid.')
 
         # After downloading URL, test that it's signed by signing key
         try:
-            Keylist.validate_log(common, q, 'Verifying signature', 3)
+            Keylist.validate_log(common, keylist.q, 'Verifying signature', 3)
             keylist.verify_fingerprints_sig(common.gpg, msg_sig_bytes, msg_bytes)
         except VerificationError:
-            return Keylist.error_obj('Signature does not verify.')
+            return Keylist.result_object('error', 'Signature does not verify.')
         except BadSignature:
-            return Keylist.error_obj('Bad signature.')
+            return Keylist.result_object('error', 'Bad signature.')
         except RevokedKey:
-            return Keylist.error_obj('The signing key is revoked.')
+            return Keylist.result_object('error', 'The signing key is revoked.')
         except SignedWithWrongKey:
-            return Keylist.error_obj('Valid signature, but signed with wrong signing key.')
+            return Keylist.result_object('error', 'Valid signature, but signed with wrong signing key.')
 
         # Test that it's a list of fingerprints
         try:
-            Keylist.validate_log(common, q, 'Validating fingerprint list', 4)
+            Keylist.validate_log(common, keylist.q, 'Validating fingerprint list', 4)
             keylist.get_fingerprint_list(msg_bytes)
         except InvalidFingerprints as e:
-            return Keylist.error_obj('Invalid fingerprints', e)
+            return Keylist.result_object('error', 'Invalid fingerprints', e)
 
-        Keylist.validate_log(common, q, 'Keylist saved', 5)
-        return True
+        Keylist.validate_log(common, keylist.q, 'Keylist saved', 5)
+        return Keylist.result_object('success')
 
+    @staticmethod
+    def refresh(common, cancel_q, keylist, force=False):
+        """
+        This function syncs a keylist, importing all of the public key.
+        q should be a RefresherMessageQueue object, and keylist is the
+        keylist to sync.
+        cancel_q is a queue.Queue that can be used to cancel the refresh
+        early. Push a True onto the queue to cancel.
 
-
-class Refresher(QtCore.QThread):
-    success = QtCore.pyqtSignal(Keylist, list, list)
-    error = QtCore.pyqtSignal(Keylist, str, bool)
-
-    def __init__(self, common, refresh_interval, q, keylist, force=False):
-        super(Refresher, self).__init__()
-        self.c = common
-        self.c.log("Refresher", "__init__")
-
-        # this should be safe to cast directly to a float since it passed the input test
-        self.refresh_interval = float(refresh_interval)
-        self.q = q
-        self.e = keylist
-        self.force = force
-
-        self.should_cancel = False
-
-    def cancel_early(self):
-        self.should_cancel = True
-        self.quit()
-
-    def finish_with_failure(self, err, reset_last_checked=True):
-        self.error.emit(self.e, err, reset_last_checked)
-
-    def finish_with_cancel(self):
-        self.finish_with_failure("Canceled")
-
-    def log(self, func, message):
-        self.c.log("Refresher", func, message)
-
-    def run(self):
-        print("Refreshing keylist with authority key {}".format(self.e.fingerprint.decode()))
-
-        self.q.add_message(RefresherMessageQueue.STATUS_STARTING)
+        It returns a result object of type "error" on error, "skip" if
+        there's no error but the keylist is getting skipped, "cancel"
+        if the refresh gets canceled early, and "success" on success.
+        """
+        common.log("Keylist", "refresh", "Refreshing keylist {}".format(keylist.url.decode()))
+        keylist.q.add_message(RefresherMessageQueue.STATUS_STARTING)
 
         # Refresh if it's forced, if it's never been checked before,
         # or if it's been longer than the configured refresh interval
-        update_interval = 60*60*(self.refresh_interval)
+        update_interval = 60*60*float(common.settings.update_interval_hours)
         run_refresher = False
 
-        # If there is no connection - skip
-        if not self.c.internet_available():
-            return
-
-        if self.force:
-            print('Forcing sync')
+        if force:
+            common.log("Keylist", "refresh", "Forcing sync")
             run_refresher = True
-        elif not self.e.last_checked:
-            print('Never been checked before')
+        elif not keylist.last_checked:
+            common.log("Keylist", "refresh", "Never been checked before")
             run_refresher = True
-        elif (datetime.datetime.now() - self.e.last_checked).total_seconds() >= update_interval:
-            print('It has been {} hours since the last sync.'.format(self.refresh_interval))
+        elif (datetime.datetime.now() - keylist.last_checked).total_seconds() >= update_interval:
+            common.log("Keylist", "refresh", "It has been {} hours since the last sync.".format(common.settings.update_interval_hours))
             run_refresher = True
 
         if not run_refresher:
-            return
+            common.log("Keylist", "refresh", "Keylist doesn't need refreshing {}".format(keylist.url.decode()))
+            return Keylist.result_object('skip')
+
+        # If there is no connection - skip
+        if not common.internet_available():
+            common.log("Keylist", "refresh", "No internet, skipping {}".format(keylist.url.decode()))
+            return Keylist.result_object('skip')
 
         # Download URL
-        success = False
         try:
-            self.log('run', 'Downloading URL {}'.format(self.e.url.decode()))
-            msg_bytes = self.e.fetch_msg_url()
+            common.log('run', 'Downloading URL {}'.format(keylist.url.decode()))
+            msg_bytes = keylist.fetch_msg_url()
         except URLDownloadError as e:
-            err = 'Failed to download: Check your internet connection'
+            return Keylist.result_object('error', 'Failed to download: Check your internet connection')
         except ProxyURLDownloadError as e:
-            err = 'Failed to download: Check your internet connection and proxy configuration'
-        else:
-            success = True
+            return Keylist.result_object('error', 'Failed to download: Check your internet connection and proxy configuration')
 
-        if not success:
-            return self.finish_with_failure(err)
-
-        if self.should_cancel:
-            return self.finish_with_cancel()
+        if cancel_q.qsize() > 0:
+            return Keylist.result_object('cancel')
 
         # Download signature URL
-        success = False
         try:
-            self.log('run', 'Downloading URL {}'.format((self.e.url + b'.sig').decode()))
-            msg_sig_bytes = self.e.fetch_msg_sig_url()
+            common.log('run', 'Downloading URL {}'.format((keylist.url + b'.sig').decode()))
+            msg_sig_bytes = keylist.fetch_msg_sig_url()
         except URLDownloadError as e:
-            err = 'Failed to download: Check your internet connection'
+            return Keylist.result_object('error', 'Failed to download: Check your internet connection')
         except ProxyURLDownloadError as e:
-            err = 'Failed to download: Check your internet connection and proxy configuration'
-        else:
-            success = True
+            return Keylist.result_object('error', 'Failed to download: Check your internet connection and proxy configuration')
 
-        if not success:
-            return self.finish_with_failure(err)
-
-        if self.should_cancel:
-            return self.finish_with_cancel()
+        if cancel_q.qsize() > 0:
+            return Keylist.result_object('cancel')
 
         # Fetch signing key from keyserver, make sure it's not expired or revoked
-        success = False
         reset_last_checked = True
         try:
-            self.log('run', 'Fetching public key {} {}'.format(self.c.fp_to_keyid(self.e.fingerprint).decode(), self.c.gpg.get_uid(self.e.fingerprint)))
-            self.e.fetch_public_key(self.c.gpg)
+            common.log('run', 'Fetching public key {} {}'.format(common.fp_to_keyid(keylist.fingerprint).decode(), common.gpg.get_uid(keylist.fingerprint)))
+            keylist.fetch_public_key(common.gpg)
         except InvalidFingerprint:
-            err = 'Invalid signing key fingerprint'
+            return Keylist.result_object('error', 'Invalid signing key fingerprint')
         except NotFoundOnKeyserver:
-            err = 'Signing key is not found on keyserver'
+            return Keylist.result_object('error', 'Signing key is not found on keyserver')
         except NotFoundInKeyring:
-            err = 'Signing key is not found in keyring'
+            return Keylist.result_object('error', 'Signing key is not found in keyring')
         except RevokedKey:
-            err = 'The signing key is revoked'
+            return Keylist.result_object('error', 'The signing key is revoked')
         except ExpiredKey:
-            err = 'The signing key is expired'
+            return Keylist.result_object('error', 'The signing key is expired')
         except KeyserverError:
-            err = 'Error connecting to keyserver'
-            reset_last_checked = False
-        else:
-            success = True
+            return Keylist.result_object('error', 'Error connecting to keyserver', data={"reset_last_checked": True})
 
-        if not success:
-            return self.finish_with_failure(err, reset_last_checked)
-
-        if self.should_cancel:
-            return self.finish_with_cancel()
+        if cancel_q.qsize() > 0:
+            return Keylist.result_object('cancel')
 
         # Verifiy signature
-        success = False
         try:
-            self.log('run', 'Verifying signature')
-            self.e.verify_fingerprints_sig(self.c.gpg, msg_sig_bytes, msg_bytes)
+            common.log('run', 'Verifying signature')
+            keylist.verify_fingerprints_sig(keylist.gpg, msg_sig_bytes, msg_bytes)
         except VerificationError:
-            err = 'Signature does not verify'
+            return Keylist.result_object('error', 'Signature does not verify')
         except BadSignature:
-            err = 'Bad signature'
+            return Keylist.result_object('error', 'Bad signature')
         except RevokedKey:
-            err = 'The signing key is revoked'
+            return Keylist.result_object('error', 'The signing key is revoked')
         except SignedWithWrongKey:
-            err = 'Valid signature, but signed with wrong signing key'
-        else:
-            success = True
+            return Keylist.result_object('error', 'Valid signature, but signed with wrong signing key')
 
-        if not success:
-            return self.finish_with_failure(err)
-
-        if self.should_cancel:
-            return self.finish_with_cancel()
+        if cancel_q.qsize() > 0:
+            return Keylist.result_object('cancel')
 
         # Get fingerprint list
-        success = False
         try:
-            self.log('run', 'Validating fingerprints')
-            fingerprints = self.e.get_fingerprint_list(msg_bytes)
+            common.log('run', 'Validating fingerprints')
+            fingerprints = keylist.get_fingerprint_list(msg_bytes)
         except InvalidFingerprints as e:
-            err = 'Invalid fingerprints: {}'.format(e)
-        else:
-            success = True
+            return Keylist.result_object('error', 'Invalid fingerprints: {}'.format(e))
 
-        if not success:
-            return self.finish_with_failure(err)
-
-        if self.should_cancel:
-            return self.finish_with_cancel()
+        if cancel_q.qsize() > 0:
+            return Keylist.result_object('cancel')
 
         # Build list of fingerprints to fetch
         fingerprints_to_fetch = []
         invalid_fingerprints = []
         for fingerprint in fingerprints:
             try:
-                self.c.gpg.test_key(fingerprint)
+                common.gpg.test_key(fingerprint)
             except InvalidFingerprint:
                 invalid_fingerprints.append(fingerprint)
             except (NotFoundInKeyring, ExpiredKey):
@@ -515,24 +417,28 @@ class Refresher(QtCore.QThread):
         # Communicate
         total_keys = len(fingerprints_to_fetch)
         current_key = 0
-        self.q.add_message(RefresherMessageQueue.STATUS_IN_PROGRESS, total_keys, current_key)
+        keylist.q.add_message(RefresherMessageQueue.STATUS_IN_PROGRESS, total_keys, current_key)
 
         # Fetch fingerprints
         notfound_fingerprints = []
         for fingerprint in fingerprints_to_fetch:
             try:
-                self.log('run', 'Fetching public key {} {}'.format(self.c.fp_to_keyid(fingerprint).decode(), self.c.gpg.get_uid(fingerprint)))
-                self.c.gpg.recv_key(self.e.keyserver, fingerprint, self.e.use_proxy, self.e.proxy_host, self.e.proxy_port)
+                common.log('run', 'Fetching public key {} {}'.format(common.fp_to_keyid(fingerprint).decode(), common.gpg.get_uid(fingerprint)))
+                common.gpg.recv_key(keylist.keyserver, fingerprint, keylist.use_proxy, keylist.proxy_host, keylist.proxy_port)
             except KeyserverError:
-                return self.finish_with_failure('Keyserver error')
+                return Keylist.result_object('error', 'Keyserver error')
             except NotFoundOnKeyserver:
                 notfound_fingerprints.append(fingerprint)
 
             current_key += 1
-            self.q.add_message(RefresherMessageQueue.STATUS_IN_PROGRESS, total_keys, current_key)
+            keylist.q.add_message(RefresherMessageQueue.STATUS_IN_PROGRESS, total_keys, current_key)
 
-            if self.should_cancel:
-                return self.finish_with_cancel()
+            if cancel_q.qsize() > 0:
+                return Keylist.result_object('cancel')
 
         # All done
-        self.success.emit(self.e, invalid_fingerprints, notfound_fingerprints)
+        return Keylist.result_object('success', data={
+            "keylist": keylist,
+            "invalid_fingerprints": invalid_fingerprints,
+            "notfound_fingerprints": notfound_fingerprints
+        })

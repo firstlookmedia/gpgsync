@@ -220,8 +220,8 @@ class ValidatorDialog(QtWidgets.QDialog):
         self.update_ui_timer.start(500) # 0.5 seconds
 
         # Start the validator
-        self.q = ValidatorMessageQueue()
-        self.validator = ValidatorThread(self.c, self.q, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
+        self.validator = ValidatorThread(self.c, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
+        self.q = self.validator.keylist.q # grab the q so we can get output from it
         self.validator.alert_error.connect(self.validator_alert_error)
         self.validator.success.connect(self.validator_success)
         self.validator.finished.connect(self.validator_finished)

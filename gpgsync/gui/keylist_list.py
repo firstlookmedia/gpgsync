@@ -22,6 +22,7 @@ import queue
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 from .keylist_dialog import KeylistDialog
+from .threads import RefresherThread
 from ..keylist import Keylist, RefresherMessageQueue
 
 
@@ -165,7 +166,10 @@ class KeylistWidget(QtWidgets.QWidget):
 
     def sync_clicked(self):
         self.c.log("KeylistWidget", "sync_clicked")
-        self.keylist.start_syncing(force=True)
+
+        refresher = RefresherThread(self.c, self.keylist, force=True)
+        refresher.start()
+
         self.refresh.emit()
 
     def cancel_sync_clicked(self):
