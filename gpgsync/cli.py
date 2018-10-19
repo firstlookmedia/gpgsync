@@ -19,33 +19,114 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import queue
+import threading
+import time
+import sys
 from .keylist import Keylist, RefresherMessageQueue
+
+
+def worker(common, keylist, force, status):
+    """
+    Sync a single keylist, to be run in a separate thread
+    """
+    cancel_q = queue.Queue()
+
+    result = Keylist.refresh(common, cancel_q, keylist, force=force)
+    keylist.interpret_result(result)
+
+    status[keylist.id]['result'] = result
+
 
 def sync(common, force=False):
     """
     Sync all keylists.
     """
+    num_keylists = len(common.settings.keylists)
+
+    # Status is a dictionary where keys are the keylist "id", a
+    # concatination of the keylist URL and fingerprint
+    status = {}
+    ids = [] # ordered list of ids
+
+    # Build the status object, and display keylist indexes
+    for i in range(num_keylists):
+        keylist = common.settings.keylists[i]
+        keylist.id = keylist.fingerprint + b':' + keylist.url
+        ids.append(keylist.id)
+        status[keylist.id] = {
+            "index": i,
+            "event": None,
+            "str": None,
+            "result": None
+        }
+        print("[{}] Keylist {}, with authority key {}".format(i, keylist.url.decode(), keylist.fingerprint.decode()))
+    print("")
+
+    # Start threads
+    threads = []
     for keylist in common.settings.keylists:
-        print("Syncing keylist {} with authority key {}".format(keylist.url.decode(), keylist.fingerprint.decode()))
-
         keylist.q = RefresherMessageQueue()
-        cancel_q = queue.Queue()
 
-        result = Keylist.refresh(common, cancel_q, keylist, force=force)
-        keylist.interpret_result(result)
+        t = threading.Thread(target=worker, args=(common, keylist, force, status,))
+        threads.append(t)
+        t.start()
+
+    # Monitor queues for updates
+    while True:
+        # Process the last event in the LIFO queues
+        for keylist in common.settings.keylists:
+            try:
+                event = keylist.q.get(False)
+                if event['status'] == RefresherMessageQueue.STATUS_IN_PROGRESS:
+                    status[keylist.id]['event'] = event
+
+            except queue.Empty:
+                pass
+
+        # Display
+        for id in ids:
+            if not status[id]['event']:
+                status[id]['str'] = '[{0:d}] Syncing...'.format(i)
+            else:
+                percent = (status[id]['event']['current_key'] / status[id]['event']['total_keys']) * 100;
+                status[id]['str'] = '[{0:d}] {1:d}/{2:d} ({3:d}%)'.format(
+                    status[id]['index'],
+                    status[id]['event']['current_key'],
+                    status[id]['event']['total_keys'],
+                    int(percent))
+        sys.stdout.write('{}          \r'.format(' \t'.join([status[id]['str'] for id in ids])))
+
+        # Are all keylists finished syncing?
+        done = True
+        for id in ids:
+            if not status[id]['result']:
+                done = False
+                break
+        if done:
+            sys.stdout.write('\n\n')
+            break
+        else:
+            # Wait a bit before checking for updates again
+            time.sleep(0.2)
+
+    # Make sure all threads are finished
+    for t in threads:
+        t.join()
+
+    # Display the results
+    for id in ids:
+        result = status[id]['result']
 
         if result['type'] == 'success':
             if keylist.warning:
-                print("Sync successful. Warning: {}".format(keylist.warning))
+                print("[{0:d}] Sync successful. Warning: {1:s}".format(keylist.index, keylist.warning))
             else:
-                print("Sync successful.")
+                print("[{0:d}] Sync successful.".format(keylist.index))
         elif result['type'] == 'error':
-            print("Sync failed. Error: {}".format(keylist.error))
+            print("[{0:d}] Sync failed. Error: {1:s}".format(keylist.error))
         elif result['type'] == 'cancel':
-            print("Sync canceled.")
+            print("[{0:d}] Sync canceled.".format(keylist.index))
         elif result['type'] == 'skip':
-            print("Sync skipped. (Use --force to force syncing.)")
+            print("[{0:d}] Sync skipped. (Use --force to force syncing.)".format(keylist.index))
         else:
-            print("Unknown problem with sync.")
-
-        print("")
+            print("[{0:d}] Unknown problem with sync.".format(keylist.index))

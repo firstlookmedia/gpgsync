@@ -18,7 +18,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import sys, platform, queue, datetime, requests
+import sys, platform, datetime, requests
 from packaging.version import parse
 from PyQt5 import QtCore, QtWidgets, QtGui
 
