@@ -86,7 +86,7 @@ def sync(common, force=False):
         # Display
         for id in ids:
             if not status[id]['event']:
-                status[id]['str'] = '[{0:d}] Syncing...'.format(i)
+                status[id]['str'] = '[{0:d}] Syncing...'.format(status[id]['index'])
             else:
                 percent = (status[id]['event']['current_key'] / status[id]['event']['total_keys']) * 100;
                 status[id]['str'] = '[{0:d}] {1:d}/{2:d} ({3:d}%)'.format(
@@ -94,7 +94,7 @@ def sync(common, force=False):
                     status[id]['event']['current_key'],
                     status[id]['event']['total_keys'],
                     int(percent))
-        sys.stdout.write('{}          \r'.format(' \t'.join([status[id]['str'] for id in ids])))
+        sys.stdout.write('{}          \r'.format('    '.join([status[id]['str'] for id in ids])))
 
         # Are all keylists finished syncing?
         done = True
@@ -107,7 +107,7 @@ def sync(common, force=False):
             break
         else:
             # Wait a bit before checking for updates again
-            time.sleep(0.2)
+            time.sleep(1)
 
     # Make sure all threads are finished
     for t in threads:
@@ -119,14 +119,14 @@ def sync(common, force=False):
 
         if result['type'] == 'success':
             if keylist.warning:
-                print("[{0:d}] Sync successful. Warning: {1:s}".format(keylist.index, keylist.warning))
+                print("[{0:d}] Sync successful. Warning: {1:s}".format(status[id]['index'], keylist.warning))
             else:
-                print("[{0:d}] Sync successful.".format(keylist.index))
+                print("[{0:d}] Sync successful.".format(status[id]['index']))
         elif result['type'] == 'error':
             print("[{0:d}] Sync failed. Error: {1:s}".format(keylist.error))
         elif result['type'] == 'cancel':
-            print("[{0:d}] Sync canceled.".format(keylist.index))
+            print("[{0:d}] Sync canceled.".format(status[id]['index']))
         elif result['type'] == 'skip':
-            print("[{0:d}] Sync skipped. (Use --force to force syncing.)".format(keylist.index))
+            print("[{0:d}] Sync skipped. (Use --force to force syncing.)".format(status[id]['index']))
         else:
-            print("[{0:d}] Unknown problem with sync.".format(keylist.index))
+            print("[{0:d}] Unknown problem with sync.".format(status[id]['index']))
