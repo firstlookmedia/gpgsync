@@ -41,6 +41,8 @@ def sync(common, force=False):
     """
     Sync all keylists.
     """
+    print("GPG Sync {}\n".format(common.version))
+
     num_keylists = len(common.settings.keylists)
 
     # Status is a dictionary where keys are the keylist "id", a

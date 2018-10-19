@@ -37,9 +37,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.c.log("MainWindow", "__init__")
 
-        version_file = self.c.get_resource_path('version')
-        self.version = parse(open(version_file).read().strip())
-        self.saved_update_version = self.version
+        self.saved_update_version = self.c.version
 
         # Initialize the window
         self.setWindowTitle('GPG Sync')
@@ -63,7 +61,7 @@ class MainWindow(QtWidgets.QMainWindow):
             pass
 
         # Initialize the system tray icon
-        self.systray = SysTray(self.c, self.version)
+        self.systray = SysTray(self.c, self.c.version)
         self.systray.show_signal.connect(self.toggle_show_window)
         self.systray.sync_now_signal.connect(self.sync_all_keylists)
         if self.c.os != 'Linux':
@@ -258,13 +256,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 latest_version = parse(release['tag_name'])
                 self.c.log("MainWindow", "check_for_updates", "latest version = {}".format(latest_version))
 
-                if self.version < latest_version:
+                if self.c.version < latest_version:
                     if self.saved_update_version < latest_version or force:
                         self.show_main_window()
 
-                        self.c.gui.update_alert(self.version, latest_version, release['html_url'])
+                        self.c.gui.update_alert(self.c.version, latest_version, release['html_url'])
                         self.saved_update_version = latest_version
-                elif self.version >= latest_version and force:
+                elif self.c.version >= latest_version and force:
                     self.show_main_window()
                     self.c.gui.alert('No updates available.<br><br><span style="font-weight:normal;">Version {} is the latest version.</span>'.format(latest_version))
                 self.c.settings.last_update_check_err = False

@@ -26,6 +26,7 @@ import platform
 import inspect
 import requests
 import socket
+from packaging.version import parse
 
 from .gnupg import GnuPG
 from .settings import Settings
@@ -37,6 +38,10 @@ class Common(object):
     """
     def __init__(self, debug):
         self.debug = debug
+
+        # Version of GPG Sync
+        version_file = self.get_resource_path('version')
+        self.version = parse(open(version_file).read().strip())
 
         # Define the OS
         self.os = platform.system()
