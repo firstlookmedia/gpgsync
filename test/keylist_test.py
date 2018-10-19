@@ -3,7 +3,7 @@ import os
 import pytest
 
 from gpgsync.keylist import URLDownloadError, ProxyURLDownloadError, \
-    InvalidFingerprints, Keylist, VerifierMessageQueue, RefresherMessageQueue
+    InvalidFingerprints, Keylist, ValidatorMessageQueue, RefresherMessageQueue
 
 
 # Load an keylist test file
@@ -52,7 +52,7 @@ def test_get_fingerprint_list_invalid_fingerprints(keylist):
 
 
 def test_verifier_message_queue_add_message():
-    q = VerifierMessageQueue()
+    q = ValidatorMessageQueue()
     q.add_message('this is a test', 1)
     q.add_message('another test', 2)
     q.add_message('yet another test', 3)

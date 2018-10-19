@@ -47,7 +47,7 @@ class InvalidFingerprints(Exception):
 
 class ValidatorMessageQueue(queue.LifoQueue):
     def __init(self):
-        super(VerifierMessageQueue, self).__init__()
+        super(ValidatorMessageQueue, self).__init__()
 
     def add_message(self, msg, step):
         self.put({
