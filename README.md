@@ -2,11 +2,23 @@
 
 # GPG Sync
 
-GPG Sync is designed to let users always have up-to-date OpenPGP public keys for other members of their organization.
+GPG Sync is designed to let users always have up-to-date OpenPGP public
+keys for other members of their organization.
 
-If you're part of an organization that uses GPG internally you might notice that it doesn't scale well. New people join and create new keys and existing people revoke their old keys and transition to new ones. It quickly becomes unwieldy to ensure that everyone has a copy of everyone else's current key, and that old revoked keys get refreshed to prevent users from accidentally using them.
+If you're part of an organization that uses GPG internally you might
+notice that it doesn't scale well. New people join and create new keys
+and existing people revoke their old keys and transition to new ones.
+It quickly becomes unwieldy to ensure that everyone has a copy of everyone
+else's current key, and that old revoked keys get refreshed to prevent
+users from accidentally using them.
 
-GPG Sync solves this problem by offloading the complexity of GPG to a single trusted person in your organization. As a member of an organization, you install GPG Sync on your computer, configure it with a few settings, and then you forget about it. GPG Sync takes care of everything else.
+GPG Sync solves this problem by offloading the complexity of GPG to a
+single trusted person in your organization. As a member of an organization,
+you install GPG Sync on your computer, configure it with a few settings,
+and then you forget about it. GPG Sync takes care of everything else.
+
+GPG Sync complies with the in-progress [Distributing OpenPGP Keys with Signed Keylist Subscriptions](https://datatracker.ietf.org/doc/draft-mccain-keylist/)
+internet standard draft.
 
 ## Learn More
 
