@@ -72,8 +72,21 @@ class RefresherMessageQueue(queue.LifoQueue):
 
 
 class Keylist(object):
+    """
+    This represents a keylist. It complies with the Keylist RFC draft:
+    https://datatracker.ietf.org/doc/draft-mccain-keylist/
+    """
     def __init__(self, common):
-        super(Keylist, self).__init__()
+        pass
+
+
+class LegacyKeylist(object):
+    """
+    This is a legacy keylist, from before GPG Sync 0.3.0, and before the
+    Keylist RFC changed the keylist format to be based on JSON.
+    """
+    def __init__(self, common):
+        super(LegacyKeylist, self).__init__()
         self.c = common
 
         self.fingerprint = b''
@@ -202,7 +215,7 @@ class Keylist(object):
         and warning in the keylist and saving settings if necessary.
         """
         if result['type'] == "success":
-            self.c.log("Keylist", "interpret_result", "refresh success")
+            self.c.log("LegacyKeylist", "interpret_result", "refresh success")
 
             if len(result['data']['invalid_fingerprints']) == 0 and len(result['data']['notfound_fingerprints']) == 0:
                 warning = False
@@ -222,10 +235,10 @@ class Keylist(object):
             self.c.settings.save()
 
         elif result['type'] == "cancel":
-            self.c.log("Keylist", "interpret_result", "refresh canceled")
+            self.c.log("LegacyKeylist", "interpret_result", "refresh canceled")
 
         elif result['type'] == "error":
-            self.c.log("Keylist", "interpret_result", "refresh error")
+            self.c.log("LegacyKeylist", "interpret_result", "refresh error")
 
             if result['data']['reset_last_checked']:
                 self.last_checked = datetime.datetime.now()
@@ -246,7 +259,7 @@ class Keylist(object):
 
     @staticmethod
     def validate_log(common, q, message, step=0):
-        common.log("Keylist", "validate", message)
+        common.log("LegacyKeylist", "validate", message)
         q.add_message(message, step)
 
     @staticmethod
@@ -259,70 +272,70 @@ class Keylist(object):
         It returns a result object with type "error" on error and
         "success" on success.
         """
-        common.log("Keylist", "validate", "Validating keylist {}".format(keylist.url.decode()))
+        common.log("LegacyKeylist", "validate", "Validating keylist {}".format(keylist.url.decode()))
 
         # Test loading URL
         try:
-            Keylist.validate_log(common, keylist.q, 'Testing downloading URL {}'.format(keylist.url.decode()), 0)
+            LegacyKeylist.validate_log(common, keylist.q, 'Testing downloading URL {}'.format(keylist.url.decode()), 0)
             msg_bytes = keylist.fetch_msg_url()
         except ProxyURLDownloadError as e:
-            return Keylist.result_object('error', 'URL failed to download: Check your internet connection and proxy settings.', e)
+            return LegacyKeylist.result_object('error', 'URL failed to download: Check your internet connection and proxy settings.', e)
         except URLDownloadError as e:
-            return Keylist.result_object('error', 'URL failed to download: Check your internet connection.', e)
+            return LegacyKeylist.result_object('error', 'URL failed to download: Check your internet connection.', e)
 
         # Test loading signature URL
         try:
-            Keylist.validate_log(common, keylist.q, 'Testing downloading URL {}'.format((keylist.url + b'.sig').decode()), 1)
+            LegacyKeylist.validate_log(common, keylist.q, 'Testing downloading URL {}'.format((keylist.url + b'.sig').decode()), 1)
             msg_sig_bytes = keylist.fetch_msg_sig_url()
         except ProxyURLDownloadError as e:
-            return Keylist.result_object('error', 'URL failed to download: Check your internet connection and proxy settings.', e)
+            return LegacyKeylist.result_object('error', 'URL failed to download: Check your internet connection and proxy settings.', e)
         except URLDownloadError as e:
-            return Keylist.result_object('error', 'URL failed to download: Check your internet connection.', e)
+            return LegacyKeylist.result_object('error', 'URL failed to download: Check your internet connection.', e)
 
         # Test fingerprint and keyserver, and that the key isn't revoked or expired
         try:
-            Keylist.validate_log(common, keylist.q, 'Downloading {} from keyserver {}'.format(keylist.c.fp_to_keyid(keylist.fingerprint).decode(), keylist.keyserver.decode()), 2)
+            LegacyKeylist.validate_log(common, keylist.q, 'Downloading {} from keyserver {}'.format(keylist.c.fp_to_keyid(keylist.fingerprint).decode(), keylist.keyserver.decode()), 2)
             keylist.fetch_public_key(common.gpg)
         except InvalidFingerprint:
-            return Keylist.result_object('error', 'Invalid signing key fingerprint.')
+            return LegacyKeylist.result_object('error', 'Invalid signing key fingerprint.')
         except KeyserverError:
-            return Keylist.result_object('error', 'Error with keyserver {}.'.format(keylist.keyserver.decode()))
+            return LegacyKeylist.result_object('error', 'Error with keyserver {}.'.format(keylist.keyserver.decode()))
         except NotFoundOnKeyserver:
-            return Keylist.result_object('error', 'Signing key is not found on keyserver. Upload signing key and try again.')
+            return LegacyKeylist.result_object('error', 'Signing key is not found on keyserver. Upload signing key and try again.')
         except NotFoundInKeyring:
-            return Keylist.result_object('error', 'Signing key is not found in keyring. Something went wrong.')
+            return LegacyKeylist.result_object('error', 'Signing key is not found in keyring. Something went wrong.')
         except RevokedKey:
-            return Keylist.result_object('error', 'The signing key is revoked.')
+            return LegacyKeylist.result_object('error', 'The signing key is revoked.')
         except ExpiredKey:
-            return Keylist.result_object('error', 'The signing key is expired.')
+            return LegacyKeylist.result_object('error', 'The signing key is expired.')
 
         # Make sure URL is in the right format
         o = urlparse(keylist.url)
         if (o.scheme != b'http' and o.scheme != b'https') or o.netloc == '':
-            return Keylist.result_object('error', 'URL is invalid.')
+            return LegacyKeylist.result_object('error', 'URL is invalid.')
 
         # After downloading URL, test that it's signed by signing key
         try:
-            Keylist.validate_log(common, keylist.q, 'Verifying signature', 3)
+            LegacyKeylist.validate_log(common, keylist.q, 'Verifying signature', 3)
             keylist.verify_fingerprints_sig(common.gpg, msg_sig_bytes, msg_bytes)
         except VerificationError:
-            return Keylist.result_object('error', 'Signature does not verify.')
+            return LegacyKeylist.result_object('error', 'Signature does not verify.')
         except BadSignature:
-            return Keylist.result_object('error', 'Bad signature.')
+            return LegacyKeylist.result_object('error', 'Bad signature.')
         except RevokedKey:
-            return Keylist.result_object('error', 'The signing key is revoked.')
+            return LegacyKeylist.result_object('error', 'The signing key is revoked.')
         except SignedWithWrongKey:
-            return Keylist.result_object('error', 'Valid signature, but signed with wrong signing key.')
+            return LegacyKeylist.result_object('error', 'Valid signature, but signed with wrong signing key.')
 
         # Test that it's a list of fingerprints
         try:
-            Keylist.validate_log(common, keylist.q, 'Validating fingerprint list', 4)
+            LegacyKeylist.validate_log(common, keylist.q, 'Validating fingerprint list', 4)
             keylist.get_fingerprint_list(msg_bytes)
         except InvalidFingerprints as e:
-            return Keylist.result_object('error', 'Invalid fingerprints', e)
+            return LegacyKeylist.result_object('error', 'Invalid fingerprints', e)
 
-        Keylist.validate_log(common, keylist.q, 'Keylist saved', 5)
-        return Keylist.result_object('success')
+        LegacyKeylist.validate_log(common, keylist.q, 'Keylist saved', 5)
+        return LegacyKeylist.result_object('success')
 
     @staticmethod
     def refresh(common, cancel_q, keylist, force=False):
@@ -337,7 +350,7 @@ class Keylist(object):
         there's no error but the keylist is getting skipped, "cancel"
         if the refresh gets canceled early, and "success" on success.
         """
-        common.log("Keylist", "refresh", "Refreshing keylist {}".format(keylist.url.decode()))
+        common.log("LegacyKeylist", "refresh", "Refreshing keylist {}".format(keylist.url.decode()))
         keylist.q.add_message(RefresherMessageQueue.STATUS_STARTING)
 
         # Refresh if it's forced, if it's never been checked before,
@@ -346,98 +359,98 @@ class Keylist(object):
         run_refresher = False
 
         if force:
-            common.log("Keylist", "refresh", "Forcing sync")
+            common.log("LegacyKeylist", "refresh", "Forcing sync")
             run_refresher = True
         elif not keylist.last_checked:
-            common.log("Keylist", "refresh", "Never been checked before")
+            common.log("LegacyKeylist", "refresh", "Never been checked before")
             run_refresher = True
         elif (datetime.datetime.now() - keylist.last_checked).total_seconds() >= update_interval:
-            common.log("Keylist", "refresh", "It has been {} hours since the last sync.".format(common.settings.update_interval_hours))
+            common.log("LegacyKeylist", "refresh", "It has been {} hours since the last sync.".format(common.settings.update_interval_hours))
             run_refresher = True
 
         if not run_refresher:
-            common.log("Keylist", "refresh", "Keylist doesn't need refreshing {}".format(keylist.url.decode()))
-            return Keylist.result_object('skip')
+            common.log("LegacyKeylist", "refresh", "Keylist doesn't need refreshing {}".format(keylist.url.decode()))
+            return LegacyKeylist.result_object('skip')
 
         # If there is no connection - skip
         if not common.internet_available():
-            common.log("Keylist", "refresh", "No internet, skipping {}".format(keylist.url.decode()))
-            return Keylist.result_object('skip')
+            common.log("LegacyKeylist", "refresh", "No internet, skipping {}".format(keylist.url.decode()))
+            return LegacyKeylist.result_object('skip')
 
         # Download URL
         try:
             common.log('run', 'Downloading URL {}'.format(keylist.url.decode()))
             msg_bytes = keylist.fetch_msg_url()
         except URLDownloadError as e:
-            return Keylist.result_object('error', 'Failed to download: Check your internet connection')
+            return LegacyKeylist.result_object('error', 'Failed to download: Check your internet connection')
         except ProxyURLDownloadError as e:
-            return Keylist.result_object('error', 'Failed to download: Check your internet connection and proxy configuration')
+            return LegacyKeylist.result_object('error', 'Failed to download: Check your internet connection and proxy configuration')
 
         if cancel_q.qsize() > 0:
-            common.log("Keylist", "refresh", "canceling early {}".format(keylist.url.decode()))
-            return Keylist.result_object('cancel')
+            common.log("LegacyKeylist", "refresh", "canceling early {}".format(keylist.url.decode()))
+            return LegacyKeylist.result_object('cancel')
 
         # Download signature URL
         try:
             common.log('run', 'Downloading URL {}'.format((keylist.url + b'.sig').decode()))
             msg_sig_bytes = keylist.fetch_msg_sig_url()
         except URLDownloadError as e:
-            return Keylist.result_object('error', 'Failed to download: Check your internet connection')
+            return LegacyKeylist.result_object('error', 'Failed to download: Check your internet connection')
         except ProxyURLDownloadError as e:
-            return Keylist.result_object('error', 'Failed to download: Check your internet connection and proxy configuration')
+            return LegacyKeylist.result_object('error', 'Failed to download: Check your internet connection and proxy configuration')
 
         if cancel_q.qsize() > 0:
-            common.log("Keylist", "refresh", "canceling early {}".format(keylist.url.decode()))
-            return Keylist.result_object('cancel')
+            common.log("LegacyKeylist", "refresh", "canceling early {}".format(keylist.url.decode()))
+            return LegacyKeylist.result_object('cancel')
 
         # Fetch signing key from keyserver, make sure it's not expired or revoked
         try:
             common.log('run', 'Fetching public key {} {}'.format(common.fp_to_keyid(keylist.fingerprint).decode(), common.gpg.get_uid(keylist.fingerprint)))
             keylist.fetch_public_key(common.gpg)
         except InvalidFingerprint:
-            return Keylist.result_object('error', 'Invalid signing key fingerprint', data={"reset_last_checked": True})
+            return LegacyKeylist.result_object('error', 'Invalid signing key fingerprint', data={"reset_last_checked": True})
         except NotFoundOnKeyserver:
-            return Keylist.result_object('error', 'Signing key is not found on keyserver', data={"reset_last_checked": True})
+            return LegacyKeylist.result_object('error', 'Signing key is not found on keyserver', data={"reset_last_checked": True})
         except NotFoundInKeyring:
-            return Keylist.result_object('error', 'Signing key is not found in keyring', data={"reset_last_checked": True})
+            return LegacyKeylist.result_object('error', 'Signing key is not found in keyring', data={"reset_last_checked": True})
         except RevokedKey:
-            return Keylist.result_object('error', 'The signing key is revoked', data={"reset_last_checked": True})
+            return LegacyKeylist.result_object('error', 'The signing key is revoked', data={"reset_last_checked": True})
         except ExpiredKey:
-            return Keylist.result_object('error', 'The signing key is expired', data={"reset_last_checked": True})
+            return LegacyKeylist.result_object('error', 'The signing key is expired', data={"reset_last_checked": True})
         except KeyserverError:
-            return Keylist.result_object('error', 'Error connecting to keyserver', data={"reset_last_checked": False})
+            return LegacyKeylist.result_object('error', 'Error connecting to keyserver', data={"reset_last_checked": False})
 
         if cancel_q.qsize() > 0:
-            common.log("Keylist", "refresh", "canceling early {}".format(keylist.url.decode()))
-            return Keylist.result_object('cancel')
+            common.log("LegacyKeylist", "refresh", "canceling early {}".format(keylist.url.decode()))
+            return LegacyKeylist.result_object('cancel')
 
         # Verifiy signature
         try:
             common.log('run', 'Verifying signature')
             keylist.verify_fingerprints_sig(common.gpg, msg_sig_bytes, msg_bytes)
         except VerificationError:
-            return Keylist.result_object('error', 'Signature does not verify')
+            return LegacyKeylist.result_object('error', 'Signature does not verify')
         except BadSignature:
-            return Keylist.result_object('error', 'Bad signature')
+            return LegacyKeylist.result_object('error', 'Bad signature')
         except RevokedKey:
-            return Keylist.result_object('error', 'The signing key is revoked')
+            return LegacyKeylist.result_object('error', 'The signing key is revoked')
         except SignedWithWrongKey:
-            return Keylist.result_object('error', 'Valid signature, but signed with wrong signing key')
+            return LegacyKeylist.result_object('error', 'Valid signature, but signed with wrong signing key')
 
         if cancel_q.qsize() > 0:
-            common.log("Keylist", "refresh", "canceling early {}".format(keylist.url.decode()))
-            return Keylist.result_object('cancel')
+            common.log("LegacyKeylist", "refresh", "canceling early {}".format(keylist.url.decode()))
+            return LegacyKeylist.result_object('cancel')
 
         # Get fingerprint list
         try:
             common.log('run', 'Validating fingerprints')
             fingerprints = keylist.get_fingerprint_list(msg_bytes)
         except InvalidFingerprints as e:
-            return Keylist.result_object('error', 'Invalid fingerprints: {}'.format(e))
+            return LegacyKeylist.result_object('error', 'Invalid fingerprints: {}'.format(e))
 
         if cancel_q.qsize() > 0:
-            common.log("Keylist", "refresh", "canceling early {}".format(keylist.url.decode()))
-            return Keylist.result_object('cancel')
+            common.log("LegacyKeylist", "refresh", "canceling early {}".format(keylist.url.decode()))
+            return LegacyKeylist.result_object('cancel')
 
         # Build list of fingerprints to fetch
         fingerprints_to_fetch = []
@@ -469,7 +482,7 @@ class Keylist(object):
                 common.log('run', 'Fetching public key {} {}'.format(common.fp_to_keyid(fingerprint).decode(), common.gpg.get_uid(fingerprint)))
                 common.gpg.recv_key(keylist.keyserver, fingerprint, keylist.use_proxy, keylist.proxy_host, keylist.proxy_port)
             except KeyserverError:
-                return Keylist.result_object('error', 'Keyserver error')
+                return LegacyKeylist.result_object('error', 'Keyserver error')
             except NotFoundOnKeyserver:
                 notfound_fingerprints.append(fingerprint)
 
@@ -477,11 +490,11 @@ class Keylist(object):
             keylist.q.add_message(RefresherMessageQueue.STATUS_IN_PROGRESS, total_keys, current_key)
 
             if cancel_q.qsize() > 0:
-                common.log("Keylist", "refresh", "canceling early {}".format(keylist.url.decode()))
-                return Keylist.result_object('cancel')
+                common.log("LegacyKeylist", "refresh", "canceling early {}".format(keylist.url.decode()))
+                return LegacyKeylist.result_object('cancel')
 
         # All done
-        return Keylist.result_object('success', data={
+        return LegacyKeylist.result_object('success', data={
             "keylist": keylist,
             "invalid_fingerprints": invalid_fingerprints,
             "notfound_fingerprints": notfound_fingerprints
