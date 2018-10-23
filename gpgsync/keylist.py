@@ -24,6 +24,7 @@ import uuid
 import datetime
 import dateutil.parser as date_parser
 import queue
+import json
 from io import BytesIO
 
 from .gnupg import *
@@ -43,6 +44,10 @@ class InvalidFingerprints(Exception):
 
     def __str__(self):
         return str([s.decode() for s in self.fingerprints])
+
+
+class KeylistNotJson(Exception):
+    pass
 
 
 class ValidatorMessageQueue(queue.LifoQueue):
@@ -91,6 +96,9 @@ class Keylist(object):
         self.error = None
         self.warning = None
 
+        # The decoded JSON object
+        self.keylist_obj = None
+
         # Temporary variable for if it's in the middle of syncing
         self.syncing = False
         self.q = None
@@ -132,7 +140,7 @@ class Keylist(object):
 
     def fetch_public_key(self, gpg):
         # Retreive the signing key from the keyserver
-        gpg.recv_key(self.keyserver, self.fingerprint, self.use_proxy, self.proxy_host, self.proxy_port)
+        gpg.recv_key(self.get_keyserver(), self.fingerprint, self.use_proxy, self.proxy_host, self.proxy_port)
 
         # Test the key for issues
         gpg.test_key(self.fingerprint)
@@ -170,7 +178,7 @@ class Keylist(object):
 
         return msg_bytes
 
-    def verify_fingerprints_sig(self, gpg, msg_sig_bytes, msg_bytes):
+    def verify_sig(self, gpg, msg_sig_bytes, msg_bytes):
         # Make sure the signature is valid
         gpg.verify(msg_sig_bytes, msg_bytes, self.fingerprint)
 
@@ -213,6 +221,128 @@ class Keylist(object):
 
             self.c.settings.save()
 
+    def decode_json(self, msg_bytes):
+        """
+        Try to decode the message into a JSON object.
+        """
+        try:
+            self.keylist_obj = json.loads(msg_bytes)
+        except json.decoder.JSONDecodeError:
+            raise KeylistNotJson()
+
+    def get_keyserver(self):
+        """
+        Figure out which keyserver will be used.
+        """
+        # If the user specified a keyserver, always use that first
+        if self.keyserver != None:
+            return self.keyserver
+
+        # If the keylist specified a keyserver, use that
+        if 'keyserver' in self.keylist_obj['metadata']:
+            return self.keylist_obj['metadata']['keylist']
+
+        # Fallback to Ubuntu's keyserver (since it seems better managed than the SKS pool)
+        return 'hkps://keyserver.ubuntu.com/'
+
+    @staticmethod
+    def validate(common, keylist):
+        """
+        This function validates that a keylist should work to sync.
+        q should be a ValidatorMessageQueue object, and keylist is the
+        keylist to validate.
+
+        It returns a result object with type "error" on error and
+        "success" on success.
+        """
+        common.log("Keylist", "validate", "Validating keylist {}".format(keylist.url.decode()))
+
+        # Make sure keylist URI is in the right format
+        o = urlparse(keylist.url)
+        if (o.scheme != b'http' and o.scheme != b'https') or o.netloc == '':
+            return Keylist.result_object('error', 'Keylist URI is invalid.')
+
+        # Test loading keylist URI
+        try:
+            Keylist.validate_log(common, keylist.q, 'Testing downloading URL {}'.format(keylist.url.decode()), 0)
+            msg_bytes = keylist.fetch_msg_url()
+        except ProxyURLDownloadError as e:
+            return Keylist.result_object('error', 'URL failed to download: Check your internet connection and proxy settings.', e)
+        except URLDownloadError as e:
+            return Keylist.result_object('error', 'URL failed to download: Check your internet connection.', e)
+
+        # Make sure it's JSON
+        try:
+            keylist.decode_json(msg_bytes)
+        except KeylistNotJson as e:
+            return Keylist.result_object('error', 'Keylist is not in JSON format.', e)
+
+        # Make sure the keylist JSON object has all required keys and values
+        if 'metadata' not in keylist.keylist_obj:
+            return Keylist.result_object('error', 'Invalid keylist format: keylist["metadata"] key is missing')
+        if 'signature_uri' not in keylist.keylist_obj['metadata']:
+            return Keylist.result_object('error', 'Invalid keylist format: keylist["metadata"]["signature_uri"] key is missing')
+        if 'keys' not in keylist.keylist_obj:
+            return Keylist.result_object('error', 'Invalid keylist format: keylist["keys"] key is missing')
+        if keylist.keylist_obj['keys'] is not list:
+            return Keylist.result_object('error', 'Invalid keylist format: keylist["keys"] is not an array')
+
+        # Make sure each key has all the required keys and values
+        for i in range(len(keylist.keylist_obj['keys'])):
+            if keylist.keylist_obj['keys'][i] is not dict:
+                return Keylist.result_object('error', 'Invalid keylist format: keylist["keys"][{}] is not an object'.format(i))
+            if 'fingerprint' not in keylist.keylist_obj['keys'][i]:
+                return Keylist.result_object('error', 'Invalid keylist format: keylist["keys"][{}]["fingerprint"] key is missing'.format(i))
+            if not common.valid_fp(keylist.keylist_obj['keys'][i]['fingerprint']):
+                return Keylist.result_object('error', 'Invalid keylist format: keylist["keys"][{}]["fingerprint"] is not a valid OpenPGP fingerprint'.format(i))
+
+        # Make sure signature URI is in the right format
+        o = urlparse(keylist.keylist_obj['metadata']['signature_uri'])
+        if (o.scheme != b'http' and o.scheme != b'https') or o.netloc == '':
+            return Keylist.result_object('error', 'Signature URI is invalid.')
+
+        # Test loading signature URI
+        try:
+            Keylist.validate_log(common, keylist.q, 'Testing downloading URL {}'.format(keylist.keylist_obj['metadata']['signature_uri']), 1)
+            msg_sig_bytes = keylist.fetch_msg_sig_url()
+        except ProxyURLDownloadError as e:
+            return LegacyKeylist.result_object('error', 'URL failed to download: Check your internet connection and proxy settings.', e)
+        except URLDownloadError as e:
+            return LegacyKeylist.result_object('error', 'URL failed to download: Check your internet connection.', e)
+
+        # Test fetching the authority key from keyserver, and make sure that the key isn't revoked or expired
+        try:
+            Keylist.validate_log(common, keylist.q, 'Downloading {} from keyserver {}'.format(keylist.c.fp_to_keyid(keylist.fingerprint).decode(), keylist.get_keyserver()), 2)
+            keylist.fetch_public_key(common.gpg)
+        except InvalidFingerprint:
+            return Keylist.result_object('error', 'Invalid signing key fingerprint.')
+        except KeyserverError:
+            return Keylist.result_object('error', 'Error with keyserver {}.'.format(keylist.keyserver.decode()))
+        except NotFoundOnKeyserver:
+            return Keylist.result_object('error', 'Signing key is not found on keyserver. Upload signing key and try again.')
+        except NotFoundInKeyring:
+            return Keylist.result_object('error', 'Signing key is not found in keyring. Something went wrong.')
+        except RevokedKey:
+            return Keylist.result_object('error', 'The signing key is revoked.')
+        except ExpiredKey:
+            return Keylist.result_object('error', 'The signing key is expired.')
+
+        # Test that the keylist is signed by the authority key
+        try:
+            Keylist.validate_log(common, keylist.q, 'Verifying signature', 3)
+            keylist.verify_sig(common.gpg, msg_sig_bytes, msg_bytes)
+        except VerificationError:
+            return Keylist.result_object('error', 'Signature does not verify.')
+        except BadSignature:
+            return Keylist.result_object('error', 'Bad signature.')
+        except RevokedKey:
+            return Keylist.result_object('error', 'The signing key is revoked.')
+        except SignedWithWrongKey:
+            return Keylist.result_object('error', 'Valid signature, but signed with wrong signing key.')
+
+        Keylist.validate_log(common, keylist.q, 'Keylist saved', 4)
+        return Keylist.result_object('success')
+
     @staticmethod
     def result_object(type, message=None, exception=None, data=None):
         return {
@@ -236,6 +366,13 @@ class LegacyKeylist(Keylist):
     def __init__(self, common):
         super(LegacyKeylist, self).__init__(common)
         self.c = common
+
+    def get_keyserver(self):
+        """
+        Figure out which keyserver will be used. In legacy keylist, always
+        just use the keyserver in the keylist object
+        """
+        return self.keyserver
 
     def get_fingerprint_list(self, msg_bytes):
         # Convert the message content into a list of fingerprints
@@ -316,7 +453,7 @@ class LegacyKeylist(Keylist):
         # After downloading URL, test that it's signed by signing key
         try:
             LegacyKeylist.validate_log(common, keylist.q, 'Verifying signature', 3)
-            keylist.verify_fingerprints_sig(common.gpg, msg_sig_bytes, msg_bytes)
+            keylist.verify_sig(common.gpg, msg_sig_bytes, msg_bytes)
         except VerificationError:
             return LegacyKeylist.result_object('error', 'Signature does not verify.')
         except BadSignature:
@@ -426,7 +563,7 @@ class LegacyKeylist(Keylist):
         # Verifiy signature
         try:
             common.log('run', 'Verifying signature')
-            keylist.verify_fingerprints_sig(common.gpg, msg_sig_bytes, msg_bytes)
+            keylist.verify_sig(common.gpg, msg_sig_bytes, msg_bytes)
         except VerificationError:
             return LegacyKeylist.result_object('error', 'Signature does not verify')
         except BadSignature:
