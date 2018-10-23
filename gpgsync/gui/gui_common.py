@@ -51,14 +51,6 @@ class GuiCommon(object):
                 }
                 """,
 
-            'KeylistDialog sig_url': """
-                QLabel {
-                    font-style: italic;
-                    color: #666666;
-                    font-size: 11px;
-                }
-                """,
-
             'KeylistDialog advanced_button': """
                 QPushButton {
                     text-decoration: underline;

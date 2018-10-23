@@ -49,13 +49,10 @@ class KeylistDialog(QtWidgets.QDialog):
         fingerprint_label = QtWidgets.QLabel("Authority Key Fingerprint")
         self.fingerprint_edit = QtWidgets.QLineEdit()
 
-        # Fingerprints URL
-        url_label = QtWidgets.QLabel("Fingerprints URL")
+        # Keylist Address
+        url_label = QtWidgets.QLabel("Keylist Address")
         self.url_edit = QtWidgets.QLineEdit()
         self.url_edit.setPlaceholderText("https://")
-        self.url_edit.textChanged.connect(self.update_sig_url)
-        self.sig_url = QtWidgets.QLabel()
-        self.sig_url.setStyleSheet(self.c.gui.css['KeylistDialog sig_url'])
 
         # Keyserver
         keyserver_label = QtWidgets.QLabel("Key server")
@@ -110,7 +107,6 @@ class KeylistDialog(QtWidgets.QDialog):
         layout.addWidget(self.fingerprint_edit)
         layout.addWidget(url_label)
         layout.addWidget(self.url_edit)
-        layout.addWidget(self.sig_url)
         layout.addWidget(self.advanced_button)
         layout.addWidget(self.advanced_group)
         layout.addLayout(buttons_layout)
@@ -128,18 +124,8 @@ class KeylistDialog(QtWidgets.QDialog):
         self.proxy_port_edit.setText(self.keylist.proxy_port.decode())
 
         # Initially update the widgets
-        self.update_sig_url(self.url_edit.text())
         self.advanced_group.show()
         self.toggle_advanced() # Hide advanced settings to start with
-
-    def update_sig_url(self, text):
-        if text == '':
-            self.sig_url.hide()
-        else:
-            self.sig_url.show()
-            self.sig_url.setText("Signature URL: {}.sig".format(text))
-
-        self.adjustSize()
 
     def toggle_advanced(self):
         if self.advanced_group.isHidden():
