@@ -1,0 +1,18 @@
+{
+  "metadata": {
+    "signature_uri": "https://raw.githubusercontent.com/firstlookmedia/gpgsync/keylist-rfc/example-keylist/keylist.json.asc",
+    "comment": "The GPG Sync example keylist"
+  },
+  "keys": [
+    {
+      "fingerprint": "86EB84C96B2E62676B47C4919BB29FF9FD3ED09F",
+      "name": "First Look Authority",
+      "comment": "This is the authority key that First Look Media uses for its keylist"
+    },
+    {
+      "fingerprint": "91C0C982A41F8D3939531A71FAB737F9C5C1CA80",
+      "name": "Warrant Canary Signing Key",
+      "email": "canary@firstlook.org"
+    }
+  ]
+}

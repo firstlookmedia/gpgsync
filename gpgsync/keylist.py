@@ -77,16 +77,6 @@ class Keylist(object):
     https://datatracker.ietf.org/doc/draft-mccain-keylist/
     """
     def __init__(self, common):
-        pass
-
-
-class LegacyKeylist(object):
-    """
-    This is a legacy keylist, from before GPG Sync 0.3.0, and before the
-    Keylist RFC changed the keylist format to be based on JSON.
-    """
-    def __init__(self, common):
-        super(LegacyKeylist, self).__init__()
         self.c = common
 
         self.fingerprint = b''
@@ -105,10 +95,10 @@ class LegacyKeylist(object):
         self.syncing = False
         self.q = None
 
-    """
-    Acts as a secondary constructor to load an keylist from settings
-    """
     def load(self, e):
+        """
+        Acts as a secondary constructor to load an keylist from settings
+        """
         self.fingerprint = str.encode(e['fingerprint'])
         self.url = str.encode(e['url'])
         self.keyserver = str.encode(e['keyserver'])
@@ -120,7 +110,6 @@ class LegacyKeylist(object):
         self.last_failed = (date_parser.parse(e['last_failed']) if e['last_failed'] is not None else None)
         self.error = e['error']
         self.warning = e['warning']
-
         return self
 
     def serialize(self):
@@ -185,6 +174,69 @@ class LegacyKeylist(object):
         # Make sure the signature is valid
         gpg.verify(msg_sig_bytes, msg_bytes, self.fingerprint)
 
+    def interpret_result(self, result):
+        """
+        After syncing, depending on how the refresh went, update timestamps
+        and warning in the keylist and saving settings if necessary.
+        """
+        if result['type'] == "success":
+            self.c.log("Keylist", "interpret_result", "refresh success")
+
+            if len(result['data']['invalid_fingerprints']) == 0 and len(result['data']['notfound_fingerprints']) == 0:
+                warning = False
+            else:
+                warnings = []
+                if len(result['data']['invalid_fingerprints']) > 0:
+                    warning.append('Invalid fingerprints: {}'.format(', '.join([x.decode() for x in result['data']['invalid_fingerprints']])))
+                if len(result['data']['notfound_fingerprints']) > 0:
+                    warnings.append('Fingerprints not found: {}'.format(', '.join([x.decode() for x in result['data']['notfound_fingerprints']])))
+                warning = ', '.join(warnings)
+
+            self.last_checked = datetime.datetime.now()
+            self.last_synced = datetime.datetime.now()
+            self.warning = warning
+            self.error = None
+
+            self.c.settings.save()
+
+        elif result['type'] == "cancel":
+            self.c.log("Keylist", "interpret_result", "refresh canceled")
+
+        elif result['type'] == "error":
+            self.c.log("Keylist", "interpret_result", "refresh error")
+
+            if result['data']['reset_last_checked']:
+                self.last_checked = datetime.datetime.now()
+            self.last_failed = datetime.datetime.now()
+            self.warning = None
+            self.error = result['data']['message']
+
+            self.c.settings.save()
+
+    @staticmethod
+    def result_object(type, message=None, exception=None, data=None):
+        return {
+            "type": type,
+            "message": message,
+            "exception": exception,
+            "data": data
+        }
+
+    @staticmethod
+    def validate_log(common, q, message, step=0):
+        common.log("Keylist", "validate", message)
+        q.add_message(message, step)
+
+
+class LegacyKeylist(Keylist):
+    """
+    This is a legacy keylist, from before GPG Sync 0.3.0, and before the
+    Keylist RFC changed the keylist format to be based on JSON.
+    """
+    def __init__(self, common):
+        super(LegacyKeylist, self).__init__(common)
+        self.c = common
+
     def get_fingerprint_list(self, msg_bytes):
         # Convert the message content into a list of fingerprints
         fingerprints = []
@@ -208,59 +260,6 @@ class LegacyKeylist(object):
             raise InvalidFingerprints(invalid_fingerprints)
 
         return fingerprints
-
-    def interpret_result(self, result):
-        """
-        After syncing, depending on how the refresh went, update timestamps
-        and warning in the keylist and saving settings if necessary.
-        """
-        if result['type'] == "success":
-            self.c.log("LegacyKeylist", "interpret_result", "refresh success")
-
-            if len(result['data']['invalid_fingerprints']) == 0 and len(result['data']['notfound_fingerprints']) == 0:
-                warning = False
-            else:
-                warnings = []
-                if len(result['data']['invalid_fingerprints']) > 0:
-                    warning.append('Invalid fingerprints: {}'.format(', '.join([x.decode() for x in result['data']['invalid_fingerprints']])))
-                if len(result['data']['notfound_fingerprints']) > 0:
-                    warnings.append('Fingerprints not found: {}'.format(', '.join([x.decode() for x in result['data']['notfound_fingerprints']])))
-                warning = ', '.join(warnings)
-
-            self.last_checked = datetime.datetime.now()
-            self.last_synced = datetime.datetime.now()
-            self.warning = warning
-            self.error = None
-
-            self.c.settings.save()
-
-        elif result['type'] == "cancel":
-            self.c.log("LegacyKeylist", "interpret_result", "refresh canceled")
-
-        elif result['type'] == "error":
-            self.c.log("LegacyKeylist", "interpret_result", "refresh error")
-
-            if result['data']['reset_last_checked']:
-                self.last_checked = datetime.datetime.now()
-            self.last_failed = datetime.datetime.now()
-            self.warning = None
-            self.error = result['data']['message']
-
-            self.c.settings.save()
-
-    @staticmethod
-    def result_object(type, message=None, exception=None, data=None):
-        return {
-            "type": type,
-            "message": message,
-            "exception": exception,
-            "data": data
-        }
-
-    @staticmethod
-    def validate_log(common, q, message, step=0):
-        common.log("LegacyKeylist", "validate", message)
-        q.add_message(message, step)
 
     @staticmethod
     def validate(common, keylist):

@@ -6,7 +6,7 @@ from PyQt5 import QtWidgets
 
 from gpgsync.common import Common
 from gpgsync.gnupg import GnuPG
-from gpgsync.keylist import LegacyKeylist
+from gpgsync.keylist import Keylist, LegacyKeylist
 
 # Set GPG Sync to dev mode, so it looks for resources in the right place
 sys.gpgsync_dev = True
@@ -25,7 +25,14 @@ def common():
     return common
 
 
-# Generate an endpint
+# Generate an keylist
+@pytest.fixture
+def keylist():
+    c = common()
+    return Keylist(c)
+
+
+# Generate an legacy keylist
 @pytest.fixture
 def legacy_keylist():
     c = common()
