@@ -3,8 +3,7 @@ import os
 import pytest
 
 from gpgsync.keylist import URLDownloadError, ProxyURLDownloadError, \
-    InvalidFingerprints, LegacyKeylist, ValidatorMessageQueue, \
-    RefresherMessageQueue
+    InvalidFingerprints, LegacyKeylist
 
 
 # Load an keylist test file
@@ -50,46 +49,3 @@ def test_get_fingerprint_list_valid(legacy_keylist):
 def test_get_fingerprint_list_invalid_fingerprints(legacy_keylist):
     with pytest.raises(InvalidFingerprints):
         legacy_keylist.get_fingerprint_list(get_legacy_keylist_file_content('invalid_fingerprints.txt'))
-
-
-def test_verifier_message_queue_add_message():
-    q = ValidatorMessageQueue()
-    q.add_message('this is a test', 1)
-    q.add_message('another test', 2)
-    q.add_message('yet another test', 3)
-
-    assert q.get(False) == {
-        'msg': 'yet another test',
-        'step': 3
-    }
-    assert q.get(False) == {
-        'msg': 'another test',
-        'step': 2
-    }
-    assert q.get(False) == {
-        'msg': 'this is a test',
-        'step': 1
-    }
-
-
-def test_refresher_message_queue_add_message():
-    q = RefresherMessageQueue()
-    q.add_message(RefresherMessageQueue.STATUS_STARTING)
-    q.add_message(RefresherMessageQueue.STATUS_IN_PROGRESS, 10, 2)
-    q.add_message(RefresherMessageQueue.STATUS_IN_PROGRESS, 10, 7)
-
-    assert q.get(False) == {
-        'status': RefresherMessageQueue.STATUS_IN_PROGRESS,
-        'total_keys': 10,
-        'current_key': 7
-    }
-    assert q.get(False) == {
-        'status': RefresherMessageQueue.STATUS_IN_PROGRESS,
-        'total_keys': 10,
-        'current_key': 2
-    }
-    assert q.get(False) == {
-        'status': RefresherMessageQueue.STATUS_STARTING,
-        'total_keys': 0,
-        'current_key': 0
-    }
