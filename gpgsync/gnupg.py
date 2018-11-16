@@ -252,7 +252,7 @@ class GnuPG(object):
         return ''
 
     def verify(self, msg_sig, msg, fp):
-        self.c.log("GnuPG", "verify," "(not displaying msg_sig, msg), fp={}".format(fp))
+        self.c.log("GnuPG", "verify," "fp={}".format(fp))
 
         if not self.c.valid_fp(fp):
             raise InvalidFingerprint(fp)

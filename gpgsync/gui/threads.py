@@ -53,6 +53,7 @@ class ValidatorThread(QtCore.QThread):
         if result['type'] == "success":
             self.success.emit()
         elif result['type'] == "error":
+            self.c.log("ValidatorThread", "run", "Error: {}, {}".format(result['message'], str(result['exception'])))
             self.alert_error.emit(result['message'], str(result['exception']))
 
 
