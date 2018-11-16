@@ -12,6 +12,34 @@ def get_keylist_file_content(filename):
     return open(filename, 'rb').read()
 
 
+def test_fetch_url_valid_url(keylist):
+    keylist.fetch_url('http://www.example.com/')
+
+
+def test_fetch_url_invalid_url(keylist):
+    with pytest.raises(URLDownloadError):
+        keylist.fetch_url('https://somethingfake')
+
+
+def test_fetch_url_valid_url_invalid_proxy(keylist):
+    with pytest.raises(ProxyURLDownloadError):
+        # Assuming 127.0.0.1:9988 is not a valid SOCKS5 proxy...
+        keylist.use_proxy = True
+        keylist.proxy_host = b'127.0.0.1'
+        keylist.proxy_port = b'9988'
+        keylist.fetch_url('https://raw.githubusercontent.com/firstlookmedia/gpgsync/master/fingerprints/fingerprints.txt')
+
+
+def test_fetch_url_valid_url_valid_proxy(keylist):
+    # Assuming you have a system Tor installed listening on 127.0.0.1:9050
+    keylist.use_proxy = True
+    keylist.proxy_host = b'127.0.0.1'
+    keylist.proxy_port = b'9050'
+    keylist.fetch_url('https://raw.githubusercontent.com/firstlookmedia/gpgsync/master/fingerprints/fingerprints.txt')
+
+
+
+
 def test_verifier_message_queue_add_message():
     q = ValidatorMessageQueue()
     q.add_message('this is a test', 1)
