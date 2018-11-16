@@ -27,13 +27,11 @@ def common():
 
 # Generate an keylist
 @pytest.fixture
-def keylist():
-    c = common()
-    return Keylist(c)
+def keylist(common):
+    return Keylist(common)
 
 
 # Generate an legacy keylist
 @pytest.fixture
-def legacy_keylist():
-    c = common()
-    return LegacyKeylist(c)
+def legacy_keylist(common):
+    return LegacyKeylist(common)
