@@ -335,6 +335,21 @@ class Keylist(object):
         try:
             keylist.validate_format(msg_bytes)
         except KeylistNotJson as e:
+            # If the keylist isn't in JSON format, is it a legacy keylist?
+            common.log("Keylist", "validate", "Not a JSON keylist, testing for legacy keylist")
+            try:
+                legacy_keylist = LegacyKeylist.from_keylist(common, keylist)
+                legacy_keylist.get_fingerprint_list(msg_bytes)
+
+                # No exception yet? Let's treat it as a legacy keylist then
+                common.log("Keylist", "validate", "Looks like a legacy keylist, so treat it like one")
+                return LegacyKeylist.validate(common, legacy_keylist)
+
+            except InvalidFingerprints:
+                # Not a legacy keylist, throw error
+                common.log("Keylist", "validate", "Not a JSON keylist or legacy keylist")
+                return Keylist.result_object('error', 'Keylist is not in JSON format.', e)
+
             return Keylist.result_object('error', 'Keylist is not in JSON format.', e)
         except KeylistInvalid as e:
             return Keylist.result_object('error', e.reason)
@@ -423,7 +438,20 @@ class Keylist(object):
         try:
             keylist.validate_format(msg_bytes)
         except KeylistNotJson as e:
-            return Keylist.result_object('error', 'Keylist is not in JSON format.', e)
+            # If the keylist isn't in JSON format, is it a legacy keylist?
+            common.log("Keylist", "refresh", "Not a JSON keylist, testing for legacy keylist")
+            try:
+                legacy_keylist = LegacyKeylist.from_keylist(common, keylist)
+                legacy_keylist.get_fingerprint_list(msg_bytes)
+
+                # No exception yet? Let's treat it as a legacy keylist then
+                common.log("Keylist", "refresh", "Looks like a legacy keylist, so treat it like one")
+                return LegacyKeylist.refresh(common, cancel_q, legacy_keylist, force)
+
+            except InvalidFingerprints:
+                # Not a legacy keylist, throw error
+                common.log("Keylist", "refresh", "Not a JSON keylist or legacy keylist")
+                return Keylist.result_object('error', 'Keylist is not in JSON format.', e)
         except KeylistInvalid as e:
             return Keylist.result_object('error', e.reason)
 
@@ -599,7 +627,7 @@ class LegacyKeylist(Keylist):
 
         # Test loading URL
         try:
-            LegacyKeylist.validate_log(common, keylist.q, 'Testing downloading URL {}'.format(keylist.url.decode()), 0)
+            LegacyKeylist.validate_log(common, keylist.q, 'Testing downloading fingerprints URL {}'.format(keylist.url.decode()), 0)
             msg_bytes = keylist.fetch_msg_url()
         except ProxyURLDownloadError as e:
             return LegacyKeylist.result_object('error', 'URL failed to download: Check your internet connection and proxy settings.', e)
@@ -608,7 +636,7 @@ class LegacyKeylist(Keylist):
 
         # Test loading signature URL
         try:
-            LegacyKeylist.validate_log(common, keylist.q, 'Testing downloading URL {}'.format((keylist.url + b'.sig').decode()), 1)
+            LegacyKeylist.validate_log(common, keylist.q, 'Testing downloading fingerprints signature URL {}'.format((keylist.url + b'.sig').decode()), 1)
             msg_sig_bytes = keylist.fetch_msg_sig_url()
         except ProxyURLDownloadError as e:
             return LegacyKeylist.result_object('error', 'URL failed to download: Check your internet connection and proxy settings.', e)
@@ -676,7 +704,7 @@ class LegacyKeylist(Keylist):
         common.log("LegacyKeylist", "refresh", "Refreshing keylist {}".format(keylist.url.decode()))
         keylist.q.add_message(RefresherMessageQueue.STATUS_STARTING)
 
-        if not self.should_refresh(force=force):
+        if not keylist.should_refresh(force=force):
             common.log("LegacyKeylist", "refresh", "Keylist doesn't need refreshing {}".format(keylist.url.decode()))
             return LegacyKeylist.result_object('skip')
 
@@ -807,3 +835,28 @@ class LegacyKeylist(Keylist):
             "invalid_fingerprints": invalid_fingerprints,
             "notfound_fingerprints": notfound_fingerprints
         })
+
+    @staticmethod
+    def validate_log(common, q, message, step=0):
+        common.log("LegacyKeylist", "validate", message)
+        q.add_message(message, step)
+
+    @staticmethod
+    def from_keylist(common, keylist):
+        """
+        Create a LegacyKeylist object from a Keylist object.
+        """
+        legacy_keylist = LegacyKeylist(common)
+        legacy_keylist.fingerprint = keylist.fingerprint
+        legacy_keylist.url = keylist.url
+        legacy_keylist.keyserver = keylist.keyserver
+        legacy_keylist.use_proxy = keylist.use_proxy
+        legacy_keylist.proxy_host = keylist.proxy_host
+        legacy_keylist.proxy_port = keylist.proxy_port
+        legacy_keylist.last_checked = keylist.last_checked
+        legacy_keylist.last_synced = keylist.last_synced
+        legacy_keylist.last_failed = keylist.last_failed
+        legacy_keylist.error = keylist.error
+        legacy_keylist.warning = keylist.warning
+        legacy_keylist.q = keylist.q
+        return legacy_keylist
