@@ -3,7 +3,8 @@ import os
 import pytest
 
 from gpgsync.keylist import URLDownloadError, ProxyURLDownloadError, \
-    InvalidFingerprints, Keylist, ValidatorMessageQueue, RefresherMessageQueue
+    KeylistNotJson, KeylistInvalid, Keylist, ValidatorMessageQueue, \
+    RefresherMessageQueue
 
 
 # Load an keylist test file
@@ -38,6 +39,39 @@ def test_fetch_url_valid_url_valid_proxy(keylist):
     keylist.fetch_url('https://raw.githubusercontent.com/firstlookmedia/gpgsync/master/fingerprints/fingerprints.txt')
 
 
+def test_keylist_not_json(keylist):
+    msg_bytes = get_keylist_file_content('keylist-not-json.json')
+    with pytest.raises(KeylistNotJson):
+        keylist.validate_format(msg_bytes)
+
+
+def test_keylist_no_metadata(keylist):
+    msg_bytes = get_keylist_file_content('keylist-no-metadata.json')
+    with pytest.raises(KeylistInvalid):
+        keylist.validate_format(msg_bytes)
+
+
+def test_keylist_no_signature_uri(keylist):
+    msg_bytes = get_keylist_file_content('keylist-no-signature-uri.json')
+    with pytest.raises(KeylistInvalid):
+        keylist.validate_format(msg_bytes)
+
+
+def test_keylist_no_keys(keylist):
+    msg_bytes = get_keylist_file_content('keylist-no-keys.json')
+    with pytest.raises(KeylistInvalid):
+        keylist.validate_format(msg_bytes)
+
+
+def test_keylist_invalid_keys(keylist):
+    msg_bytes = get_keylist_file_content('keylist-invalid-keys.json')
+    with pytest.raises(KeylistInvalid):
+        keylist.validate_format(msg_bytes)
+
+
+def test_keylist_valid(keylist):
+    msg_bytes = get_keylist_file_content('keylist-valid.json')
+    keylist.validate_format(msg_bytes)
 
 
 def test_verifier_message_queue_add_message():

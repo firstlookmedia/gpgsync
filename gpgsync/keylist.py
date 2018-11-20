@@ -38,14 +38,6 @@ class ProxyURLDownloadError(Exception):
     pass
 
 
-class InvalidFingerprints(Exception):
-    def __init__(self, fingerprints):
-        self.fingerprints = fingerprints
-
-    def __str__(self):
-        return str([s.decode() for s in self.fingerprints])
-
-
 class KeylistNotJson(Exception):
     pass
 
@@ -56,6 +48,14 @@ class KeylistInvalid(Exception):
 
     def __str__(self):
         return self.reason
+
+
+class InvalidFingerprints(Exception):
+    def __init__(self, fingerprints):
+        self.fingerprints = fingerprints
+
+    def __str__(self):
+        return str([s.decode() for s in self.fingerprints])
 
 
 class ValidatorMessageQueue(queue.LifoQueue):
