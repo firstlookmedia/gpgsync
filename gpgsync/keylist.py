@@ -267,7 +267,7 @@ class Keylist(object):
         if (o.scheme != 'http' and o.scheme != 'https') or o.netloc == '':
             raise KeylistInvalid('Signature URI is invalid.')
 
-    def should_refresh(self, force=False):
+    def should_refresh(self, force):
         """
         Based on the info stored in the keylist, should we refresh it?
         """
@@ -397,7 +397,7 @@ class Keylist(object):
         common.log("Keylist", "refresh", "Refreshing keylist {}".format(keylist.url.decode()))
         keylist.q.add_message(RefresherMessageQueue.STATUS_STARTING)
 
-        if not keylist.should_refresh():
+        if not keylist.should_refresh(force=force):
             common.log("Keylist", "refresh", "Keylist doesn't need refreshing {}".format(keylist.url.decode()))
             return Keylist.result_object('skip')
 
@@ -676,7 +676,7 @@ class LegacyKeylist(Keylist):
         common.log("LegacyKeylist", "refresh", "Refreshing keylist {}".format(keylist.url.decode()))
         keylist.q.add_message(RefresherMessageQueue.STATUS_STARTING)
 
-        if not self.should_refresh():
+        if not self.should_refresh(force=force):
             common.log("LegacyKeylist", "refresh", "Keylist doesn't need refreshing {}".format(keylist.url.decode()))
             return LegacyKeylist.result_object('skip')
 
