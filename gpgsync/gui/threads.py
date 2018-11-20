@@ -24,12 +24,12 @@ from PyQt5 import QtCore, QtWidgets
 from ..keylist import Keylist, ValidatorMessageQueue, RefresherMessageQueue
 
 
-class ValidatorThread(QtCore.QThread):
+class AuthorityKeyValidatorThread(QtCore.QThread):
     alert_error = QtCore.pyqtSignal(str, str)
     success = QtCore.pyqtSignal()
 
     def __init__(self, common, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port):
-        super(ValidatorThread, self).__init__()
+        super(AuthorityKeyValidatorThread, self).__init__()
         self.c = common
 
         # Make a keylist
@@ -46,14 +46,13 @@ class ValidatorThread(QtCore.QThread):
         self.finished.emit()
 
     def run(self):
-        self.c.log("ValidatorThread", "run", "starting keylist validator thread")
+        self.c.log("AuthorityKeyValidatorThread", "run", "starting authority key validator thread")
 
-        result = Keylist.validate(self.c, self.keylist)
-
-        if result['type'] == "success":
+        result = self.keylist.validate_authority_key()
+        if result == True:
             self.success.emit()
-        elif result['type'] == "error":
-            self.c.log("ValidatorThread", "run", "Error: {}, {}".format(result['message'], str(result['exception'])))
+        else:
+            self.c.log("ValidatorThread", "run", "Error: {} {}".format(result['message'], str(result['exception'])))
             self.alert_error.emit(result['message'], str(result['exception']))
 
 

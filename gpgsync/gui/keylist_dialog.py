@@ -22,7 +22,7 @@ import queue
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 from ..keylist import Keylist, ValidatorMessageQueue
-from .threads import ValidatorThread
+from .threads import AuthorityKeyValidatorThread
 
 
 class KeylistDialog(QtWidgets.QDialog):
@@ -187,41 +187,19 @@ class ValidatorDialog(QtWidgets.QDialog):
         self.setWindowIcon(self.c.gui.icon)
 
         # Label
-        self.label = QtWidgets.QLabel("Verifying keylist")
-
-        # Progress bar
-        self.progress_bar = QtWidgets.QProgressBar()
-        self.progress_bar.setRange(0, 5)
-        self.progress_bar.setValue(0)
+        self.label = QtWidgets.QLabel("Fetching authority key from keyserver...")
 
         # Layout
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.label)
-        layout.addWidget(self.progress_bar)
         self.setLayout(layout)
 
-        # Timer to update the UI
-        self.update_ui_timer = QtCore.QTimer()
-        self.update_ui_timer.timeout.connect(self.update_ui)
-        self.update_ui_timer.start(500) # 0.5 seconds
-
         # Start the validator
-        self.validator = ValidatorThread(self.c, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
-        self.q = self.validator.keylist.q # grab the q so we can get output from it
+        self.validator = AuthorityKeyValidatorThread(self.c, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
         self.validator.alert_error.connect(self.validator_alert_error)
         self.validator.success.connect(self.validator_success)
         self.validator.finished.connect(self.validator_finished)
         self.validator.start()
-
-    def update_ui(self):
-        # Process the last event in the LIFO queue, ignore the rest
-        try:
-            event = self.q.get(False)
-            self.label.setText(event['msg'])
-            self.progress_bar.setValue(event['step'])
-
-        except queue.Empty:
-            pass
 
     def validator_alert_error(self, msg, details=''):
         self.c.gui.alert(msg, details, QtWidgets.QMessageBox.Warning)
