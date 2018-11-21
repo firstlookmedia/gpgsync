@@ -184,11 +184,11 @@ class ValidatorDialog(QtWidgets.QDialog):
         super(ValidatorDialog, self).__init__()
         self.c = common
 
-        self.setWindowTitle('Verifying Keylist')
+        self.setWindowTitle('Adding Keylist')
         self.setWindowIcon(self.c.gui.icon)
 
         # Label
-        self.label = QtWidgets.QLabel("Fetching authority key from keyserver...")
+        self.label = QtWidgets.QLabel("Downloading keylist address and fetching authority key from keyserver...")
 
         # Layout
         layout = QtWidgets.QVBoxLayout()
