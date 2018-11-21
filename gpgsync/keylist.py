@@ -314,15 +314,15 @@ class Keylist(object):
             self.c.log('Keylist', 'validate_authority_key', 'Fetching public key {} {}'.format(self.c.fp_to_keyid(self.fingerprint).decode(), self.c.gpg.get_uid(self.fingerprint)))
             self.fetch_public_key(self.c.gpg)
         except InvalidFingerprint:
-            return Keylist.result_object('error', 'Invalid signing key fingerprint', data={"reset_last_checked": True})
+            return Keylist.result_object('error', 'Invalid authority key fingerprint', data={"reset_last_checked": True})
         except NotFoundOnKeyserver:
-            return Keylist.result_object('error', 'Signing key is not found on keyserver', data={"reset_last_checked": True})
+            return Keylist.result_object('error', 'Authority key is not found on keyserver', data={"reset_last_checked": True})
         except NotFoundInKeyring:
-            return Keylist.result_object('error', 'Signing key is not found in keyring', data={"reset_last_checked": True})
+            return Keylist.result_object('error', 'Authority key is not found in keyring', data={"reset_last_checked": True})
         except RevokedKey:
-            return Keylist.result_object('error', 'The signing key is revoked', data={"reset_last_checked": True})
+            return Keylist.result_object('error', 'The authority key is revoked', data={"reset_last_checked": True})
         except ExpiredKey:
-            return Keylist.result_object('error', 'The signing key is expired', data={"reset_last_checked": True})
+            return Keylist.result_object('error', 'The authority key is expired', data={"reset_last_checked": True})
         except KeyserverError:
             return Keylist.result_object('error', 'Error connecting to keyserver', data={"reset_last_checked": False})
         return True
