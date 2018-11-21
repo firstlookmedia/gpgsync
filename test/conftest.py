@@ -33,5 +33,5 @@ def keylist(common):
 
 # Generate an legacy keylist
 @pytest.fixture
-def legacy_keylist(common):
-    return LegacyKeylist(common)
+def legacy_keylist(keylist):
+    return LegacyKeylist(keylist)

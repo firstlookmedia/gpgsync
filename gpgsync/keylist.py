@@ -372,7 +372,7 @@ class Keylist(object):
             # If the keylist isn't in JSON format, is it a legacy keylist?
             common.log("Keylist", "refresh", "Not a JSON keylist, testing for legacy keylist")
             try:
-                legacy_keylist = LegacyKeylist.from_keylist(common, keylist)
+                legacy_keylist = LegacyKeylist(keylist)
                 legacy_keylist.get_fingerprint_list(msg_bytes)
 
                 # No exception yet? Let's treat it as a legacy keylist then
@@ -489,9 +489,21 @@ class LegacyKeylist(Keylist):
     This is a legacy keylist, from before GPG Sync 0.3.0, and before the
     Keylist RFC changed the keylist format to be based on JSON.
     """
-    def __init__(self, common):
-        super(LegacyKeylist, self).__init__(common)
-        self.c = common
+    def __init__(self, keylist):
+        super(LegacyKeylist, self).__init__(keylist.c)
+        self.c = keylist.c
+        self.fingerprint = keylist.fingerprint
+        self.url = keylist.url
+        self.keyserver = keylist.keyserver
+        self.use_proxy = keylist.use_proxy
+        self.proxy_host = keylist.proxy_host
+        self.proxy_port = keylist.proxy_port
+        self.last_checked = keylist.last_checked
+        self.last_synced = keylist.last_synced
+        self.last_failed = keylist.last_failed
+        self.error = keylist.error
+        self.warning = keylist.warning
+        self.q = keylist.q
 
     def get_keyserver(self):
         """
@@ -578,22 +590,10 @@ class LegacyKeylist(Keylist):
             common.log("LegacyKeylist", "refresh", "canceling early {}".format(keylist.url.decode()))
             return LegacyKeylist.result_object('cancel')
 
-        # Fetch signing key from keyserver, make sure it's not expired or revoked
-        try:
-            common.log('run', 'Fetching public key {} {}'.format(common.fp_to_keyid(keylist.fingerprint).decode(), common.gpg.get_uid(keylist.fingerprint)))
-            keylist.fetch_public_key(common.gpg)
-        except InvalidFingerprint:
-            return LegacyKeylist.result_object('error', 'Invalid signing key fingerprint', data={"reset_last_checked": True})
-        except NotFoundOnKeyserver:
-            return LegacyKeylist.result_object('error', 'Signing key is not found on keyserver', data={"reset_last_checked": True})
-        except NotFoundInKeyring:
-            return LegacyKeylist.result_object('error', 'Signing key is not found in keyring', data={"reset_last_checked": True})
-        except RevokedKey:
-            return LegacyKeylist.result_object('error', 'The signing key is revoked', data={"reset_last_checked": True})
-        except ExpiredKey:
-            return LegacyKeylist.result_object('error', 'The signing key is expired', data={"reset_last_checked": True})
-        except KeyserverError:
-            return LegacyKeylist.result_object('error', 'Error connecting to keyserver', data={"reset_last_checked": False})
+        # Validate the authority key
+        result = keylist.validate_authority_key()
+        if result != True:
+            return result
 
         if cancel_q.qsize() > 0:
             common.log("LegacyKeylist", "refresh", "canceling early {}".format(keylist.url.decode()))
@@ -674,23 +674,3 @@ class LegacyKeylist(Keylist):
             "invalid_fingerprints": invalid_fingerprints,
             "notfound_fingerprints": notfound_fingerprints
         })
-
-    @staticmethod
-    def from_keylist(common, keylist):
-        """
-        Create a LegacyKeylist object from a Keylist object.
-        """
-        legacy_keylist = LegacyKeylist(common)
-        legacy_keylist.fingerprint = keylist.fingerprint
-        legacy_keylist.url = keylist.url
-        legacy_keylist.keyserver = keylist.keyserver
-        legacy_keylist.use_proxy = keylist.use_proxy
-        legacy_keylist.proxy_host = keylist.proxy_host
-        legacy_keylist.proxy_port = keylist.proxy_port
-        legacy_keylist.last_checked = keylist.last_checked
-        legacy_keylist.last_synced = keylist.last_synced
-        legacy_keylist.last_failed = keylist.last_failed
-        legacy_keylist.error = keylist.error
-        legacy_keylist.warning = keylist.warning
-        legacy_keylist.q = keylist.q
-        return legacy_keylist
