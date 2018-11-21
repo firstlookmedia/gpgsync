@@ -115,7 +115,8 @@ class KeylistDialog(QtWidgets.QDialog):
         # Populate the widgets with keylist data
         self.fingerprint_edit.setText(self.keylist.fingerprint.decode())
         self.url_edit.setText(self.keylist.url.decode())
-        self.keyserver_edit.setText(self.keylist.keyserver.decode())
+        if self.keylist.keyserver:
+            self.keyserver_edit.setText(self.keylist.keyserver.decode())
         if self.keylist.use_proxy:
             self.use_proxy.setCheckState(QtCore.Qt.Checked)
         else:
@@ -201,7 +202,7 @@ class ValidatorDialog(QtWidgets.QDialog):
         self.validator.finished.connect(self.validator_finished)
         self.validator.start()
 
-    def validator_alert_error(self, msg, details=''):
+    def validator_alert_error(self, msg, details=None):
         self.c.gui.alert(msg, details, QtWidgets.QMessageBox.Warning)
 
     def validator_success(self):

@@ -96,13 +96,13 @@ class GuiCommon(object):
                 """
         }
 
-    def alert(self, msg, details='', icon=QtWidgets.QMessageBox.Warning, question=False):
+    def alert(self, msg, details=None, icon=QtWidgets.QMessageBox.Warning, question=False):
         d = QtWidgets.QMessageBox()
         d.setWindowTitle('GPG Sync')
         d.setText(msg)
         d.setWindowIcon(self.icon)
 
-        if details:
+        if details != None and details != '':
             d.setDetailedText(details)
 
         if question:

@@ -94,7 +94,7 @@ class Keylist(object):
 
         self.fingerprint = b''
         self.url = b''
-        self.keyserver = b'hkps://hkps.pool.sks-keyservers.net'
+        self.keyserver = None
         self.use_proxy = False
         self.proxy_host = b'127.0.0.1'
         self.proxy_port = b'9050'
@@ -298,16 +298,20 @@ class Keylist(object):
         """
         Figure out which keyserver will be used.
         """
+        self.c.log("Keylist", "get_keyserver", "self.keyserver={}".format(self.keyserver))
         # If the user specified a keyserver, always use that first
-        if self.keyserver != None:
+        if self.keyserver != b'':
             return self.keyserver
 
         # If the keylist specified a keyserver, use that
-        if 'keyserver' in self.keylist_obj['metadata']:
-            return self.keylist_obj['metadata']['keylist']
+        try:
+            if 'keyserver' in self.keylist_obj['metadata']:
+                return self.keylist_obj['metadata']['keyserver']
+        except:
+            pass
 
         # Fallback to Ubuntu's keyserver (since it seems better managed than the SKS pool)
-        return 'hkps://keyserver.ubuntu.com/'
+        return b'hkps://keyserver.ubuntu.com/'
 
     def result_object(self, type, message=None, exception=None, data=None):
         """
@@ -349,13 +353,14 @@ class Keylist(object):
         Returns a result object, with msg_bytes as data.
         """
         try:
-            self.c.log('Keylist', 'refresh_keylist_uri', 'Downloading {}'.format(self.url.decode()))
+            msg_url = self.url.decode()
+            self.c.log('Keylist', 'refresh_keylist_uri', 'Downloading {}'.format(msg_url))
             msg_bytes = self.fetch_msg_url()
             return self.result_object('success', data=msg_bytes)
         except URLDownloadError as e:
-            return self.result_object('error', 'Failed to download: Check your internet connection')
+            return self.result_object('error', 'Failed to download keylist address\n{}\n\nCheck your internet connection'.format(msg_url))
         except ProxyURLDownloadError as e:
-            return self.result_object('error', 'Failed to download: Check your internet connection and proxy configuration')
+            return self.result_object('error', 'Failed to download keylist address:\n{}\n\nCheck your internet connection and proxy configuration.'.format(msg_url))
 
     def refresh_keylist_signature_uri(self):
         """
@@ -368,9 +373,9 @@ class Keylist(object):
             msg_sig_bytes = self.fetch_msg_sig_url()
             return self.result_object('success', data=msg_sig_bytes)
         except URLDownloadError as e:
-            return self.result_object('error', 'Failed to download: Check your internet connection')
+            return self.result_object('error', 'Failed to download signature address:\n{}\n\nCheck your internet connection'.format(msg_sig_url))
         except ProxyURLDownloadError as e:
-            return self.result_object('error', 'Failed to download: Check your internet connection and proxy configuration')
+            return self.result_object('error', 'Failed to download signature address:\n{}\n\nCheck your internet connection and proxy configuration'.format(msg_sig_url))
 
     def refresh_verify_signature(self, msg_sig_bytes, msg_bytes):
         """

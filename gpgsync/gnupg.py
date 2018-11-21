@@ -116,14 +116,14 @@ class GnuPG(object):
         fp = self.c.clean_fp(fp).decode()
         keyserver = self.c.clean_keyserver(keyserver).decode()
 
-        default_hkps_server = 'hkps://hkps.pool.sks-keyservers.net'
+        hkps_pool_keyserver = 'hkps://hkps.pool.sks-keyservers.net'
         ca_cert_file = self.c.get_resource_path('sks-keyservers.netCA.pem')
 
         # Create gpg.conf and dirmngr.conf
         dirmngr_conf = ''
         gpg_conf = 'require-cross-certification\n'
         gpg_conf += 'keyserver {}\n'.format(keyserver)
-        if keyserver == default_hkps_server:
+        if keyserver == hkps_pool_keyserver:
             # Don't need to add ca_cert_file in OS X, because GPG Tools includes the
             # correct .pem for hkps://hkps.pool.sks-keyservers.net, and specifying it
             # breaks because of a space in the filename (in "GPG Sync.app")

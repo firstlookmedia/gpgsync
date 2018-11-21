@@ -25,6 +25,11 @@ from ..keylist import Keylist, ValidatorMessageQueue, RefresherMessageQueue
 
 
 class AuthorityKeyValidatorThread(QtCore.QThread):
+    """
+    In order to display the UID of the authority key in the UI, we need to first
+    fetch the authority key from a keyserver. But in order to do that, we need
+    to first download the keylist, to learn what keyserver we should be using.
+    """
     alert_error = QtCore.pyqtSignal(str, str)
     success = QtCore.pyqtSignal()
 
@@ -48,12 +53,29 @@ class AuthorityKeyValidatorThread(QtCore.QThread):
     def run(self):
         self.c.log("AuthorityKeyValidatorThread", "run", "starting authority key validator thread")
 
+        # Download keylist URI
+        result = self.keylist.refresh_keylist_uri()
+        if result['type'] == 'success':
+            msg_bytes = result['data']
+        else:
+            self.c.log("ValidatorThread", "run", "Error: {} {}".format(result['message'], result['exception']))
+            self.alert_error.emit(result['message'], result['exception'])
+            return
+
+        # Run validate_format, so we can parse out the keyserver to use
+        try:
+            common.log("Keylist", "refresh", "Validating keylist format")
+            self.keylist.validate_format(msg_bytes)
+        except:
+            pass
+
+        # Validate the authority key -- basically just to fetch it from the keyserver
         result = self.keylist.validate_authority_key()
         if result['type'] == 'success':
             self.success.emit()
         else:
-            self.c.log("ValidatorThread", "run", "Error: {} {}".format(result['message'], str(result['exception'])))
-            self.alert_error.emit(result['message'], str(result['exception']))
+            self.c.log("ValidatorThread", "run", "Error: {} {}".format(result['message'], result['exception']))
+            self.alert_error.emit(result['message'], result['exception'])
 
 
 class RefresherThread(QtCore.QThread):
