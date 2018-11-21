@@ -120,12 +120,12 @@ def sync(common, force=False):
         result = status[id]['result']
 
         if result['type'] == 'success':
-            if keylist.warning:
-                print("[{0:d}] Sync successful. Warning: {1:s}".format(status[id]['index'], keylist.warning))
+            if result['data']['keylist'].warning:
+                print("[{0:d}] Sync successful. Warning: {1:s}".format(status[id]['index'], result['data']['keylist'].warning))
             else:
                 print("[{0:d}] Sync successful.".format(status[id]['index']))
         elif result['type'] == 'error':
-            print("[{0:d}] Sync failed. Error: {1:s}".format(keylist.error))
+            print("[{0:d}] Sync failed. Error: {1:s}".format(result['data']['keylist'].error))
         elif result['type'] == 'cancel':
             print("[{0:d}] Sync canceled.".format(status[id]['index']))
         elif result['type'] == 'skip':
