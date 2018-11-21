@@ -198,6 +198,8 @@ class Keylist(object):
         After syncing, depending on how the refresh went, update timestamps
         and warning in the keylist and saving settings if necessary.
         """
+        self.c.log("Keylist", "interpret_result", result)
+
         if result['type'] == "success":
             self.c.log("Keylist", "interpret_result", "refresh success")
 
@@ -206,9 +208,9 @@ class Keylist(object):
             else:
                 warnings = []
                 if len(result['data']['invalid_fingerprints']) > 0:
-                    warning.append('Invalid fingerprints: {}'.format(', '.join([x.decode() for x in result['data']['invalid_fingerprints']])))
+                    warning.append('Invalid fingerprints: {}'.format(', '.join(result['data']['invalid_fingerprints'])))
                 if len(result['data']['notfound_fingerprints']) > 0:
-                    warnings.append('Fingerprints not found: {}'.format(', '.join([x.decode() for x in result['data']['notfound_fingerprints']])))
+                    warnings.append('Fingerprints not found: {}'.format(', '.join(result['data']['notfound_fingerprints'])))
                 warning = ', '.join(warnings)
 
             self.last_checked = datetime.datetime.now()
@@ -307,7 +309,7 @@ class Keylist(object):
         # Fallback to Ubuntu's keyserver (since it seems better managed than the SKS pool)
         return 'hkps://keyserver.ubuntu.com/'
 
-    def result_object(type, message=None, exception=None, data=None):
+    def result_object(self, type, message=None, exception=None, data=None):
         """
         Returns an object that can be further evaluated.
         """
@@ -373,11 +375,12 @@ class Keylist(object):
     def refresh_verify_signature(self, msg_sig_bytes, msg_bytes):
         """
         Verify the signature.
-        Returns a result object, with msg_sig_bytes as data.
+        Returns a result object.
         """
         try:
             self.c.log('Keylist', 'refresh', 'Verifying signature')
             self.verify_sig(self.c.gpg, msg_sig_bytes, msg_bytes)
+            return self.result_object('success')
         except VerificationError:
             return self.result_object('error', 'Signature does not verify')
         except BadSignature:
@@ -475,6 +478,7 @@ class Keylist(object):
 
         # Make sure the keylist is in the correct format
         try:
+            common.log("Keylist", "refresh", "Validating keylist format")
             keylist.validate_format(msg_bytes)
         except KeylistNotJson as e:
             # If the keylist isn't in JSON format, is it a legacy keylist?
@@ -643,7 +647,7 @@ class LegacyKeylist(Keylist):
 
         # Validate the authority key
         result = keylist.validate_authority_key()
-        if result != True:
+        if result['type'] != 'success':
             return result
 
         if cancel_q.qsize() > 0:
@@ -651,7 +655,7 @@ class LegacyKeylist(Keylist):
             return keylist.result_object('cancel')
 
         # Verify signature
-        result = keylist.refresh_verify_signature()
+        result = keylist.refresh_verify_signature(msg_sig_bytes, msg_bytes)
         if result['type'] != 'success':
             return result
 
@@ -661,7 +665,7 @@ class LegacyKeylist(Keylist):
 
         # Build list of fingerprints to fetch
         try:
-            fingerprints = keylist.get_fingerprint_list(msg_bytes)
+            fingerprints = [fp.decode() for fp in keylist.get_fingerprint_list(msg_bytes)]
         except InvalidFingerprints as e:
             return keylist.result_object('error', 'Invalid fingerprints: {}'.format(e))
         fingerprints_to_fetch, invalid_fingerprints = keylist.refresh_build_fingerprints_lists(fingerprints)
