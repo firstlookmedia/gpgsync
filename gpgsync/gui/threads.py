@@ -49,7 +49,7 @@ class AuthorityKeyValidatorThread(QtCore.QThread):
         self.c.log("AuthorityKeyValidatorThread", "run", "starting authority key validator thread")
 
         result = self.keylist.validate_authority_key()
-        if result == True:
+        if result['type'] == 'success':
             self.success.emit()
         else:
             self.c.log("ValidatorThread", "run", "Error: {} {}".format(result['message'], str(result['exception'])))
