@@ -111,6 +111,9 @@ class Keylist(object):
         self.syncing = False
         self.q = None
 
+        # Ubuntu's keyserver is the default we fall back to (since it seems better managed than the SKS pool)
+        self.default_keyserver = b'hkps://keyserver.ubuntu.com/'
+
     def load(self, e):
         """
         Acts as a secondary constructor to load an keylist from settings
@@ -145,16 +148,6 @@ class Keylist(object):
                     tmp[k] = v
 
         return tmp
-
-    def fetch_public_key(self, gpg):
-        # Retreive the signing key from the keyserver
-        gpg.recv_key(self.get_keyserver(), self.fingerprint, self.use_proxy, self.proxy_host, self.proxy_port)
-
-        # Test the key for issues
-        gpg.test_key(self.fingerprint)
-
-        # Save it to disk
-        gpg.export_pubkey_to_disk(self.fingerprint)
 
     def fetch_msg_url(self):
         return self.fetch_url(self.url)
@@ -226,11 +219,14 @@ class Keylist(object):
         elif result['type'] == "error":
             self.c.log("Keylist", "interpret_result", "refresh error")
 
-            if result['data']['reset_last_checked']:
-                self.last_checked = datetime.datetime.now()
-            self.last_failed = datetime.datetime.now()
+            if type(result['data']) == list:
+                if 'reset_last_checked' in result['data'] and result['data']['reset_last_checked']:
+                    self.last_checked = datetime.datetime.now()
+
+            if 'message' in result:
+                self.error = result['message']
             self.warning = None
-            self.error = result['data']['message']
+            self.last_failed = datetime.datetime.now()
 
             self.c.settings.save()
 
@@ -310,8 +306,7 @@ class Keylist(object):
         except:
             pass
 
-        # Fallback to Ubuntu's keyserver (since it seems better managed than the SKS pool)
-        return b'hkps://keyserver.ubuntu.com/'
+        return self.default_keyserver
 
     def result_object(self, type, message=None, exception=None, data=None):
         """
@@ -332,7 +327,18 @@ class Keylist(object):
         # Fetch signing key from keyserver, make sure it's not expired or revoked
         try:
             self.c.log('Keylist', 'validate_authority_key', 'Fetching public key {} {}'.format(self.c.fp_to_keyid(self.fingerprint).decode(), self.c.gpg.get_uid(self.fingerprint)))
-            self.fetch_public_key(self.c.gpg)
+            keyserver = self.get_keyserver()
+            self.c.log('Keylist', 'validate_authority_key', 'keyserver={}'.format(keyserver))
+
+            # Retreive the signing key from the keyserver
+            self.c.gpg.recv_key(keyserver, self.fingerprint, self.use_proxy, self.proxy_host, self.proxy_port)
+
+            # Test the key for issues
+            self.c.gpg.test_key(self.fingerprint)
+
+            # Save it to disk
+            self.c.gpg.export_pubkey_to_disk(self.fingerprint)
+
             return self.result_object('success')
         except InvalidFingerprint:
             return self.result_object('error', 'Invalid authority key fingerprint', data={"reset_last_checked": True})
@@ -493,7 +499,7 @@ class Keylist(object):
                 legacy_keylist.get_fingerprint_list(msg_bytes)
 
                 # No exception yet? Let's treat it as a legacy keylist then
-                common.log("Keylist", "refresh", "Looks like a legacy keylist, so treat it like one")
+                common.log("Keylist", "refresh", "Looks like a legacy keylist")
                 return LegacyKeylist.refresh(common, cancel_q, legacy_keylist, force)
 
             except InvalidFingerprints:
@@ -531,6 +537,12 @@ class Keylist(object):
         if cancel_q.qsize() > 0:
             common.log("Keylist", "refresh", "canceling early {}".format(keylist.url.decode()))
             return keylist.result_object('cancel')
+
+        # Is this keylist getting redirected?
+        if new_keylist_uri is not None:
+            common.log("Keylist", "refresh", "Starting refresh over with new keylist URI: {}".format(new_keylist_uri))
+            keylist.url = new_keylist_uri
+            return Keylist.refresh(common, cancel_q, keylist, force)
 
         # Communicate
         total_keys = len(keylist.keylist_obj['keys'])
@@ -581,7 +593,11 @@ class LegacyKeylist(Keylist):
         Figure out which keyserver will be used. In legacy keylist, always
         just use the keyserver in the keylist object
         """
-        return self.keyserver
+        if self.keyserver != b'':
+            return self.keyserver
+
+        # Otherwise return the default keyserver
+        return self.default_keyserver
 
     def get_fingerprint_list(self, msg_bytes):
         # Convert the message content into a list of fingerprints
@@ -667,6 +683,17 @@ class LegacyKeylist(Keylist):
         if cancel_q.qsize() > 0:
             common.log("LegacyKeylist", "refresh", "canceling early {}".format(keylist.url.decode()))
             return keylist.result_object('cancel')
+
+        # Check to see if the legacy keylist is redirecting to a new URI
+        new_keylist_uri = None
+        first_line = msg_bytes.split(b'\n')[0].strip()
+        if first_line.startswith(b'#') and b'=' in first_line:
+            parts = [s.strip() for s in first_line[1:].split(b'=')]
+            if parts[0] == b'new_keylist_uri':
+                new_keylist_uri = parts[1]
+                common.log("LegacyKeylist", "refresh", "Legacy keylist wants to redirect to: {}".format(new_keylist_uri))
+                keylist.url = new_keylist_uri
+                return Keylist.refresh(common, cancel_q, keylist, force)
 
         # Build list of fingerprints to fetch
         try:

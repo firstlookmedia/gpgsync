@@ -59,7 +59,8 @@ def sync(common, force=False):
             "index": i,
             "event": None,
             "str": None,
-            "result": None
+            "result": None,
+            "keylist": keylist
         }
         print("[{}] Keylist {}, with authority key {}".format(i, keylist.url.decode(), keylist.fingerprint.decode()))
     print("")
@@ -118,14 +119,15 @@ def sync(common, force=False):
     # Display the results
     for id in ids:
         result = status[id]['result']
+        keylist = status[id]['keylist']
 
         if result['type'] == 'success':
-            if result['data']['keylist'].warning:
-                print("[{0:d}] Sync successful. Warning: {1:s}".format(status[id]['index'], result['data']['keylist'].warning))
+            if keylist1.warning:
+                print("[{0:d}] Sync successful. Warning: {1:s}".format(status[id]['index'], keylist.warning))
             else:
                 print("[{0:d}] Sync successful.".format(status[id]['index']))
         elif result['type'] == 'error':
-            print("[{0:d}] Sync failed. Error: {1:s}".format(result['data']['keylist'].error))
+            print("[{0:d}] Sync failed. Error: {1:s}".format(status[id]['index'], keylist.error))
         elif result['type'] == 'cancel':
             print("[{0:d}] Sync canceled.".format(status[id]['index']))
         elif result['type'] == 'skip':
