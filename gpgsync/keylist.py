@@ -538,12 +538,6 @@ class Keylist(object):
             common.log("Keylist", "refresh", "canceling early {}".format(keylist.url.decode()))
             return keylist.result_object('cancel')
 
-        # Is this keylist getting redirected?
-        if new_keylist_uri is not None:
-            common.log("Keylist", "refresh", "Starting refresh over with new keylist URI: {}".format(new_keylist_uri))
-            keylist.url = new_keylist_uri
-            return Keylist.refresh(common, cancel_q, keylist, force)
-
         # Communicate
         total_keys = len(keylist.keylist_obj['keys'])
         keylist.q.add_message(RefresherMessageQueue.STATUS_IN_PROGRESS, total_keys, 0)
@@ -574,6 +568,10 @@ class LegacyKeylist(Keylist):
     """
     def __init__(self, keylist):
         super(LegacyKeylist, self).__init__(keylist.c)
+
+        # Keep the original keylist, in case we need to redirect it
+        self.original_keylist = keylist
+
         self.c = keylist.c
         self.fingerprint = keylist.fingerprint
         self.url = keylist.url
@@ -692,8 +690,8 @@ class LegacyKeylist(Keylist):
             if parts[0] == b'new_keylist_uri':
                 new_keylist_uri = parts[1]
                 common.log("LegacyKeylist", "refresh", "Legacy keylist wants to redirect to: {}".format(new_keylist_uri))
-                keylist.url = new_keylist_uri
-                return Keylist.refresh(common, cancel_q, keylist, force)
+                keylist.original_keylist.url = new_keylist_uri
+                return Keylist.refresh(common, cancel_q, keylist.original_keylist, force)
 
         # Build list of fingerprints to fetch
         try:

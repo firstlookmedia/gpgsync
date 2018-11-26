@@ -122,7 +122,7 @@ def sync(common, force=False):
         keylist = status[id]['keylist']
 
         if result['type'] == 'success':
-            if keylist1.warning:
+            if keylist.warning:
                 print("[{0:d}] Sync successful. Warning: {1:s}".format(status[id]['index'], keylist.warning))
             else:
                 print("[{0:d}] Sync successful.".format(status[id]['index']))
