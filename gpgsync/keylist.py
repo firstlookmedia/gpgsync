@@ -324,13 +324,13 @@ class Keylist(object):
         Fetches the authority key from keyservers.
         Returns a result object.
         """
-        # Fetch signing key from keyserver, make sure it's not expired or revoked
+        # Fetch authority key from keyserver, make sure it's not expired or revoked
         try:
             self.c.log('Keylist', 'validate_authority_key', 'Fetching public key {} {}'.format(self.c.fp_to_keyid(self.fingerprint).decode(), self.c.gpg.get_uid(self.fingerprint)))
             keyserver = self.get_keyserver()
             self.c.log('Keylist', 'validate_authority_key', 'keyserver={}'.format(keyserver))
 
-            # Retreive the signing key from the keyserver
+            # Retreive the authority key from the keyserver
             self.c.gpg.recv_key(keyserver, self.fingerprint, self.use_proxy, self.proxy_host, self.proxy_port)
 
             # Test the key for issues
@@ -397,9 +397,9 @@ class Keylist(object):
         except BadSignature:
             return self.result_object('error', 'Bad signature')
         except RevokedKey:
-            return self.result_object('error', 'The signing key is revoked')
+            return self.result_object('error', 'The authority key is revoked')
         except SignedWithWrongKey:
-            return self.result_object('error', 'Valid signature, but signed with wrong signing key')
+            return self.result_object('error', 'Valid signature, but signed with wrong authority key')
 
     def refresh_build_fingerprints_lists(self, fingerprints):
         """

@@ -281,7 +281,7 @@ class GnuPG(object):
         if b'Signature made' not in err and b'Good signature from' not in err:
             raise VerificationError()
 
-        # Make sure the signing key is correct
+        # Make sure the authority key is correct
         lines = err.split(b'\n')
         for i in range(len(lines)):
             if lines[i].startswith(b'gpg: Signature made'):
