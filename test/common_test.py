@@ -26,7 +26,8 @@ def test_fp_to_keyid(common):
 
 
 def test_clean_keyserver(common):
-    assert common.clean_keyserver(b'pgp.mit.edu') == b'hkp://pgp.mit.edu'
-    assert common.clean_keyserver(b'hkp://pgp.mit.edu') == b'hkp://pgp.mit.edu'
-    assert common.clean_keyserver(b'hkps://hkps.pool.sks-keyservers.net') == b'hkps://hkps.pool.sks-keyservers.net'
-    assert common.clean_keyserver(b'ldap://somekeyserver') == b'ldap://somekeyserver'
+    assert common.clean_keyserver(b'pgp.mit.edu') == b'hkp://pgp.mit.edu:80'
+    assert common.clean_keyserver(b'hkp://pgp.mit.edu') == b'hkp://pgp.mit.edu:80'
+    assert common.clean_keyserver(b'hkps://hkps.pool.sks-keyservers.net/') == b'hkps://hkps.pool.sks-keyservers.net:443'
+    assert common.clean_keyserver(b'hkps://hkps.pool.sks-keyservers.net:4444') == b'hkps://hkps.pool.sks-keyservers.net:4444'
+    assert common.clean_keyserver(b'ldap://somekeyserver') == b'hkp://somekeyserver:80'
