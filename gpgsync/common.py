@@ -26,6 +26,7 @@ import platform
 import inspect
 import requests
 import socket
+from urllib.parse import urlparse
 from packaging.version import parse
 
 from .gnupg import GnuPG
@@ -72,9 +73,33 @@ class Common(object):
         return '0x{}'.format(self.clean_fp(fp)[-16:].decode()).encode()
 
     def clean_keyserver(self, keyserver):
-        if b'://' not in keyserver:
-            return b'hkp://' + keyserver
-        return keyserver
+        """
+        Convert keyserver to format: protocol://domain:port
+        """
+        o = urlparse(keyserver)
+
+        # Scheme and port
+        scheme = o.scheme
+        if scheme == b'hkp':
+            port = 80
+        elif scheme == b'hkps':
+            port = 443
+        else:
+            scheme = b'hkp'
+            port = 80
+
+        # Domain
+        domain = o.netloc
+        if domain == b'':
+            domain = o.path.strip(b'/')
+
+        # Does the domain include a port?
+        if b':' in domain:
+            parts = domain.split(b':')
+            domain = parts[0]
+            port = int(parts[1])
+
+        return scheme + b'://' + domain + b':' + str(port).encode()
 
     def get_resource_path(self, filename):
         if getattr(sys, 'gpgsync_dev', False):
