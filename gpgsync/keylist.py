@@ -446,7 +446,7 @@ class Keylist(object):
             self.q.add_message(RefresherMessageQueue.STATUS_IN_PROGRESS, total_keys, current_key)
 
             if cancel_q.qsize() > 0:
-                self.c.log("Keylist", "refresh_fetch_fingerprints", "canceling early {}".format(keylist.url.decode()))
+                self.c.log("Keylist", "refresh_fetch_fingerprints", "canceling early {}".format(self.url.decode()))
                 return self.result_object('cancel')
 
         return self.result_object('success', data=notfound_fingerprints)
