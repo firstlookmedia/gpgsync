@@ -89,19 +89,19 @@ class KeylistWidget(QtWidgets.QWidget):
         # Authority Key user ID
         uid = self.c.gpg.get_uid(self.keylist.fingerprint)
         uid_label = QtWidgets.QLabel(uid)
-        uid_label.setMinimumSize(440, 30)
-        uid_label.setMaximumSize(440, 30)
+        uid_label.setMinimumSize(500, 30)
+        uid_label.setMaximumSize(500, 30)
         uid_label.setStyleSheet(self.c.gui.css['KeylistWidget uid_label'])
 
         # Status
         self.status_label = QtWidgets.QLabel()
-        self.status_label.setMinimumSize(440, 20)
-        self.status_label.setMaximumSize(440, 20)
+        self.status_label.setMinimumSize(500, 20)
+        self.status_label.setMaximumSize(500, 20)
 
         # Sync progress bar
         self.progress_bar = QtWidgets.QProgressBar()
-        self.progress_bar.setMinimumSize(290, 20)
-        self.progress_bar.setMaximumSize(290, 20)
+        self.progress_bar.setMinimumSize(350, 20)
+        self.progress_bar.setMaximumSize(350, 20)
         self.progress_bar.hide()
 
         # Buttons
@@ -141,8 +141,8 @@ class KeylistWidget(QtWidgets.QWidget):
         self.update_ui()
 
         # Size
-        self.setMinimumSize(440, 70)
-        self.setMaximumSize(440, 70)
+        self.setMinimumSize(500, 80)
+        self.setMaximumSize(500, 80)
 
         # Update timer
         self.update_ui_timer = QtCore.QTimer()
