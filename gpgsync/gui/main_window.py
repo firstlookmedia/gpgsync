@@ -193,9 +193,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.keylist_list.update_keylist_widgets()
 
         # Set new window size
-        height = len(self.c.settings.keylists)*80 + 140
-        self.setMinimumSize(480, height)
-        self.setMaximumSize(480, height)
+        height = len(self.c.settings.keylists)*90 + 160
+        self.setMinimumSize(530, height)
+        self.setMaximumSize(530, height)
 
     def add_keylist(self):
         d = KeylistDialog(self.c)
