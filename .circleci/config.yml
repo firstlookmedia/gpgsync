@@ -9,32 +9,28 @@ jobs:
     environment:
       FLM_ENV: "test"
     docker:
-      - image: circleci/python:3.6
+      - image: circleci/python:3-stretch-node-browsers
     steps:
-      - checkout
-
       - run:
           name: Verify python versions
           command: |
-            python --version
+            python3 --version
             pip --version
-
-      - run:
-          name: Install dependencies
-          command: |
-            sudo apt install gnupg2 python3-pyqt5 tor
-            python3 -m venv venv
-            . venv/bin/activate
-            pip install --upgrade pip
-            pip install -r ./install/requirements.txt
-            pip install -r ./install/requirements-tests.txt
-
+      - run: sudo apt install gnupg2 python3-pyqt5 tor
       - run:
           name: Restart tor service
           command: sudo service tor restart
-
+      - checkout
       - run:
-          name: Run tests
+          name: Install Python deps in a venv
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -q --upgrade pip
+            pip install -r ./requirements.txt
+            pip install -r ./requirements-tests.txt
+      - run:
+          name: run tests
           command: |
             . venv/bin/activate
-            python -m pytest -v
+            python setup.py pytest
