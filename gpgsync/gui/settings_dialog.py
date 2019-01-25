@@ -41,6 +41,7 @@ class SettingsLayout(QtWidgets.QVBoxLayout):
     def __init__(self, settings):
         super(SettingsLayout, self).__init__()
         self.settings = settings
+        self.c = self.settings.c
 
         self.run_automatically_checkbox = QtWidgets.QCheckBox("Run GPG Sync automatically on login")
         if self.settings.run_automatically:
