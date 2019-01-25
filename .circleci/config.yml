@@ -27,8 +27,8 @@ jobs:
             python3 -m venv venv
             . venv/bin/activate
             pip install -q --upgrade pip
-            pip install -r ./requirements.txt
-            pip install -r ./requirements-tests.txt
+            pip install -r ./install/requirements.txt
+            pip install -r ./install/requirements-tests.txt
       - run:
           name: run tests
           command: |
