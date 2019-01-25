@@ -12,6 +12,8 @@ Now install some python dependencies with pip (note, there's issues building a .
 
 ```sh
 pip3 install -r requirements.txt
+pip3 install -r requirements-tests.txt
+pip3 install -r requirements-package.txt
 ```
 
 Here's how you run GPG Sync, without having to build an app bundle:
@@ -44,7 +46,9 @@ Open a command prompt, cd to the gpgsync folder, and install dependencies with p
 
 ```cmd
 pip install -r requirements.txt
-pip install pywin32
+pip install -r requirements-tests.txt
+pip install -r requirements-package.txt
+pip install -r requirements-windows.txt
 ```
 
 Install the Qt 5.11.3 from https://www.qt.io/download-open-source/. I downloaded `qt-unified-windows-x86-3.0.6-online.exe`. In the installer, you can skip making an account, and all you need `Qt` > `Qt 5.11.3` > `MSVC 2015 32-bit`.
@@ -140,7 +144,7 @@ make build-debianstretch-deb
 From the `gpgsync` folder run:
 
 ```sh
-pytest
+python setup.py pytest
 ```
 
 Note that one of the tests will fail if you don't have SOCKS5 proxy server listening on port 9050 (e.g. Tor installed).
