@@ -27,15 +27,10 @@ jobs:
             python3 -m venv venv
             . venv/bin/activate
             pip install -q --upgrade pip
-            pip install -q -r ./requirements.txt
+            pip install -r ./install/requirements.txt
+            pip install -r ./install/requirements-tests.txt
       - run:
           name: run tests
           command: |
             . venv/bin/activate
-            mkdir test-reports
-            python setup.py pytest --addopts '--junitxml=test-reports/junit.xml'
-
-      - store_test_results:
-          path: test-reports
-      - store_artifacts:
-          path: test-reports
+            python setup.py pytest
