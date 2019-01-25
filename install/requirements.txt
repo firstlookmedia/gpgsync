@@ -6,7 +6,6 @@ idna==2.8
 macholib==1.11
 packaging==18.0
 pefile==2018.8.8
-PyInstaller==3.4
 pyparsing==2.3.1
 PyQt5==5.11.3
 PyQt5-sip==4.19.13
