@@ -9,7 +9,7 @@ jobs:
     environment:
       FLM_ENV: "test"
     docker:
-      - image: circleci/python:3.7.2
+      - image: circleci/python:3.6
     steps:
       - checkout
 
