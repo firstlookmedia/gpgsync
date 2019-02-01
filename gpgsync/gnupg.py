@@ -30,6 +30,10 @@ class InvalidFingerprint(Exception):
     pass
 
 
+class InvalidKeyserver(Exception):
+    pass
+
+
 class KeyserverError(Exception):
     pass
 
@@ -93,7 +97,10 @@ class GnuPG(object):
     def __del__(self):
         # Delete the temporary homedir
         shutil.rmtree(self.homedir, ignore_errors=True)
-        self.c.log("GnuPG", "__del__", "deleted homedir: {}".format(self.homedir))
+
+        # Commenting out log, because when running tests __del__ seems to run without
+        # capturing output
+        #self.c.log("GnuPG", "__del__", "deleted homedir: {}".format(self.homedir))
 
     def is_gpg_available(self):
         if self.system == 'Windows':
@@ -135,6 +142,9 @@ class GnuPG(object):
 
         args = ['--recv-keys', fp]
         out,err = self._gpg(args)
+
+        if b"could not parse keyserver URL" in err:
+            raise InvalidKeyserver(keyserver)
 
         if b"No keyserver available" in err or b"gpg: keyserver communications error: General error" in err or b"gpgkeys: HTTP fetch error" in out:
             raise KeyserverError(keyserver)

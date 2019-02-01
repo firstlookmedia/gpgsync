@@ -3,9 +3,9 @@ import os
 import subprocess
 import pytest
 
-from gpgsync.gnupg import GnuPG, InvalidFingerprint, KeyserverError, \
-    NotFoundOnKeyserver, NotFoundInKeyring, RevokedKey, ExpiredKey, \
-    VerificationError, BadSignature, SignedWithWrongKey
+from gpgsync.gnupg import GnuPG, InvalidFingerprint, InvalidKeyserver, \
+    KeyserverError, NotFoundOnKeyserver, NotFoundInKeyring, RevokedKey, \
+    ExpiredKey, VerificationError, BadSignature, SignedWithWrongKey
 
 # Test fingerprint
 test_key_fp = b'3B72C32B49CBB5BBDD57440E1D07D43448FB8382'
@@ -28,6 +28,11 @@ def test_gpg_is_available(common):
 def test_gpg_recv_key(common):
     common.gpg.recv_key(b'hkp://keyserver.ubuntu.com', test_key_fp, False, None, None)
     assert common.gpg.get_uid(test_key_fp) == 'GPG Sync Unit Test Key (not secure in any way)'
+
+
+def test_gpg_recv_key_uses_default_keyserver(common):
+    with pytest.raises(InvalidKeyserver):
+        common.gpg.recv_key(None, test_key_fp, False, None, None)
 
 
 def test_gpg_recv_key_invalid_keyserver(common):
