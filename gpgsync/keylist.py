@@ -438,7 +438,7 @@ class Keylist(object):
         for fingerprint in fingerprints_to_fetch:
             try:
                 self.c.log('Keylist', 'refresh_fetch_fingerprints', 'Fetching public key {} {}'.format(self.c.fp_to_keyid(fingerprint).decode(), self.c.gpg.get_uid(fingerprint)))
-                self.c.gpg.recv_key(self.keyserver, fingerprint, self.use_proxy, self.proxy_host, self.proxy_port)
+                self.c.gpg.recv_key(self.get_keyserver(), fingerprint, self.use_proxy, self.proxy_host, self.proxy_port)
             except KeyserverError:
                 return self.result_object('error', 'Keyserver error')
             except InvalidKeyserver:
