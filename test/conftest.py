@@ -20,7 +20,7 @@ qt_app = QtWidgets.QApplication(sys.argv)
 def common():
     appdata_path = tempfile.mkdtemp()
 
-    common = Common(debug=False)
+    common = Common(debug=True)
     common.gpg = GnuPG(common, appdata_path=appdata_path)
     return common
 

@@ -352,6 +352,8 @@ class Keylist(object):
             return self.result_object('error', 'The authority key is expired', data={"reset_last_checked": True})
         except KeyserverError:
             return self.result_object('error', 'Error connecting to keyserver', data={"reset_last_checked": False})
+        except InvalidKeyserver:
+            return self.result_object('error', 'Invalid keyserver', data={"reset_last_checked": False})
 
     def refresh_keylist_uri(self):
         """
@@ -436,9 +438,11 @@ class Keylist(object):
         for fingerprint in fingerprints_to_fetch:
             try:
                 self.c.log('Keylist', 'refresh_fetch_fingerprints', 'Fetching public key {} {}'.format(self.c.fp_to_keyid(fingerprint).decode(), self.c.gpg.get_uid(fingerprint)))
-                self.c.gpg.recv_key(self.keyserver, fingerprint, self.use_proxy, self.proxy_host, self.proxy_port)
+                self.c.gpg.recv_key(self.get_keyserver(), fingerprint, self.use_proxy, self.proxy_host, self.proxy_port)
             except KeyserverError:
                 return self.result_object('error', 'Keyserver error')
+            except InvalidKeyserver:
+                return self.result_object('error', 'Invalid keyserver')
             except NotFoundOnKeyserver:
                 notfound_fingerprints.append(fingerprint)
 
