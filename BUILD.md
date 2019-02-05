@@ -11,9 +11,9 @@ Install Qt 5.11.3 from https://www.qt.io/download-open-source/. I downloaded `qt
 Now install some python dependencies with pip (note, there's issues building a .app if you install this in a virtualenv):
 
 ```sh
-pip3 install -r requirements.txt
-pip3 install -r requirements-tests.txt
-pip3 install -r requirements-package.txt
+pip3 install -r install/requirements.txt
+pip3 install -r install/requirements-tests.txt
+pip3 install -r install/requirements-package.txt
 ```
 
 Here's how you run GPG Sync, without having to build an app bundle:
@@ -45,10 +45,11 @@ Download Python 3.7.2, 32-bit (x86) from https://www.python.org/downloads/releas
 Open a command prompt, cd to the gpgsync folder, and install dependencies with pip:
 
 ```cmd
-pip install -r requirements.txt
-pip install -r requirements-tests.txt
-pip install -r requirements-package.txt
-pip install -r requirements-windows.txt
+pip install -r install\requirements.txt
+pip install -r install\requirements-tests.txt
+pip install -r install\requirements-windows.txt
+# skip this if you're building for distribution
+pip install -r install\requirements-package.txt
 ```
 
 Install the Qt 5.11.3 from https://www.qt.io/download-open-source/. I downloaded `qt-unified-windows-x86-3.0.6-online.exe`. In the installer, you can skip making an account, and all you need `Qt` > `Qt 5.11.3` > `MSVC 2015 32-bit`.
@@ -74,6 +75,77 @@ Add the following directories to the path:
 * `C:\Users\user\AppData\Local\Programs\Python\Python37-32\Lib\site-packages\PyQt5\Qt\bin`
 
 Finally, open a command prompt, cd into the gpgsync directory, and type: `pyinstaller install\pyinstaller.spec`. `gpgsync.exe` and all of their supporting files will get created inside the `dist` folder.
+
+### If you want the .exe to not get falsely flagged as malicious by anti-virus software
+
+GPG Sync uses PyInstaller to turn the python source code into Windows executable `.exe` file. Apparently, malware developers also use PyInstaller, and some anti-virus vendors have included snippets of PyInstaller code in their virus definitions. To avoid this, you have to compile the Windows PyInstaller bootloader yourself instead of using the pre-compiled one that comes with PyInstaller.
+
+(If you don't care about this, you can install PyInstaller with `pip install PyInstaller==3.4`.)
+
+Here's how to compile the PyInstaller bootloader:
+
+Download and install [Microsoft Build Tools for Visual Studio 2017](https://www.visualstudio.com/downloads/#build-tools-for-visual-studio-2017). I downloaded `vs_buildtools.exe`. In the installer, check the box next to "Visual C++ build tools". Click "Individual components", and under "Compilers, build tools and runtimes", check "Windows Universal CRT SDK". Then click install. When installation is done, you may have to reboot your computer.
+
+Then, enable the 32-bit Visual C++ Toolset on the Command Line like this:
+
+```
+cd "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build"
+vcvars32.bat
+```
+
+Make sure you have a new enough `setuptools`:
+
+```
+pip install setuptools==40.6.3
+```
+
+Now make sure you don't have PyInstaller installed from pip:
+
+```
+pip uninstall PyInstaller
+rmdir C:\Users\user\AppData\Local\Programs\Python\Python37-32\Lib\site-packages\PyInstaller /S
+```
+
+Change to a folder where you keep source code, and clone the PyInstaller git repo:
+
+```
+git clone https://github.com/pyinstaller/pyinstaller.git
+```
+
+To verify the git tag, you first need the signing key's PGP key, which means you need `gpg`. If you installed git from git-scm.com, you can run this from Git Bash:
+
+```
+gpg --keyserver hkps://keyserver.ubuntu.com:443 --recv-key 0xD4AD8B9C167B757C4F08E8777B752811BF773B65
+```
+
+And now verify the tag:
+
+```
+cd pyinstaller
+git tag -v v3.4
+```
+
+It should say `Good signature from "Hartmut Goebel <h.goebel@goebel-consult.de>`. If it verified successfully, checkout the tag:
+
+```
+git checkout v3.4
+```
+
+And compile the bootloader, following [these instructions](https://pythonhosted.org/PyInstaller/bootloader-building.html). To compile, run this:
+
+```
+cd bootloader
+python waf distclean all --target-arch=32bit --msvc_targets=x86
+```
+
+Finally, install the PyInstaller module into your local site-packages:
+
+```
+cd ..
+python setup.py install
+```
+
+Now the next time you use PyInstaller to build GPG Sync, the `.exe` file should not be flagged as malicious by anti-virus.
 
 ### To build the installer:
 
