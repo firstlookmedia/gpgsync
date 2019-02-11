@@ -1,13 +1,13 @@
 # GPG Sync Changelog
 
-## 0.3.0
+## 0.3
 
 * Support for the new Keylist RFC file format. For more information see:
   * https://code.firstlook.media/keylist-rfc-explainer
   * https://datatracker.ietf.org/doc/draft-mccain-keylist/
   * https://github.com/firstlookmedia/keylist-rfc
 
-## 0.2.0
+## 0.2
 
 * Ported to Windows!
 * Completely redesigned the user interface
@@ -30,6 +30,6 @@
 * Allow Mac users to use any gpg2, not just from GPG Tools
 * Various bug fixes
 
-## 0.1.0
+## 0.1
 
 * First release
