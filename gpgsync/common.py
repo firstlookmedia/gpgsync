@@ -40,12 +40,12 @@ class Common(object):
     def __init__(self, debug):
         self.debug = debug
 
+        # Define the OS
+        self.os = platform.system()
+
         # Version of GPG Sync
         version_file = self.get_resource_path('version')
         self.version = parse(open(version_file).read().strip())
-
-        # Define the OS
-        self.os = platform.system()
 
         # Load settings
         self.settings = Settings(self)
