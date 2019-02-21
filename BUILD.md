@@ -25,7 +25,7 @@ Here's how you run GPG Sync, without having to build an app bundle:
 Here's how you build an app bundle:
 
 ```sh
-install/build_osx.sh
+install/build_pkg.sh
 ```
 
 Now you should have `dist/GPG Sync.app`.
@@ -33,7 +33,7 @@ Now you should have `dist/GPG Sync.app`.
 To codesign and build a .pkg for distribution:
 
 ```sh
-install/build_osx.sh --release
+install/build_pkg.sh --release
 ```
 
 Now you should have `dist/GPG Sync.pkg`.
