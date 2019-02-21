@@ -30,10 +30,8 @@ if [ "$1" = "--release" ]; then
   pkgbuild --sign "$IDENTITY_NAME_INSTALLER" --root "$DIST_PATH" --component-plist install/macos-packaging/gpgsync-component.plist --scripts install/macos-packaging/scripts "$PKG_PATH"
   productbuild --sign "$IDENTITY_NAME_INSTALLER" --package "$PKG_PATH" "$PRODUCT_PATH"
 
-  #productbuild --sign "$IDENTITY_NAME_INSTALLER" --component "$APP_PATH" /Applications "$PKG_PATH"
-
   echo "Cleaning up"
-  rm -rf "$APP_PATH"
+  rm -rf "$APP_PATH" "$PKG_PATH"
 
   echo "All done, your installer is in: $PRODUCT_PATH"
 fi

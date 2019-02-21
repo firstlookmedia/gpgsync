@@ -36,7 +36,7 @@ To codesign and build a .pkg for distribution:
 install/build_pkg.sh --release
 ```
 
-Now you should have `dist/GPG Sync.pkg`.
+Now you should have `dist/GPG Sync-{version}.pkg`.
 
 ## Windows
 
