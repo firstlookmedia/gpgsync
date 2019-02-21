@@ -18,7 +18,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+import platform
 from PyQt5 import QtCore, QtWidgets, QtGui
+
+# macOS only
+if platform.system() == 'Darwin':
+    from Foundation import NSUserDefaults
 
 
 class GuiCommon(object):
@@ -31,8 +36,14 @@ class GuiCommon(object):
         # Preload icons
         self.icon = QtGui.QIcon(self.c.get_resource_path('gpgsync.png'))
         if self.c.os == 'Darwin':
-            self.systray_icon = QtGui.QIcon(self.c.get_resource_path('gpgsync-bw.png'))
-            self.systray_syncing_icon = QtGui.QIcon(self.c.get_resource_path('syncing-bw.png'))
+            # Detect dark mode in macOS Mojova
+            # See: https://stackoverflow.com/a/54701363
+            if NSUserDefaults.standardUserDefaults().stringForKey_('AppleInterfaceStyle') == 'Dark':
+                self.systray_icon = QtGui.QIcon(self.c.get_resource_path('gpgsync-bw-dark.png'))
+                self.systray_syncing_icon = QtGui.QIcon(self.c.get_resource_path('syncing-bw-dark.png'))
+            else:
+                self.systray_icon = QtGui.QIcon(self.c.get_resource_path('gpgsync-bw-light.png'))
+                self.systray_syncing_icon = QtGui.QIcon(self.c.get_resource_path('syncing-bw-light.png'))
         else:
             self.systray_icon = QtGui.QIcon(self.c.get_resource_path('gpgsync.png'))
             self.systray_syncing_icon = QtGui.QIcon(self.c.get_resource_path('syncing.png'))

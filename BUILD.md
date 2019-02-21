@@ -13,6 +13,7 @@ Now install some python dependencies with pip (note, there's issues building a .
 ```sh
 pip3 install -r install/requirements.txt
 pip3 install -r install/requirements-tests.txt
+pip3 install -r install/requirements-macos.txt
 pip3 install -r install/requirements-package.txt
 ```
 
