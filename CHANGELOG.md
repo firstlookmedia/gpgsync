@@ -1,5 +1,12 @@
 # GPG Sync Changelog
 
+## 0.3.1
+
+* Improve macOS packaging
+* Support for macOS Mojave dark theme
+* Fixed bug in Linux that caused a crash
+* Allow window to expand to fit large authority key names
+
 ## 0.3
 
 * Support for the new Keylist RFC file format. For more information see:
