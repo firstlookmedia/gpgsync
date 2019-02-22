@@ -28,6 +28,12 @@ To learn how GPG Sync works and how to use it, check out the [Wiki](https://gith
 
 Download macOS and Windows binaries from the [Releases](https://github.com/firstlookmedia/gpgsync/releases) page.
 
+macOS users can also use [Homebrew](https://brew.sh/):
+
+```sh
+brew cask install gpg-sync
+```
+
 Linux users should follow these [simple instructions](https://github.com/firstlookmedia/gpgsync/blob/master/BUILD.md#linux-distributions) to build GPG Sync from source.
 
 ## Test Status
