@@ -1,5 +1,9 @@
 # GPG Sync Changelog
 
+## 0.3.2
+
+* Improve macOS packaging
+
 ## 0.3.1
 
 * Improve macOS packaging
