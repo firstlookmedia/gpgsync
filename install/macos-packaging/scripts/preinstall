@@ -1,2 +1,3 @@
 #!/bin/sh
 osascript -e 'quit app "GPG Sync"'
+exit 0
