@@ -1,3 +1,5 @@
-#!/bin/sh
+#!/bin/bash
 open -a "GPG Sync"
+
+# Always return with success
 exit 0
