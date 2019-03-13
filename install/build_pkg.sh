@@ -17,8 +17,18 @@ echo "Building the app bundle"
 pyinstaller install/pyinstaller.spec --clean
 
 if [ "$1" = "--release" ]; then
-  APP_PATH="$DIST_PATH/GPG Sync.app"
+  DIST_ROOT_PATH="$DIST_PATH/root"
+  DIST_APPLICATIONS_PATH="$DIST_ROOT_PATH/Applications"
+  APP_PATH="$DIST_APPLICATIONS_PATH/GPG Sync.app"
+
+  mkdir -p "$DIST_APPLICATIONS_PATH"
+  mv "$DIST_PATH/GPG Sync.app" "$APP_PATH"
+
+  SCRIPTS_PATH="$ROOT/install/macos-packaging/scripts"
+  COMPONENT_PLIST_PATH="$ROOT/install/macos-packaging/gpgsync-component.plist"
+  COMPONENT_PATH="$DIST_PATH/GPGSyncComponent.pkg"
   PKG_PATH="$DIST_PATH/GPGSync-$VERSION.pkg"
+
   IDENTITY_NAME_APPLICATION="Developer ID Application: FIRST LOOK PRODUCTIONS, INC."
   IDENTITY_NAME_INSTALLER="Developer ID Installer: FIRST LOOK PRODUCTIONS, INC."
 
@@ -26,23 +36,48 @@ if [ "$1" = "--release" ]; then
   codesign --deep -s "$IDENTITY_NAME_APPLICATION" "$APP_PATH"
 
   echo "Creating an installer"
-  productbuild --sign "$IDENTITY_NAME_INSTALLER" --scripts "$SCRIPTS_PATH" --component "$APP_PATH" /Applications "$PKG_PATH"
+  pkgbuild \
+    --sign "$IDENTITY_NAME_INSTALLER" \
+    --root "$DIST_ROOT_PATH" \
+    --component-plist "$COMPONENT_PLIST_PATH" \
+    --scripts "$SCRIPTS_PATH" \
+    "$COMPONENT_PATH"
+  productbuild \
+    --sign "$IDENTITY_NAME_INSTALLER" \
+    --package "$COMPONENT_PATH" \
+    "$PKG_PATH"
 
   echo "Cleaning up"
-  rm -rf "$APP_PATH"
+  rm -rf "$COMPONENT_PATH" "$DIST_ROOT_PATH" "$DIST_PATH/gpgsync"
 
   echo "All done, your installer is in: $PKG_PATH"
 fi
 
 if [ "$1" = "--release-without-codesigning" ]; then
-  APP_PATH="$DIST_PATH/GPG Sync.app"
+  DIST_ROOT_PATH="$DIST_PATH/root"
+  DIST_APPLICATIONS_PATH="$DIST_ROOT_PATH/Applications"
+  APP_PATH="$DIST_APPLICATIONS_PATH/GPG Sync.app"
+
+  mkdir -p "$DIST_APPLICATIONS_PATH"
+  mv "$DIST_PATH/GPG Sync.app" "$APP_PATH"
+
+  SCRIPTS_PATH="$ROOT/install/macos-packaging/scripts"
+  COMPONENT_PLIST_PATH="$ROOT/install/macos-packaging/gpgsync-component.plist"
+  COMPONENT_PATH="$DIST_PATH/GPGSyncComponent.pkg"
   PKG_PATH="$DIST_PATH/GPGSync-$VERSION.pkg"
 
   echo "Creating an installer"
-  productbuild --scripts "$SCRIPTS_PATH" --component "$APP_PATH" /Applications "$PKG_PATH"
+  pkgbuild \
+    --root "$DIST_ROOT_PATH" \
+    --component-plist "$COMPONENT_PLIST_PATH" \
+    --scripts "$SCRIPTS_PATH" \
+    "$COMPONENT_PATH"
+  productbuild \
+    --package "$COMPONENT_PATH" \
+    "$PKG_PATH"
 
   echo "Cleaning up"
-  rm -rf "$APP_PATH"
+  rm -rf "$COMPONENT_PATH" "$DIST_ROOT_PATH" "$DIST_PATH/gpgsync"
 
   echo "All done, your installer is in: $PKG_PATH"
 fi

@@ -1,9 +1,11 @@
 #!/bin/bash
+
+# Quit GPG Sync
 osascript -e 'quit app "GPG Sync"'
 
-# A bug in GPG Sync 0.3.2 caused the macOS installer to place extra files in /,
+# A bug in GPG Sync 0.3.2 (#165) caused the macOS installer to place extra files in /,
 # so this deletes them if necessary
-rm -rf "/GPG Sync.app" "/GPGSync.pkg" "/gpgsync" 2> /dev/null
+rm -rf "/GPGSync.pkg" "/gpgsync" 2> /dev/null
 
 # Always return with success
 exit 0

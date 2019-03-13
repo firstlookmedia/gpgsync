@@ -1,4 +1,12 @@
 #!/bin/bash
+
+# A bug in GPG Sync 0.3.2 (#165) caused the macOS installer to place "GPG Sync.app"
+# in /, so if it's there, move it
+if [ -d "/GPG Sync.app" ]; then
+  mv "/GPG Sync.app" "/Applications/GPG Sync.app"
+fi
+
+# Launch GPG Sync
 open -a "GPG Sync"
 
 # Always return with success
