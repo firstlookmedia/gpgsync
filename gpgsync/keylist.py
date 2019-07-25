@@ -344,7 +344,7 @@ class Keylist(object):
             self.c.log('Keylist', 'validate_authority_key', 'keyserver={}'.format(keyserver))
 
             # Retreive the authority key from the keyserver
-            self.c.gpg.recv_key(keyserver, self.fingerprint, self.use_proxy, self.proxy_host, self.proxy_port)
+            self.c.gpg.recv_key(self.use_modern_keyserver, keyserver, self.fingerprint, self.use_proxy, self.proxy_host, self.proxy_port)
 
             # Test the key for issues
             self.c.gpg.test_key(self.fingerprint)
@@ -451,7 +451,7 @@ class Keylist(object):
         for fingerprint in fingerprints_to_fetch:
             try:
                 self.c.log('Keylist', 'refresh_fetch_fingerprints', 'Fetching public key {} {}'.format(self.c.fp_to_keyid(fingerprint).decode(), self.c.gpg.get_uid(fingerprint)))
-                self.c.gpg.recv_key(self.get_keyserver(), fingerprint, self.use_proxy, self.proxy_host, self.proxy_port)
+                self.c.gpg.recv_key(self.use_modern_keyserver, self.get_keyserver(), fingerprint, self.use_proxy, self.proxy_host, self.proxy_port)
             except KeyserverError:
                 return self.result_object('error', 'Keyserver error')
             except InvalidKeyserver:

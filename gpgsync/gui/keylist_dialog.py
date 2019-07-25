@@ -66,7 +66,7 @@ class KeylistDialog(QtWidgets.QDialog):
 
         # SOCKS5 proxy settings
         self.use_proxy = QtWidgets.QCheckBox()
-        self.use_proxy.setText("Load URL through SOCKS5 proxy (e.g. Tor)")
+        self.use_proxy.setText("Load URL through Tor (Tor daemon not included)")
         self.use_proxy.setCheckState(QtCore.Qt.Unchecked)
         proxy_host_label = QtWidgets.QLabel('Host')
         self.proxy_host_edit = QtWidgets.QLineEdit()
@@ -80,7 +80,7 @@ class KeylistDialog(QtWidgets.QDialog):
         proxy_vlayout = QtWidgets.QVBoxLayout()
         proxy_vlayout.addWidget(self.use_proxy)
         proxy_vlayout.addLayout(proxy_hlayout)
-        proxy_group = QtWidgets.QGroupBox("Proxy Configuration")
+        proxy_group = QtWidgets.QGroupBox("Tor Configuration")
         proxy_group.setLayout(proxy_vlayout)
 
         # Advanced settings button
