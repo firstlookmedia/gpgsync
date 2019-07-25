@@ -29,7 +29,7 @@ import socket
 from urllib.parse import urlparse
 from packaging.version import parse
 
-from .gnupg import GnuPG
+from .gnupg import GnuPG, NotFoundOnKeyserver, KeyserverError
 from .settings import Settings
 
 
@@ -147,3 +147,32 @@ class Common(object):
             pass
 
         return False
+
+    def vks_get_by_fingerprint(self, fp, use_proxy, proxy_host, proxy_port):
+        """
+        Download a public key from keys.openssl.org using the VKS interface:
+        https://keys.openpgp.org/about/api
+        """
+        if use_proxy:
+            api_endpoint = 'http://zkaan2xfbuxia2wpf7ofnkbz6r5zdbbvxbunvp5g2iebopbfc4iqmbad.onion/vks/v1'
+
+            socks5_address = 'socks5h://{}:{}'.format(proxy_host.decode(), proxy_port.decode())
+            proxies = {
+                'https': socks5_address,
+                'http': socks5_address
+            }
+        else:
+            api_endpoint = 'https://keys.openpgp.org/vks/v1'
+            proxies = None
+
+        # Fetch the key by fingerprint
+        r = self.requests_get("{}/by-fingerprint/{}".format(api_endpoint, fp), proxies)
+        self.log("Common", "vks_get_by_fingerprint", "{} GET /by-fingerprint/{}".format(r.status_code, fp))
+
+        if r.status_code == 404:
+            raise NotFoundOnKeyserver(fp)
+        if r.status_code != 200:
+            raise KeyserverError("keys.openpgp.org: {}".format(r.text))
+
+        # Return the ASCII-armored public key, in bytes
+        return r.content

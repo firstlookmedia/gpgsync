@@ -115,7 +115,10 @@ class GnuPG(object):
                 return False
 
     def recv_key(self, use_modern_keyserver, keyserver, fp, use_proxy, proxy_host, proxy_port):
-        self.c.log("GnuPG", "recv_key", "keyserver={}, fp={}, use_proxy={}, proxy_host={}, proxy_port={}".format(keyserver, fp, use_proxy, proxy_host, proxy_port))
+        if use_modern_keyserver:
+            self.c.log("GnuPG", "recv_key", "using modern keyserver, fp={}, use_proxy={}".format(fp, use_proxy))
+        else:
+            self.c.log("GnuPG", "recv_key", "using legacy keyserver, keyserver={}, fp={}, use_proxy={}".format(keyserver, fp, use_proxy))
 
         if not self.c.valid_fp(fp):
             raise InvalidFingerprint(fp)
@@ -123,9 +126,8 @@ class GnuPG(object):
         fp = self.c.clean_fp(fp).decode()
 
         if use_modern_keyserver:
-            # Use keys.openpgp.org
-            # https://keys.openpgp.org/about/api
-            pass
+            pubkey = self.c.vks_get_by_fingerprint(fp, use_proxy, proxy_host, proxy_port)
+            self.import_to_default_homedir(pubkey=pubkey)
 
         else:
             # Use legacy SKS keyserver
@@ -164,7 +166,7 @@ class GnuPG(object):
                 raise KeyserverError(keyserver)
 
             # Import key into default homedir
-            self.import_to_default_homedir(fp)
+            self.import_to_default_homedir(fp=fp)
 
     def get_pubkey_filename_on_disk(self, fp):
         fp = self.c.clean_fp(fp).decode()
@@ -328,24 +330,31 @@ class GnuPG(object):
             return fp
         return b'0x' + fp[-16:]
 
-    def import_to_default_homedir(self, fp):
-        self.c.log("GnuPG", "import_to_default_homedir", "fp={}".format(fp))
+    def import_to_default_homedir(self, fp=None, pubkey=None):
+        """
+        If fp is passed in, export the pubkey from the temporary homedir. If pubkey is passed in,
+        just import that pubkey directly.
+        """
+        #self.c.log("GnuPG", "import_to_default_homedir", "fp={}, pubkey={}".format(fp, pubkey))
 
-        # Export public key from the temporary homedir
-        out,err = self._gpg(['--armor', '--export', fp])
-        pubkey = out
+        if fp is not None:
+            # Export public key from the temporary homedir
+            out,err = self._gpg(['--armor', '--export', fp])
+            pubkey = out
+
+            if b'gpg: WARNING: nothing exported' in err:
+                return
 
         # Import public key into default homedir
-        if not b'gpg: WARNING: nothing exported' in err:
-            p = subprocess.Popen([self.gpg_path, '--import'],
-                stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE,
-                startupinfo=self.popen_startupinfo)
-            (out, err) = p.communicate(pubkey)
+        p = subprocess.Popen([self.gpg_path, '--import'],
+            stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE,
+            startupinfo=self.popen_startupinfo)
+        (out, err) = p.communicate(pubkey)
 
-            if out != '':
-                self.c.log("GnuPG", "import_to_default_homedir", "stdout: {}".format(out))
-            if err != '':
-                self.c.log("GnuPG", "import_to_default_homedir", "stderr: {}".format(err))
+        if out != b'':
+            self.c.log("GnuPG", "import_to_default_homedir", "stdout: {}".format(out))
+        if err != b'':
+            self.c.log("GnuPG", "import_to_default_homedir", "stderr: {}".format(err))
 
     def _gpg(self, args, input=None):
         default_args = [self.gpg_path, '--batch', '--no-tty', '--homedir', self.homedir]
