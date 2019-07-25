@@ -94,6 +94,7 @@ class Keylist(object):
 
         self.fingerprint = b''
         self.url = b''
+        self.use_modern_keyserver = True
         self.keyserver = None
         self.use_proxy = False
         self.proxy_host = b'127.0.0.1'
@@ -118,26 +119,38 @@ class Keylist(object):
         """
         Acts as a secondary constructor to load an keylist from settings
         """
-        self.fingerprint = str.encode(e['fingerprint'])
-        self.url = str.encode(e['url'])
-        self.keyserver = str.encode(e['keyserver'])
-        self.use_proxy = e['use_proxy']
-        self.proxy_host = str.encode(e['proxy_host'])
-        self.proxy_port = str.encode(e['proxy_port'])
-        self.last_checked = (date_parser.parse(e['last_checked']) if e['last_checked'] is not None else None)
-        self.last_synced = (date_parser.parse(e['last_synced']) if e['last_synced'] is not None else None)
-        self.last_failed = (date_parser.parse(e['last_failed']) if e['last_failed'] is not None else None)
-        self.error = e['error']
-        self.warning = e['warning']
+        if 'fingerprint' in e:
+            self.fingerprint = str.encode(e['fingerprint'])
+        if 'url' in e:
+            self.url = str.encode(e['url'])
+        if 'use_modern_keyserver' in e:
+            self.use_modern_keyserver = e['use_modern_keyserver']
+        if 'keyserver' in e:
+            self.keyserver = str.encode(e['keyserver'])
+        if 'use_proxy' in e:
+            self.use_proxy = e['use_proxy']
+        if 'proxy_host' in e:
+            self.proxy_host = str.encode(e['proxy_host'])
+        if 'proxy_port' in e:
+            self.proxy_port = str.encode(e['proxy_port'])
+        if 'last_checked' in e:
+            self.last_checked = (date_parser.parse(e['last_checked']) if e['last_checked'] is not None else None)
+        if 'last_synced' in e:
+            self.last_synced = (date_parser.parse(e['last_synced']) if e['last_synced'] is not None else None)
+        if 'last_failed' in e:
+            self.last_failed = (date_parser.parse(e['last_failed']) if e['last_failed'] is not None else None)
+        if 'error' in e:
+            self.error = e['error']
+        if 'warning' in e:
+            self.warning = e['warning']
         return self
 
     def serialize(self):
         tmp = {}
 
         # Serialize only the attributes that should persist
-        keys = ['fingerprint', 'url', 'keyserver', 'use_proxy',  'proxy_host',
-                'proxy_port', 'last_checked', 'last_synced', 'last_failed',
-                'error', 'warning']
+        keys = ['fingerprint', 'url', 'use_modern_keylist', 'keyserver', 'use_proxy', 'proxy_host',
+                'proxy_port', 'last_checked', 'last_synced', 'last_failed', 'error', 'warning']
         for k, v in self.__dict__.items():
             if k in keys:
                 if isinstance(v, bytes):
