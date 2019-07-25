@@ -26,24 +26,23 @@ def test_gpg_is_available(common):
 
 
 def test_gpg_recv_key(common):
-    common.gpg.recv_key(b'hkp://keyserver.ubuntu.com', test_key_fp, False, None, None)
+    common.gpg.recv_key(False, b'hkp://keyserver.ubuntu.com', test_key_fp, False, None, None)
     assert common.gpg.get_uid(test_key_fp) == 'GPG Sync Unit Test Key (not secure in any way)'
 
 
 def test_gpg_recv_key_uses_default_keyserver(common):
     with pytest.raises(InvalidKeyserver):
-        common.gpg.recv_key(None, test_key_fp, False, None, None)
+        common.gpg.recv_key(False, None, test_key_fp, False, None, None)
 
 
 def test_gpg_recv_key_invalid_keyserver(common):
     with pytest.raises(KeyserverError):
-        common.gpg.recv_key(b'hkp://fakekeyserver', test_key_fp, False, None, None)
+        common.gpg.recv_key(False, b'hkp://fakekeyserver', test_key_fp, False, None, None)
 
 
 def test_gpg_recv_key_not_found_on_keyserver(common):
     with pytest.raises(NotFoundOnKeyserver):
-        common.gpg.recv_key(b'hkp://keyserver.ubuntu.com', b'0000000000000000000000000000000000000000', False, None, None)
-
+        common.gpg.recv_key(False, b'hkp://keyserver.ubuntu.com', b'0000000000000000000000000000000000000000', False, None, None)
 
 def test_gpg_test_key_invalid_fingerprint(common):
     with pytest.raises(InvalidFingerprint):
