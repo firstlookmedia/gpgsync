@@ -37,17 +37,17 @@ def main():
 
     # Parse arguments
     parser = argparse.ArgumentParser(formatter_class=lambda prog: argparse.HelpFormatter(prog,max_help_position=48))
-    parser.add_argument('--debug', action='store_true', dest='debug', help="Log debug output to stdout")
+    parser.add_argument('--verbose', '-v', action='store_true', dest='verbose', help="Show lots of output, useful for debugging")
     parser.add_argument('--sync', action='store_true', dest='sync', help="Sync all keylists without loading the GUI")
     parser.add_argument('--force', action='store_true', dest='force', help="If syncing without the GUI, force sync again even if it has synced recently")
     args = parser.parse_args()
 
-    debug = args.debug
+    verbose = args.verbose
     sync = args.sync
     force = args.force
 
     # Create the common object
-    common = Common(debug)
+    common = Common(verbose)
 
     # If we only want to sync keylists
     if sync:

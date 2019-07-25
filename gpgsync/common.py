@@ -37,8 +37,8 @@ class Common(object):
     """
     The Common class is a singleton of shared functionality throughout the app
     """
-    def __init__(self, debug):
-        self.debug = debug
+    def __init__(self, verbose):
+        self.verbose = verbose
 
         # Define the OS
         self.os = platform.system()
@@ -54,7 +54,7 @@ class Common(object):
         self.gpg = GnuPG(self, appdata_path=self.settings.get_appdata_path())
 
     def log(self, module, func, msg=''):
-        if self.debug:
+        if self.verbose:
             final_msg = "[{}] {}".format(module, func)
             if msg:
                 final_msg = "{}: {}".format(final_msg, msg)
