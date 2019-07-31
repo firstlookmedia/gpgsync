@@ -22,7 +22,7 @@ internet standard draft.
 
 ### Important note about keyservers
 
-By default, GPG Sync downloads PGP public keys from the [keys.openpgp.org](https://keys.openpgp.org/about), a modern keyserver that is resistent against abuse. (The old SKS keyserver pool is vulnerable to [certificate flooding](https://dkg.fifthhorseman.net/blog/openpgp-certificate-flooding.html) attacks, and it's based on unmaintained software that will likely never get fixed.)
+By default, GPG Sync downloads PGP public keys from the [keys.openpgp.org](https://keys.openpgp.org/about), a modern abuse-resistent keyserver. (The old SKS keyserver pool is vulnerable to [certificate flooding](https://dkg.fifthhorseman.net/blog/openpgp-certificate-flooding.html) attacks, and it's based on unmaintained software that will likely never get fixed.)
 
 For this reason, **it's important that your authority key, as well as every key on your keylist, has a user ID that contains an email address** and that **all users must opt-in to allowing their email addresses** on this keyserver. You can opt-in by uploading your public key [here](https://keys.openpgp.org/upload), requesting to verify each email address on it, and then clicking the links you receive in those verification emails.
 
