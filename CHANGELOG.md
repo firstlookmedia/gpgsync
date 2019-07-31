@@ -1,5 +1,11 @@
 # GPG Sync Changelog
 
+## 0.3.4
+
+* Uses modern keyserver, keys.openpgp.org, by default
+* Upgrades depdendencies
+* Renames --debug to --verbose, -v
+
 ## 0.3.3
 
 * Improve macOS packaging (again)
