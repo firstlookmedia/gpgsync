@@ -114,49 +114,59 @@ class GnuPG(object):
             except:
                 return False
 
-    def recv_key(self, keyserver, fp, use_proxy, proxy_host, proxy_port):
-        self.c.log("GnuPG", "recv_key", "keyserver={}, fp={}, use_proxy={}, proxy_host={}, proxy_port={}".format(keyserver, fp, use_proxy, proxy_host, proxy_port))
+    def recv_key(self, use_modern_keyserver, keyserver, fp, use_proxy, proxy_host, proxy_port):
+        if use_modern_keyserver:
+            self.c.log("GnuPG", "recv_key", "using modern keyserver, fp={}, use_proxy={}".format(fp, use_proxy))
+        else:
+            self.c.log("GnuPG", "recv_key", "using legacy keyserver, keyserver={}, fp={}, use_proxy={}".format(keyserver, fp, use_proxy))
 
         if not self.c.valid_fp(fp):
             raise InvalidFingerprint(fp)
 
         fp = self.c.clean_fp(fp).decode()
-        keyserver = self.c.clean_keyserver(keyserver).decode()
 
-        hkps_pool_keyserver = 'hkps://hkps.pool.sks-keyservers.net'
-        ca_cert_file = self.c.get_resource_path('sks-keyservers.netCA.pem')
+        if use_modern_keyserver:
+            pubkey = self.c.vks_get_by_fingerprint(fp, use_proxy, proxy_host, proxy_port)
+            self.import_to_default_homedir(pubkey=pubkey)
 
-        # Create gpg.conf and dirmngr.conf
-        dirmngr_conf = ''
-        gpg_conf = 'require-cross-certification\n'
-        gpg_conf += 'keyserver {}\n'.format(keyserver)
-        if keyserver == hkps_pool_keyserver:
-            # Don't need to add ca_cert_file in OS X, because GPG Tools includes the
-            # correct .pem for hkps://hkps.pool.sks-keyservers.net, and specifying it
-            # breaks because of a space in the filename (in "GPG Sync.app")
-            if not self.system == 'Darwin':
-                gpg_conf += 'keyserver-options ca-cert-file={}\n'.format(ca_cert_file)
-                dirmngr_conf += 'hkp-cacert {}\n'.format(ca_cert_file)
-        open(os.path.join(self.homedir, 'dirmngr.conf'), 'w').write(dirmngr_conf)
-        open(os.path.join(self.homedir, 'gpg.conf'), 'w').write(gpg_conf)
+        else:
+            # Use legacy SKS keyserver
+            keyserver = self.c.clean_keyserver(keyserver).decode()
 
-        args = ['--recv-keys', fp]
-        out,err = self._gpg(args)
+            hkps_pool_keyserver = 'hkps://hkps.pool.sks-keyservers.net'
+            ca_cert_file = self.c.get_resource_path('sks-keyservers.netCA.pem')
 
-        if b"could not parse keyserver URL" in err:
-            raise InvalidKeyserver(keyserver)
+            # Create gpg.conf and dirmngr.conf
+            dirmngr_conf = ''
+            gpg_conf = 'require-cross-certification\n'
+            gpg_conf += 'keyserver {}\n'.format(keyserver)
+            if keyserver == hkps_pool_keyserver:
+                # Don't need to add ca_cert_file in OS X, because GPG Tools includes the
+                # correct .pem for hkps://hkps.pool.sks-keyservers.net, and specifying it
+                # breaks because of a space in the filename (in "GPG Sync.app")
+                if not self.system == 'Darwin':
+                    gpg_conf += 'keyserver-options ca-cert-file={}\n'.format(ca_cert_file)
+                    dirmngr_conf += 'hkp-cacert {}\n'.format(ca_cert_file)
+            open(os.path.join(self.homedir, 'dirmngr.conf'), 'w').write(dirmngr_conf)
+            open(os.path.join(self.homedir, 'gpg.conf'), 'w').write(gpg_conf)
 
-        if b"No keyserver available" in err or b"gpg: keyserver communications error: General error" in err or b"gpgkeys: HTTP fetch error" in out:
-            raise KeyserverError(keyserver)
+            args = ['--recv-keys', fp]
+            out,err = self._gpg(args)
 
-        if b"not found on keyserver" in err or b"keyserver receive failed: No data" in err or b"no valid OpenPGP data found" in err:
-            raise NotFoundOnKeyserver(fp)
+            if b"could not parse keyserver URL" in err:
+                raise InvalidKeyserver(keyserver)
 
-        if b"keyserver receive failed" in err:
-            raise KeyserverError(keyserver)
+            if b"No keyserver available" in err or b"gpg: keyserver communications error: General error" in err or b"gpgkeys: HTTP fetch error" in out:
+                raise KeyserverError(keyserver)
 
-        # Import key into default homedir
-        self.import_to_default_homedir(fp)
+            if b"not found on keyserver" in err or b"keyserver receive failed: No data" in err or b"no valid OpenPGP data found" in err:
+                raise NotFoundOnKeyserver(fp)
+
+            if b"keyserver receive failed" in err:
+                raise KeyserverError(keyserver)
+
+            # Import key into default homedir
+            self.import_to_default_homedir(fp=fp)
 
     def get_pubkey_filename_on_disk(self, fp):
         fp = self.c.clean_fp(fp).decode()
@@ -320,24 +330,31 @@ class GnuPG(object):
             return fp
         return b'0x' + fp[-16:]
 
-    def import_to_default_homedir(self, fp):
-        self.c.log("GnuPG", "import_to_default_homedir", "fp={}".format(fp))
+    def import_to_default_homedir(self, fp=None, pubkey=None):
+        """
+        If fp is passed in, export the pubkey from the temporary homedir. If pubkey is passed in,
+        just import that pubkey directly.
+        """
+        #self.c.log("GnuPG", "import_to_default_homedir", "fp={}, pubkey={}".format(fp, pubkey))
 
-        # Export public key from the temporary homedir
-        out,err = self._gpg(['--armor', '--export', fp])
-        pubkey = out
+        if fp is not None:
+            # Export public key from the temporary homedir
+            out,err = self._gpg(['--armor', '--export', fp])
+            pubkey = out
+
+            if b'gpg: WARNING: nothing exported' in err:
+                return
 
         # Import public key into default homedir
-        if not b'gpg: WARNING: nothing exported' in err:
-            p = subprocess.Popen([self.gpg_path, '--import'],
-                stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE,
-                startupinfo=self.popen_startupinfo)
-            (out, err) = p.communicate(pubkey)
+        p = subprocess.Popen([self.gpg_path, '--import'],
+            stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE,
+            startupinfo=self.popen_startupinfo)
+        (out, err) = p.communicate(pubkey)
 
-            if out != '':
-                self.c.log("GnuPG", "import_to_default_homedir", "stdout: {}".format(out))
-            if err != '':
-                self.c.log("GnuPG", "import_to_default_homedir", "stderr: {}".format(err))
+        if out != b'':
+            self.c.log("GnuPG", "import_to_default_homedir", "stdout: {}".format(out))
+        if err != b'':
+            self.c.log("GnuPG", "import_to_default_homedir", "stderr: {}".format(err))
 
     def _gpg(self, args, input=None):
         default_args = [self.gpg_path, '--batch', '--no-tty', '--homedir', self.homedir]

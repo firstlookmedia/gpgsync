@@ -20,6 +20,14 @@ and then you forget about it. GPG Sync takes care of everything else.
 GPG Sync complies with the in-progress [Distributing OpenPGP Keys with Signed Keylist Subscriptions](https://datatracker.ietf.org/doc/draft-mccain-keylist/)
 internet standard draft.
 
+### Important note about keyservers
+
+By default, GPG Sync downloads PGP public keys from [keys.openpgp.org](https://keys.openpgp.org/about), a modern abuse-resistent keyserver. (The old SKS keyserver pool is vulnerable to [certificate flooding](https://dkg.fifthhorseman.net/blog/openpgp-certificate-flooding.html) attacks, and it's based on unmaintained software that will likely never get fixed.)
+
+For this reason, **it's important that your authority key, as well as every key on your keylist, has a user ID that contains an email address** and that **all users must opt-in to allowing their email addresses** on this keyserver. You can opt-in by uploading your public key [here](https://keys.openpgp.org/upload), requesting to verify each email address on it, and then clicking the links you receive in those verification emails.
+
+If a member of your organization doesn't opt-in to allowing their email addresses on this keyserver, then when subscribers of your keylist refresh it, the public key that GPG Sync will import won't contain the information necessary to be able to send that member an encrypted email. GPG Sync still supports the legacy, vulnerable SKS keyserver network; this can be enabled in the advanced settings of each keylist.
+
 ## Learn More
 
 To learn how GPG Sync works and how to use it, check out the [Wiki](https://github.com/firstlookmedia/gpgsync/wiki).
