@@ -283,6 +283,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.force_check_for_updates()
 
     def shutdown(self):
+        self.systray.hide()
         self.c.log("MainWindow", "shutdown")
 
     def quit(self):
