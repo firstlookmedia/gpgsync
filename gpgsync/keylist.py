@@ -456,7 +456,8 @@ class Keylist(object):
                 fingerprint = self.c.clean_fp(fingerprint).decode()
                 try:
                     pubkey = self.c.vks_get_by_fingerprint(fingerprint, self.use_proxy, self.proxy_host, self.proxy_port)
-                    pubkeys.append(pubkey)
+                    if pubkey:
+                        pubkeys.append(pubkey)
                 except KeyserverError as e:
                     return self.result_object('error', str(e))
                 except NotFoundOnKeyserver:

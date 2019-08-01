@@ -174,5 +174,21 @@ class Common(object):
         if r.status_code != 200:
             raise KeyserverError("keys.openpgp.org: {}".format(r.text))
 
-        # Return the ASCII-armored public key, in bytes
-        return r.content
+        pubkey = r.content
+
+        # Verify the fingerprint of the public key
+        out, _ = self.gpg._gpg(['--with-colons', '--with-fingerprint'], pubkey)
+        verified = False
+        returned_fp = 'n/a'
+        for line in out.split(b'\n'):
+            if line.startswith(b'fpr:'):
+                returned_fp = line.split(b':')[-2].decode()
+                if returned_fp == fp:
+                    verified = True
+
+        if verified:
+            # Return the ASCII-armored public key, in bytes
+            return pubkey
+
+        self.log("Common", "vks_get_by_fingerprint", "ERROR: pubkey returned by server has invalid fingerprint, {}".format(returned_fp))
+        return None
