@@ -41,7 +41,7 @@ Now you should have `dist/GPG Sync-{version}.pkg`.
 
 ## Windows
 
-Download Python 3.7.2, 32-bit (x86) from https://www.python.org/downloads/release/python-372/. I downloaded `python-3.7.2.exe`. When installing it, make sure to check the "Add Python 3.7 to PATH" checkbox on the first page of the installer.
+Download Python 3.7.4, 32-bit (x86) from https://www.python.org/downloads/release/python-374/. I downloaded `python-3.7.4.exe`. When installing it, make sure to check the "Add Python 3.7 to PATH" checkbox on the first page of the installer.
 
 Open a command prompt, cd to the gpgsync folder, and install dependencies with pip:
 
@@ -53,7 +53,7 @@ pip install -r install\requirements-windows.txt
 pip install -r install\requirements-package.txt
 ```
 
-Install the Qt 5.11.3 from https://www.qt.io/download-open-source/. I downloaded `qt-unified-windows-x86-3.0.6-online.exe`. In the installer, you can skip making an account, and all you need `Qt` > `Qt 5.11.3` > `MSVC 2015 32-bit`.
+Install the Qt 5.13.0 from https://www.qt.io/download-open-source/. I downloaded `qt-opensource-windows-x86-5.13.0.exe`. In the installer, you can skip making an account, and all you need `Qt` > `Qt 5.13.0` > `MSVC 2017 32-bit`.
 
 After that you can launch GPG Sync during development with:
 
@@ -71,8 +71,8 @@ Download and install the standalone [Windows 10 SDK](https://dev.windows.com/en-
 
 Add the following directories to the path:
 
-* `C:\Program Files (x86)\Windows Kits\10\bin\10.0.17763.0\x86`
-* `C:\Program Files (x86)\Windows Kits\10\Redist\10.0.17763.0\ucrt\DLLs\x86`
+* `C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x86`
+* `C:\Program Files (x86)\Windows Kits\10\Redist\10.0.18362.0\ucrt\DLLs\x86`
 * `C:\Users\user\AppData\Local\Programs\Python\Python37-32\Lib\site-packages\PyQt5\Qt\bin`
 
 Finally, open a command prompt, cd into the gpgsync directory, and type: `pyinstaller install\pyinstaller.spec`. `gpgsync.exe` and all of their supporting files will get created inside the `dist` folder.
