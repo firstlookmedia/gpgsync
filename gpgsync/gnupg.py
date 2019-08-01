@@ -127,6 +127,11 @@ class GnuPG(object):
 
         if use_modern_keyserver:
             pubkey = self.c.vks_get_by_fingerprint(fp, use_proxy, proxy_host, proxy_port)
+
+            # Import into temporary homedir
+            self._gpg(['--import'], pubkey)
+
+            # Also import into default homedir
             self.import_to_default_homedir(pubkey=pubkey)
 
         else:
