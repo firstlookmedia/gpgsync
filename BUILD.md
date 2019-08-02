@@ -232,7 +232,7 @@ Note that one of the tests will fail if you don't have SOCKS5 proxy server liste
 
 # Release instructions
 
-This section documents the release process. Unless you're a GPG Developer developer making a release, you'll probably never need to follow it.
+This section documents the release process. Unless you're a GPG Sync developer making a release, you'll probably never need to follow it.
 
 ## Changelog, version, and signed git tag
 
