@@ -4,10 +4,10 @@
 !define APP_EXE "gpgsync.exe"
 
 # change these with each release
-!define INSTALLSIZE 38746
+!define INSTALLSIZE 76759
 !define VERSIONMAJOR 0
 !define VERSIONMINOR 3
-!define VERSIONSTRING "0.3.3"
+!define VERSIONSTRING "0.3.4"
 
 RequestExecutionLevel admin
 

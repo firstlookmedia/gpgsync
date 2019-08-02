@@ -26,18 +26,19 @@ Here's how you run GPG Sync, without having to build an app bundle:
 Here's how you build an app bundle:
 
 ```sh
-install/build_pkg.sh
+install/build_app.sh
 ```
 
 Now you should have `dist/GPG Sync.app`.
 
-To codesign and build a .pkg for distribution:
+To build a .pkg for distribution:
 
 ```sh
-install/build_pkg.sh --release
+install/build_pkg.sh # this requires codesigning certificates
+install/build_pkg.sh --without-codesign # this doesn't
 ```
 
-Now you should have `dist/GPG Sync-{version}.pkg`.
+Now you should have `dist/GPGSync-{version}.pkg`.
 
 ## Windows
 
@@ -228,3 +229,81 @@ python setup.py pytest
 ```
 
 Note that one of the tests will fail if you don't have SOCKS5 proxy server listening on port 9050 (e.g. Tor installed).
+
+# Release instructions
+
+This section documents the release process. Unless you're a GPG Developer developer making a release, you'll probably never need to follow it.
+
+## Changelog, version, and signed git tag
+
+Before making a release, all of these should be complete:
+
+- `share/version` should have the correct version
+- `install/gpgsync.nsi` should have the correct version, for the Windows installer
+- CHANGELOG.md should be updated to include a list of all major changes since the last release
+- There must be a PGP-signed git tag for the version, e.g. for GPG Sync 0.3.4, the tag must be v0.3.4
+
+The first step for the macOS and Windows releases is the same:
+
+Verify the release git tag:
+
+```sh
+git fetch
+git tag -v v$VERSION
+```
+
+If the tag verifies successfully, check it out:
+
+```
+git checkout v$VERSION
+```
+
+## macOS release
+
+To make a macOS release, go to macOS build machine:
+
+- Build machine should be running macOS 10.13
+- Verify and checkout the git tag for this release
+- Run `./install.build_app.sh`; this will make `dist/GPG Sync.app` but won't codesign it
+- Copy `dist/GPG Sync.app` from the build machine to the `dist` folder on the release machine
+
+Then move to the macOS release machine:
+
+- Release machine should be running the latest version of macOS, and must have:
+  - Apple-trusted `Developer ID Application: FIRST LOOK PRODUCTIONS, INC.` and `Developer ID Installer: FIRST LOOK PRODUCTIONS, INC.` code-signing certificates installed
+  - An app-specific Apple ID password saved in the login keychain called `gpgsync-notarize`
+- Verify and checkout the git tag for this release
+- Run `./install/build_pkg.sh`; this will make a codesigned installer package called `dist/GPGSync-$VERSION.pkg`
+- Notarize it: `xcrun altool --notarize-app --primary-bundle-id "org.firstlook.gpgsync" -u "micah@firstlook.org" -p "@keychain:gpgsync-notarize" --file GPGSync-$VERSION.pkg`
+- Wait for it to get approved, check status with: `xcrun altool --notarization-history 0 -u "micah@firstlook.org" -p "@keychain:gpgsync-notarize"`
+- After it's approved, staple the ticket: `xcrun stapler staple GPGSync-$VERSION.pkg`
+
+- Copy `GPGSync-$VERSION.pkg` to developer machine
+
+This process ends up with the final file:
+
+```
+dist/GPGSync-$VERSION.pkg
+```
+
+## Windows release
+
+To make a Windows release, go to Windows build machine:
+
+- Build machine should be running Windows 10, and have the Windows codesigning certificate installed
+- Verify and checkout the git tag for this release
+- Run `install\build_exe.bat`; this will make a codesigned installer package called `dist\gpgsync-setup.exe`
+- Rename `gpgsync-setup.exe` to `gpgsync-$VERSION-setup.exe`
+
+This process ends up with the final file:
+
+```
+gpgsync-$VERSION-setup.exe
+```
+
+## Publishing the release
+
+To publish the release:
+
+- Create a new release on GitHub, put the changelog in the description of the release, and the Windows and macOS installers
+- Make a PR to [homebrew-cask](https://github.com/homebrew/homebrew-cask) to update the macOS version

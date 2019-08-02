@@ -5,6 +5,7 @@
 * Uses modern keyserver, keys.openpgp.org, by default
 * Upgrades depdendencies
 * Renames --debug to --verbose, -v
+* Improvements to Windows installer
 
 ## 0.3.3
 
