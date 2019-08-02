@@ -1,6 +1,7 @@
 !define APPNAME "GPG Sync"
 !define BINPATH "..\dist\gpgsync"
 !define ABOUTURL "https://github.com/firstlookmedia/gpgsync"
+!define APP_EXE "gpgsync.exe"
 
 # change these with each release
 !define INSTALLSIZE 38746
@@ -15,6 +16,7 @@ InstallDir "$PROGRAMFILES\${APPNAME}"
 Icon "gpgsync.ico"
 
 !include LogicLib.nsh
+!include "nsProcess.nsh"
 
 Page directory
 Page instfiles
@@ -27,6 +29,20 @@ ${If} $0 != "admin" ;Require admin rights on NT4+
     setErrorLevel 740 ;ERROR_ELEVATION_REQUIRED
     quit
 ${EndIf}
+!macroend
+
+!macro CloseIfRunning
+    # If app is running, close it first
+    ${nsProcess::FindProcess} "${APP_EXE}" $R0
+    ${If} $R0 == 0
+        DetailPrint "${AppName} is running. Closing it down"
+        ${nsProcess::CloseProcess} "${APP_EXE}" $R0
+        DetailPrint "Waiting for ${AppName} to close"
+        Sleep 2000
+    ${Else}
+        DetailPrint "${APP_EXE} was not found to be running"
+    ${EndIf}
+    ${nsProcess::Unload}
 !macroend
 
 # in order to code sign uninstall.exe, we need to do some hacky stuff outlined
@@ -57,6 +73,8 @@ Function .onInit
 FunctionEnd
 
 Section "install"
+    !insertmacro CloseIfRunning
+
     SetOutPath "$INSTDIR"
     File "gpgsync.ico"
     File /a /r "${BINPATH}\"
@@ -101,6 +119,7 @@ FunctionEnd
 !ifdef INNER
     Section "uninstall"
         Delete "$SMPROGRAMS\${APPNAME}.lnk"
+        !insertmacro CloseIfRunning
 
         # remove files
         RMDir /r $INSTDIR
