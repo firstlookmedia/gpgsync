@@ -240,8 +240,8 @@ Before making a release, all of these should be complete:
 
 - `share/version` should have the correct version
 - `install/gpgsync.nsi` should have the correct version, for the Windows installer
-- CHANGELOG.md should be updated to include a list of all major changes since the last release
-- There must be a PGP-signed git tag for the version, e.g. for GPG Sync 0.3.4, the tag must be v0.3.4
+- `CHANGELOG.md` should be updated to include a list of all major changes since the last release
+- There must be a PGP-signed git tag for the version, e.g. for GPG Sync 0.3.4, the tag must be `v0.3.4`
 
 The first step for the macOS and Windows releases is the same:
 
@@ -264,7 +264,7 @@ To make a macOS release, go to macOS build machine:
 
 - Build machine should be running macOS 10.13
 - Verify and checkout the git tag for this release
-- Run `./install.build_app.sh`; this will make `dist/GPG Sync.app` but won't codesign it
+- Run `./install/build_app.sh`; this will make `dist/GPG Sync.app` but won't codesign it
 - Copy `dist/GPG Sync.app` from the build machine to the `dist` folder on the release machine
 
 Then move to the macOS release machine:
@@ -277,8 +277,6 @@ Then move to the macOS release machine:
 - Notarize it: `xcrun altool --notarize-app --primary-bundle-id "org.firstlook.gpgsync" -u "micah@firstlook.org" -p "@keychain:gpgsync-notarize" --file GPGSync-$VERSION.pkg`
 - Wait for it to get approved, check status with: `xcrun altool --notarization-history 0 -u "micah@firstlook.org" -p "@keychain:gpgsync-notarize"`
 - After it's approved, staple the ticket: `xcrun stapler staple GPGSync-$VERSION.pkg`
-
-- Copy `GPGSync-$VERSION.pkg` to developer machine
 
 This process ends up with the final file:
 
@@ -305,5 +303,5 @@ gpgsync-$VERSION-setup.exe
 
 To publish the release:
 
-- Create a new release on GitHub, put the changelog in the description of the release, and the Windows and macOS installers
+- Create a new release on GitHub, put the changelog in the description of the release, and upload the Windows and macOS installers
 - Make a PR to [homebrew-cask](https://github.com/homebrew/homebrew-cask) to update the macOS version
