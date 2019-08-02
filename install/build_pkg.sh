@@ -42,7 +42,7 @@ else
     IDENTITY_NAME_INSTALLER="Developer ID Installer: FIRST LOOK PRODUCTIONS, INC."
 
     echo "Codesigning the app bundle"
-    codesign --deep -s "$IDENTITY_NAME_APPLICATION" "$APP_PATH"
+    codesign --options runtime --timestamp --deep -s "$IDENTITY_NAME_APPLICATION" "$APP_PATH"
 
     echo "Creating a codesigned installer"
     pkgbuild \
