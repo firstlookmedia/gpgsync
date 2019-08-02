@@ -153,6 +153,13 @@ Now the next time you use PyInstaller to build GPG Sync, the `.exe` file should 
 * Go to http://nsis.sourceforge.net/Download and download the latest NSIS. I downloaded `nsis-3.04-setup.exe`.
 * Add `C:\Program Files (x86)\NSIS` to the path.
 
+Now install the Processes NSIS plugin.
+
+* Go to https://nsis.sourceforge.io/NsProcess_plugin and download NsProcess. I donwnloaded `nsProcess_1_6.7z` (with sha256 hash `fc19fc66a5219a233570fafd5daeb0c9b85387b379f6df5ac8898159a57c5944`)
+* Decompress it. You will probably need [7-Zip](https://www.7-zip.org/)
+* Copy `nsProcess_1.6/Plugin/*.dll` to `C:\Program Files (x86)\NSIS\Plugins\x86-ansi`
+* Copy `nsProcess_1.6/Include/ncProcess.nsh` to `C:\Program Files (x86)\NSIS\Include`
+
 If you want to sign binaries with Authenticode:
 
 * You'll need a code signing certificate. I got an open source code signing certificate from [Certum](https://www.certum.eu/certum/cert,offer_en_open_source_cs.xml).
