@@ -29,7 +29,7 @@ import socket
 from urllib.parse import urlparse
 from packaging.version import parse
 
-from .gnupg import GnuPG
+from .gnupg import GnuPG, NotFoundOnKeyserver, KeyserverError
 from .settings import Settings
 
 
@@ -37,8 +37,8 @@ class Common(object):
     """
     The Common class is a singleton of shared functionality throughout the app
     """
-    def __init__(self, debug):
-        self.debug = debug
+    def __init__(self, verbose):
+        self.verbose = verbose
 
         # Define the OS
         self.os = platform.system()
@@ -54,7 +54,7 @@ class Common(object):
         self.gpg = GnuPG(self, appdata_path=self.settings.get_appdata_path())
 
     def log(self, module, func, msg=''):
-        if self.debug:
+        if self.verbose:
             final_msg = "[{}] {}".format(module, func)
             if msg:
                 final_msg = "{}: {}".format(final_msg, msg)
@@ -147,3 +147,48 @@ class Common(object):
             pass
 
         return False
+
+    def vks_get_by_fingerprint(self, fp, use_proxy, proxy_host, proxy_port):
+        """
+        Download a public key from keys.openssl.org using the VKS interface:
+        https://keys.openpgp.org/about/api
+        """
+        if use_proxy:
+            api_endpoint = 'http://zkaan2xfbuxia2wpf7ofnkbz6r5zdbbvxbunvp5g2iebopbfc4iqmbad.onion/vks/v1'
+
+            socks5_address = 'socks5h://{}:{}'.format(proxy_host.decode(), proxy_port.decode())
+            proxies = {
+                'https': socks5_address,
+                'http': socks5_address
+            }
+        else:
+            api_endpoint = 'https://keys.openpgp.org/vks/v1'
+            proxies = None
+
+        # Fetch the key by fingerprint
+        r = self.requests_get("{}/by-fingerprint/{}".format(api_endpoint, fp), proxies)
+        self.log("Common", "vks_get_by_fingerprint", "{} GET /by-fingerprint/{}".format(r.status_code, fp))
+
+        if r.status_code == 404:
+            raise NotFoundOnKeyserver(fp)
+        if r.status_code != 200:
+            raise KeyserverError("keys.openpgp.org: {}".format(r.text))
+
+        pubkey = r.content
+
+        # Verify the fingerprint of the public key
+        out, _ = self.gpg._gpg(['--with-colons', '--with-fingerprint'], pubkey)
+        verified = False
+        returned_fp = 'n/a'
+        for line in out.split(b'\n'):
+            if line.startswith(b'fpr:'):
+                returned_fp = line.split(b':')[-2].decode()
+                if returned_fp == fp:
+                    verified = True
+
+        if verified:
+            # Return the ASCII-armored public key, in bytes
+            return pubkey
+
+        self.log("Common", "vks_get_by_fingerprint", "ERROR: pubkey returned by server has invalid fingerprint, {}".format(returned_fp))
+        return None

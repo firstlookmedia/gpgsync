@@ -54,13 +54,19 @@ class KeylistDialog(QtWidgets.QDialog):
         self.url_edit = QtWidgets.QLineEdit()
         self.url_edit.setPlaceholderText("https://")
 
+        # Use modern keyserver
+        self.use_modern_keyserver = QtWidgets.QCheckBox()
+        self.use_modern_keyserver.setText("Use modern keyserver: keys.openpgp.org")
+        self.use_modern_keyserver.setCheckState(QtCore.Qt.Checked)
+        self.use_modern_keyserver.stateChanged.connect(self.toggle_use_modern_keyserver)
+
         # Keyserver
-        keyserver_label = QtWidgets.QLabel("Key server")
+        self.keyserver_label = QtWidgets.QLabel("Key server")
         self.keyserver_edit = QtWidgets.QLineEdit()
 
         # SOCKS5 proxy settings
         self.use_proxy = QtWidgets.QCheckBox()
-        self.use_proxy.setText("Load URL through SOCKS5 proxy (e.g. Tor)")
+        self.use_proxy.setText("Load URL through Tor (Tor daemon not included)")
         self.use_proxy.setCheckState(QtCore.Qt.Unchecked)
         proxy_host_label = QtWidgets.QLabel('Host')
         self.proxy_host_edit = QtWidgets.QLineEdit()
@@ -74,7 +80,7 @@ class KeylistDialog(QtWidgets.QDialog):
         proxy_vlayout = QtWidgets.QVBoxLayout()
         proxy_vlayout.addWidget(self.use_proxy)
         proxy_vlayout.addLayout(proxy_hlayout)
-        proxy_group = QtWidgets.QGroupBox("Proxy Configuration")
+        proxy_group = QtWidgets.QGroupBox("Tor Configuration")
         proxy_group.setLayout(proxy_vlayout)
 
         # Advanced settings button
@@ -85,7 +91,9 @@ class KeylistDialog(QtWidgets.QDialog):
 
         # Advanced settings group
         advanced_layout = QtWidgets.QVBoxLayout()
-        advanced_layout.addWidget(keyserver_label)
+        advanced_layout.addWidget(self.use_modern_keyserver)
+        advanced_layout.addSpacing(10)
+        advanced_layout.addWidget(self.keyserver_label)
         advanced_layout.addWidget(self.keyserver_edit)
         advanced_layout.addWidget(proxy_group)
         self.advanced_group = QtWidgets.QGroupBox("Advanced Settings")
@@ -115,6 +123,10 @@ class KeylistDialog(QtWidgets.QDialog):
         # Populate the widgets with keylist data
         self.fingerprint_edit.setText(self.keylist.fingerprint.decode())
         self.url_edit.setText(self.keylist.url.decode())
+        if self.keylist.use_modern_keyserver:
+            self.use_modern_keyserver.setCheckState(QtCore.Qt.Checked)
+        else:
+            self.use_modern_keyserver.setCheckState(QtCore.Qt.Unchecked)
         if self.keylist.keyserver:
             self.keyserver_edit.setText(self.keylist.keyserver.decode())
         if self.keylist.use_proxy:
@@ -127,6 +139,7 @@ class KeylistDialog(QtWidgets.QDialog):
         # Initially update the widgets
         self.advanced_group.show()
         self.toggle_advanced() # Hide advanced settings to start with
+        self.toggle_use_modern_keyserver() # Show/hide keyserver settings to start with
 
     def toggle_advanced(self):
         if self.advanced_group.isHidden():
@@ -137,18 +150,27 @@ class KeylistDialog(QtWidgets.QDialog):
             self.advanced_group.hide()
 
         self.adjustSize()
+    
+    def toggle_use_modern_keyserver(self):
+        if self.use_modern_keyserver.isChecked():
+            self.keyserver_label.hide()
+            self.keyserver_edit.hide()
+        else:
+            self.keyserver_label.show()
+            self.keyserver_edit.show()
 
     def save_clicked(self):
         # Grab the values
         fingerprint = self.fingerprint_edit.text().encode()
         url = self.url_edit.text().encode()
+        use_modern_keyserver = self.use_modern_keyserver.isChecked()
         keyserver = self.keyserver_edit.text().encode()
         use_proxy = self.use_proxy.isChecked()
         proxy_host = self.proxy_host_edit.text().encode()
         proxy_port = self.proxy_port_edit.text().encode()
 
         # Open the validator dialog
-        d = ValidatorDialog(self.c, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
+        d = ValidatorDialog(self.c, fingerprint, url, use_modern_keyserver, keyserver, use_proxy, proxy_host, proxy_port)
         d.success.connect(self.validated)
         d.exec_()
 
@@ -160,6 +182,7 @@ class KeylistDialog(QtWidgets.QDialog):
         self.keylist.fingerprint = self.fingerprint_edit.text().encode()
         self.keylist.url = self.url_edit.text().encode()
         self.keylist.sig_url = self.keylist.url + b'.sig'
+        self.keylist.use_modern_keyserver = self.use_modern_keyserver.isChecked()
         self.keylist.keyserver = self.keyserver_edit.text().encode()
         self.keylist.use_proxy = self.use_proxy.isChecked()
         self.keylist.proxy_host = self.proxy_host_edit.text().encode()
@@ -180,7 +203,7 @@ class KeylistDialog(QtWidgets.QDialog):
 class ValidatorDialog(QtWidgets.QDialog):
     success = QtCore.pyqtSignal()
 
-    def __init__(self, common, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port):
+    def __init__(self, common, fingerprint, url, use_modern_keyserver, keyserver, use_proxy, proxy_host, proxy_port):
         super(ValidatorDialog, self).__init__()
         self.c = common
 
@@ -196,7 +219,7 @@ class ValidatorDialog(QtWidgets.QDialog):
         self.setLayout(layout)
 
         # Start the validator
-        self.validator = AuthorityKeyValidatorThread(self.c, fingerprint, url, keyserver, use_proxy, proxy_host, proxy_port)
+        self.validator = AuthorityKeyValidatorThread(self.c, fingerprint, url, use_modern_keyserver, keyserver, use_proxy, proxy_host, proxy_port)
         self.validator.alert_error.connect(self.validator_alert_error)
         self.validator.success.connect(self.validator_success)
         self.validator.finished.connect(self.validator_finished)

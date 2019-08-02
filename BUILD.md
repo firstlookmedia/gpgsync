@@ -4,9 +4,9 @@
 
 Install Xcode from the Mac App Store. Once it's installed, run it for the first time to set it up. Also, run this to make sure command line tools are installed: `xcode-select --install`. And finally, open Xcode, go to Preferences > Locations, and make sure under Command Line Tools you select an installed version from the dropdown. (This is required for installing Qt5.)
 
-Download and install Python 3.7.2 from https://www.python.org/downloads/release/python-372/. I downloaded `python-3.7.2-macosx10.9.pkg`.
+Download and install Python 3.7.4 from https://www.python.org/downloads/release/python-374/. I downloaded `python-3.7.4-macosx10.9.pkg`.
 
-Install Qt 5.11.3 from https://www.qt.io/download-open-source/. I downloaded `qt-unified-mac-x64-3.0.6-online.dmg`. In the installer, you can skip making an account, and all you need is `Qt` > `Qt 5.11.3` > `macOS`.
+Install Qt 5.13.0 for macOS from https://www.qt.io/offline-installers. I downloaded `qt-opensource-mac-x64-5.13.0.dmg`. In the installer, you can skip making an account, and all you need is `Qt` > `Qt 5.13.0` > `macOS`.
 
 Now install some python dependencies with pip (note, there's issues building a .app if you install this in a virtualenv):
 
@@ -26,22 +26,23 @@ Here's how you run GPG Sync, without having to build an app bundle:
 Here's how you build an app bundle:
 
 ```sh
-install/build_pkg.sh
+install/build_app.sh
 ```
 
 Now you should have `dist/GPG Sync.app`.
 
-To codesign and build a .pkg for distribution:
+To build a .pkg for distribution:
 
 ```sh
-install/build_pkg.sh --release
+install/build_pkg.sh # this requires codesigning certificates
+install/build_pkg.sh --without-codesign # this doesn't
 ```
 
-Now you should have `dist/GPG Sync-{version}.pkg`.
+Now you should have `dist/GPGSync-{version}.pkg`.
 
 ## Windows
 
-Download Python 3.7.2, 32-bit (x86) from https://www.python.org/downloads/release/python-372/. I downloaded `python-3.7.2.exe`. When installing it, make sure to check the "Add Python 3.7 to PATH" checkbox on the first page of the installer.
+Download Python 3.7.4, 32-bit (x86) from https://www.python.org/downloads/release/python-374/. I downloaded `python-3.7.4.exe`. When installing it, make sure to check the "Add Python 3.7 to PATH" checkbox on the first page of the installer.
 
 Open a command prompt, cd to the gpgsync folder, and install dependencies with pip:
 
@@ -53,7 +54,7 @@ pip install -r install\requirements-windows.txt
 pip install -r install\requirements-package.txt
 ```
 
-Install the Qt 5.11.3 from https://www.qt.io/download-open-source/. I downloaded `qt-unified-windows-x86-3.0.6-online.exe`. In the installer, you can skip making an account, and all you need `Qt` > `Qt 5.11.3` > `MSVC 2015 32-bit`.
+Install the Qt 5.13.0 from https://www.qt.io/download-open-source/. I downloaded `qt-opensource-windows-x86-5.13.0.exe`. In the installer, you can skip making an account, and all you need `Qt` > `Qt 5.13.0` > `MSVC 2017 32-bit`.
 
 After that you can launch GPG Sync during development with:
 
@@ -71,8 +72,8 @@ Download and install the standalone [Windows 10 SDK](https://dev.windows.com/en-
 
 Add the following directories to the path:
 
-* `C:\Program Files (x86)\Windows Kits\10\bin\10.0.17763.0\x86`
-* `C:\Program Files (x86)\Windows Kits\10\Redist\10.0.17763.0\ucrt\DLLs\x86`
+* `C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x86`
+* `C:\Program Files (x86)\Windows Kits\10\Redist\10.0.18362.0\ucrt\DLLs\x86`
 * `C:\Users\user\AppData\Local\Programs\Python\Python37-32\Lib\site-packages\PyQt5\Qt\bin`
 
 Finally, open a command prompt, cd into the gpgsync directory, and type: `pyinstaller install\pyinstaller.spec`. `gpgsync.exe` and all of their supporting files will get created inside the `dist` folder.
@@ -153,6 +154,13 @@ Now the next time you use PyInstaller to build GPG Sync, the `.exe` file should 
 * Go to http://nsis.sourceforge.net/Download and download the latest NSIS. I downloaded `nsis-3.04-setup.exe`.
 * Add `C:\Program Files (x86)\NSIS` to the path.
 
+Now install the Processes NSIS plugin.
+
+* Go to https://nsis.sourceforge.io/NsProcess_plugin and download NsProcess. I donwnloaded `nsProcess_1_6.7z` (with sha256 hash `fc19fc66a5219a233570fafd5daeb0c9b85387b379f6df5ac8898159a57c5944`)
+* Decompress it. You will probably need [7-Zip](https://www.7-zip.org/)
+* Copy `nsProcess_1.6/Plugin/*.dll` to `C:\Program Files (x86)\NSIS\Plugins\x86-ansi`
+* Copy `nsProcess_1.6/Include/ncProcess.nsh` to `C:\Program Files (x86)\NSIS\Include`
+
 If you want to sign binaries with Authenticode:
 
 * You'll need a code signing certificate. I got an open source code signing certificate from [Certum](https://www.certum.eu/certum/cert,offer_en_open_source_cs.xml).
@@ -221,3 +229,81 @@ python setup.py pytest
 ```
 
 Note that one of the tests will fail if you don't have SOCKS5 proxy server listening on port 9050 (e.g. Tor installed).
+
+# Release instructions
+
+This section documents the release process. Unless you're a GPG Developer developer making a release, you'll probably never need to follow it.
+
+## Changelog, version, and signed git tag
+
+Before making a release, all of these should be complete:
+
+- `share/version` should have the correct version
+- `install/gpgsync.nsi` should have the correct version, for the Windows installer
+- CHANGELOG.md should be updated to include a list of all major changes since the last release
+- There must be a PGP-signed git tag for the version, e.g. for GPG Sync 0.3.4, the tag must be v0.3.4
+
+The first step for the macOS and Windows releases is the same:
+
+Verify the release git tag:
+
+```sh
+git fetch
+git tag -v v$VERSION
+```
+
+If the tag verifies successfully, check it out:
+
+```
+git checkout v$VERSION
+```
+
+## macOS release
+
+To make a macOS release, go to macOS build machine:
+
+- Build machine should be running macOS 10.13
+- Verify and checkout the git tag for this release
+- Run `./install.build_app.sh`; this will make `dist/GPG Sync.app` but won't codesign it
+- Copy `dist/GPG Sync.app` from the build machine to the `dist` folder on the release machine
+
+Then move to the macOS release machine:
+
+- Release machine should be running the latest version of macOS, and must have:
+  - Apple-trusted `Developer ID Application: FIRST LOOK PRODUCTIONS, INC.` and `Developer ID Installer: FIRST LOOK PRODUCTIONS, INC.` code-signing certificates installed
+  - An app-specific Apple ID password saved in the login keychain called `gpgsync-notarize`
+- Verify and checkout the git tag for this release
+- Run `./install/build_pkg.sh`; this will make a codesigned installer package called `dist/GPGSync-$VERSION.pkg`
+- Notarize it: `xcrun altool --notarize-app --primary-bundle-id "org.firstlook.gpgsync" -u "micah@firstlook.org" -p "@keychain:gpgsync-notarize" --file GPGSync-$VERSION.pkg`
+- Wait for it to get approved, check status with: `xcrun altool --notarization-history 0 -u "micah@firstlook.org" -p "@keychain:gpgsync-notarize"`
+- After it's approved, staple the ticket: `xcrun stapler staple GPGSync-$VERSION.pkg`
+
+- Copy `GPGSync-$VERSION.pkg` to developer machine
+
+This process ends up with the final file:
+
+```
+dist/GPGSync-$VERSION.pkg
+```
+
+## Windows release
+
+To make a Windows release, go to Windows build machine:
+
+- Build machine should be running Windows 10, and have the Windows codesigning certificate installed
+- Verify and checkout the git tag for this release
+- Run `install\build_exe.bat`; this will make a codesigned installer package called `dist\gpgsync-setup.exe`
+- Rename `gpgsync-setup.exe` to `gpgsync-$VERSION-setup.exe`
+
+This process ends up with the final file:
+
+```
+gpgsync-$VERSION-setup.exe
+```
+
+## Publishing the release
+
+To publish the release:
+
+- Create a new release on GitHub, put the changelog in the description of the release, and the Windows and macOS installers
+- Make a PR to [homebrew-cask](https://github.com/homebrew/homebrew-cask) to update the macOS version

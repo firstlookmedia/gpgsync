@@ -94,6 +94,7 @@ class Keylist(object):
 
         self.fingerprint = b''
         self.url = b''
+        self.use_modern_keyserver = True
         self.keyserver = None
         self.use_proxy = False
         self.proxy_host = b'127.0.0.1'
@@ -118,26 +119,38 @@ class Keylist(object):
         """
         Acts as a secondary constructor to load an keylist from settings
         """
-        self.fingerprint = str.encode(e['fingerprint'])
-        self.url = str.encode(e['url'])
-        self.keyserver = str.encode(e['keyserver'])
-        self.use_proxy = e['use_proxy']
-        self.proxy_host = str.encode(e['proxy_host'])
-        self.proxy_port = str.encode(e['proxy_port'])
-        self.last_checked = (date_parser.parse(e['last_checked']) if e['last_checked'] is not None else None)
-        self.last_synced = (date_parser.parse(e['last_synced']) if e['last_synced'] is not None else None)
-        self.last_failed = (date_parser.parse(e['last_failed']) if e['last_failed'] is not None else None)
-        self.error = e['error']
-        self.warning = e['warning']
+        if 'fingerprint' in e:
+            self.fingerprint = str.encode(e['fingerprint'])
+        if 'url' in e:
+            self.url = str.encode(e['url'])
+        if 'use_modern_keyserver' in e:
+            self.use_modern_keyserver = e['use_modern_keyserver']
+        if 'keyserver' in e:
+            self.keyserver = str.encode(e['keyserver'])
+        if 'use_proxy' in e:
+            self.use_proxy = e['use_proxy']
+        if 'proxy_host' in e:
+            self.proxy_host = str.encode(e['proxy_host'])
+        if 'proxy_port' in e:
+            self.proxy_port = str.encode(e['proxy_port'])
+        if 'last_checked' in e:
+            self.last_checked = (date_parser.parse(e['last_checked']) if e['last_checked'] is not None else None)
+        if 'last_synced' in e:
+            self.last_synced = (date_parser.parse(e['last_synced']) if e['last_synced'] is not None else None)
+        if 'last_failed' in e:
+            self.last_failed = (date_parser.parse(e['last_failed']) if e['last_failed'] is not None else None)
+        if 'error' in e:
+            self.error = e['error']
+        if 'warning' in e:
+            self.warning = e['warning']
         return self
 
     def serialize(self):
         tmp = {}
 
         # Serialize only the attributes that should persist
-        keys = ['fingerprint', 'url', 'keyserver', 'use_proxy',  'proxy_host',
-                'proxy_port', 'last_checked', 'last_synced', 'last_failed',
-                'error', 'warning']
+        keys = ['fingerprint', 'url', 'use_modern_keylist', 'keyserver', 'use_proxy', 'proxy_host',
+                'proxy_port', 'last_checked', 'last_synced', 'last_failed', 'error', 'warning']
         for k, v in self.__dict__.items():
             if k in keys:
                 if isinstance(v, bytes):
@@ -331,7 +344,7 @@ class Keylist(object):
             self.c.log('Keylist', 'validate_authority_key', 'keyserver={}'.format(keyserver))
 
             # Retreive the authority key from the keyserver
-            self.c.gpg.recv_key(keyserver, self.fingerprint, self.use_proxy, self.proxy_host, self.proxy_port)
+            self.c.gpg.recv_key(self.use_modern_keyserver, keyserver, self.fingerprint, self.use_proxy, self.proxy_host, self.proxy_port)
 
             # Test the key for issues
             self.c.gpg.test_key(self.fingerprint)
@@ -435,23 +448,50 @@ class Keylist(object):
         """
         current_key = 0
         notfound_fingerprints = []
-        for fingerprint in fingerprints_to_fetch:
-            try:
-                self.c.log('Keylist', 'refresh_fetch_fingerprints', 'Fetching public key {} {}'.format(self.c.fp_to_keyid(fingerprint).decode(), self.c.gpg.get_uid(fingerprint)))
-                self.c.gpg.recv_key(self.get_keyserver(), fingerprint, self.use_proxy, self.proxy_host, self.proxy_port)
-            except KeyserverError:
-                return self.result_object('error', 'Keyserver error')
-            except InvalidKeyserver:
-                return self.result_object('error', 'Invalid keyserver')
-            except NotFoundOnKeyserver:
-                notfound_fingerprints.append(fingerprint)
 
-            current_key += 1
-            self.q.add_message(RefresherMessageQueue.STATUS_IN_PROGRESS, total_keys, current_key)
+        if self.use_modern_keyserver:
+            # Download all keys from keys.openpgp.org
+            pubkeys = []
+            for fingerprint in fingerprints_to_fetch:
+                fingerprint = self.c.clean_fp(fingerprint).decode()
+                try:
+                    pubkey = self.c.vks_get_by_fingerprint(fingerprint, self.use_proxy, self.proxy_host, self.proxy_port)
+                    if pubkey:
+                        pubkeys.append(pubkey)
+                except KeyserverError as e:
+                    return self.result_object('error', str(e))
+                except NotFoundOnKeyserver:
+                    notfound_fingerprints.append(fingerprint)
 
-            if cancel_q.qsize() > 0:
-                self.c.log("Keylist", "refresh_fetch_fingerprints", "canceling early {}".format(self.url.decode()))
-                return self.result_object('cancel')
+                current_key += 1
+                self.q.add_message(RefresherMessageQueue.STATUS_IN_PROGRESS, total_keys, current_key)
+
+                if cancel_q.qsize() > 0:
+                    self.c.log("Keylist", "refresh_fetch_fingerprints", "canceling early {}".format(self.url.decode()))
+                    return self.result_object('cancel')
+
+            # Import them all to local keyring
+            self.c.gpg.import_to_default_homedir(pubkey=b'\n'.join(pubkeys))
+
+        else:
+            # Legacy keyservers
+            for fingerprint in fingerprints_to_fetch:
+                try:
+                    self.c.log('Keylist', 'refresh_fetch_fingerprints', 'Fetching public key {} {}'.format(self.c.fp_to_keyid(fingerprint).decode(), self.c.gpg.get_uid(fingerprint)))
+                    self.c.gpg.recv_key(self.use_modern_keyserver, self.get_keyserver(), fingerprint, self.use_proxy, self.proxy_host, self.proxy_port)
+                except KeyserverError:
+                    return self.result_object('error', 'Keyserver error')
+                except InvalidKeyserver:
+                    return self.result_object('error', 'Invalid keyserver')
+                except NotFoundOnKeyserver:
+                    notfound_fingerprints.append(fingerprint)
+
+                current_key += 1
+                self.q.add_message(RefresherMessageQueue.STATUS_IN_PROGRESS, total_keys, current_key)
+
+                if cancel_q.qsize() > 0:
+                    self.c.log("Keylist", "refresh_fetch_fingerprints", "canceling early {}".format(self.url.decode()))
+                    return self.result_object('cancel')
 
         return self.result_object('success', data=notfound_fingerprints)
 
