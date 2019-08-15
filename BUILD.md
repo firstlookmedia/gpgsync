@@ -54,12 +54,12 @@ pip install -r install\requirements-windows.txt
 pip install -r install\requirements-package.txt
 ```
 
-Install the Qt 5.13.0 from https://www.qt.io/download-open-source/. I downloaded `qt-opensource-windows-x86-5.13.0.exe`. In the installer, you can skip making an account, and all you need `Qt` > `Qt 5.13.0` > `MSVC 2017 32-bit`.
+Install the Qt 5.13.0 from https://www.qt.io/offline-installers. I downloaded `qt-opensource-windows-x86-5.13.0.exe`. In the installer, you can skip making an account, and all you need `Qt` > `Qt 5.13.0` > `MSVC 2017 32-bit`.
 
 After that you can launch GPG Sync during development with:
 
 ```
-python dev_scripts\gpg_sync --debug
+python dev_scripts\gpgsync -v
 ```
 
 ### To make a .exe:
