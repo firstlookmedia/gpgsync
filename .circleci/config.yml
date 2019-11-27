@@ -13,7 +13,9 @@ jobs:
     steps:
       - run:
           name: Install dependencies
-          command: sudo install gnupg2 python3-pyqt5 tor
+          command: |
+            apt-get update
+            apt-get install -y gnupg2 python3-pyqt5 tor
       - run:
           name: Restart tor service
           command: service tor restart
@@ -23,5 +25,4 @@ jobs:
           command: pipenv install --dev
       - run:
           name: Run tests
-          command: |
-            pipenv run python setup.py pytest
+          command: pipenv run python setup.py pytest
