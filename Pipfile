@@ -1,0 +1,22 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pytest = "*"
+pytest-runner = "*"
+pyinstaller = { version = "*", platform_system = "== 'Darwin'" }
+
+[packages]
+pyqt5 = "*"
+pysocks = "*"
+python-dateutil = "*"
+requests = "*"
+pyobjc-core = { version = "*", platform_system = "== 'Darwin'" }
+pyobjc-framework-cocoa = { version = "*", platform_system = "== 'Darwin'" }
+pyobjc-framework-quartz = { version = "*", platform_system = "== 'Darwin'" }
+pywin32 = { version = "*", platform_system = "== 'Windows'" }
+
+[requires]
+python_version = "3"

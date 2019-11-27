@@ -8,19 +8,16 @@ Download and install Python 3.7.4 from https://www.python.org/downloads/release/
 
 Install Qt 5.13.0 for macOS from https://www.qt.io/offline-installers. I downloaded `qt-opensource-mac-x64-5.13.0.dmg`. In the installer, you can skip making an account, and all you need is `Qt` > `Qt 5.13.0` > `macOS`.
 
-Now install some python dependencies with pip (note, there's issues building a .app if you install this in a virtualenv):
+If you don't have it already, install pipenv (`pip3 install --user pipenv`). Then install dependencies:
 
 ```sh
-pip3 install -r install/requirements.txt
-pip3 install -r install/requirements-tests.txt
-pip3 install -r install/requirements-macos.txt
-pip3 install -r install/requirements-package.txt
+pipenv install --dev
 ```
 
 Here's how you run GPG Sync, without having to build an app bundle:
 
 ```sh
-./dev_scripts/gpgsync
+pipenv run ./dev_scripts/gpgsync
 ```
 
 Here's how you build an app bundle:
@@ -44,22 +41,18 @@ Now you should have `dist/GPGSync-{version}.pkg`.
 
 Download Python 3.7.4, 32-bit (x86) from https://www.python.org/downloads/release/python-374/. I downloaded `python-3.7.4.exe`. When installing it, make sure to check the "Add Python 3.7 to PATH" checkbox on the first page of the installer.
 
-Open a command prompt, cd to the gpgsync folder, and install dependencies with pip:
+Open a command prompt and cd to the gpgsync folder. If you don't have it already, install pipenv (`pip install pipenv`). Then install dependencies:
 
 ```cmd
-pip install -r install\requirements.txt
-pip install -r install\requirements-tests.txt
-pip install -r install\requirements-windows.txt
-# skip this if you're building for distribution
-pip install -r install\requirements-package.txt
+pipenv install --dev
 ```
 
-Install the Qt 5.13.0 from https://www.qt.io/download-open-source/. I downloaded `qt-opensource-windows-x86-5.13.0.exe`. In the installer, you can skip making an account, and all you need `Qt` > `Qt 5.13.0` > `MSVC 2017 32-bit`.
+Install the Qt 5.13.0 from https://www.qt.io/offline-installers. I downloaded `qt-opensource-windows-x86-5.13.0.exe`. In the installer, you can skip making an account, and all you need `Qt` > `Qt 5.13.0` > `MSVC 2017 32-bit`.
 
 After that you can launch GPG Sync during development with:
 
 ```
-python dev_scripts\gpg_sync --debug
+pipenv run python dev_scripts\gpgsync -v
 ```
 
 ### To make a .exe:

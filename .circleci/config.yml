@@ -9,28 +9,20 @@ jobs:
     environment:
       FLM_ENV: "test"
     docker:
-      - image: circleci/python:3-stretch-node-browsers
+      - image: circleci/python:3.7-buster
     steps:
       - run:
-          name: Verify python versions
+          name: Install dependencies
           command: |
-            python3 --version
-            pip --version
-      - run: sudo apt install gnupg2 python3-pyqt5 tor
+            sudo apt-get update
+            sudo apt-get install -y gnupg2 python3-pyqt5 tor xvfb
       - run:
-          name: Restart tor service
-          command: sudo service tor restart
+          name: start tor service
+          command: sudo service tor start
       - checkout
       - run:
-          name: Install Python deps in a venv
-          command: |
-            python3 -m venv venv
-            . venv/bin/activate
-            pip install -q --upgrade pip
-            pip install -r ./install/requirements.txt
-            pip install -r ./install/requirements-tests.txt
+          name: Install python dependencies
+          command: pipenv install --dev
       - run:
-          name: run tests
-          command: |
-            . venv/bin/activate
-            python setup.py pytest
+          name: Run tests
+          command: pipenv run xvfb-run -s "-screen 0 1280x1024x24" python setup.py pytest
