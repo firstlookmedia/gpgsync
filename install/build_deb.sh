@@ -8,6 +8,9 @@ VERSION=`cat share/version`
 # clean up from last build
 rm -r deb_dist >/dev/null 2>&1
 
+# build source package
+python3 setup.py --command-packages=stdeb.command sdist_dsc
+
 # build binary package
 python3 setup.py --command-packages=stdeb.command bdist_deb
 

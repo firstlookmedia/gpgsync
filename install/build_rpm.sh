@@ -10,7 +10,7 @@ VERSION=${VERSION:1}
 rm -r build dist >/dev/null 2>&1
 
 # build binary package
-python3 setup.py bdist_rpm --requires="python3-qt5, python3-requests, python3-nose, python3-packaging, python3-dateutil, gnupg2"
+python3 setup.py bdist_rpm --requires="python3-qt5, python3-requests, python3-packaging, python3-dateutil, gnupg2"
 
 # return install instructions if build succeeds
 if [[ $? -eq 0 ]]; then
