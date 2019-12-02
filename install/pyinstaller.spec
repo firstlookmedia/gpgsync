@@ -45,7 +45,7 @@ if p == 'Darwin':
   app = BUNDLE(
       coll,
       name='GPG Sync.app',
-      icon='install/gpgsync.icns',
+      icon='gpgsync.icns',
       bundle_identifier='org.firstlook.gpgsync',
       info_plist={
           'LSUIElement': True,

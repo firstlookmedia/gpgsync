@@ -4,23 +4,20 @@
 
 Install Xcode from the Mac App Store. Once it's installed, run it for the first time to set it up. Also, run this to make sure command line tools are installed: `xcode-select --install`. And finally, open Xcode, go to Preferences > Locations, and make sure under Command Line Tools you select an installed version from the dropdown. (This is required for installing Qt5.)
 
-Download and install Python 3.7.4 from https://www.python.org/downloads/release/python-374/. I downloaded `python-3.7.4-macosx10.9.pkg`.
+Download and install Python 3.8.0 from https://www.python.org/downloads/release/python-380/. I downloaded `python-3.8.0-macosx10.9.pkg`.
 
-Install Qt 5.13.0 for macOS from https://www.qt.io/offline-installers. I downloaded `qt-opensource-mac-x64-5.13.0.dmg`. In the installer, you can skip making an account, and all you need is `Qt` > `Qt 5.13.0` > `macOS`.
+Install Qt 5.13.2 for macOS from https://www.qt.io/offline-installers. I downloaded `qt-opensource-mac-x64-5.13.2.dmg`. In the installer, you can skip making an account, and all you need is `Qt` > `Qt 5.13.2` > `macOS`. (The Qt installer has not been notarized yet, so if you're running macOS Catalina, it will take a very long time to open the first time and you'll see an error. To get past it you'll need to right-click on the dmg file, choose Open, and when you see the popup saying the software can't be authenticated, click Open again.)
 
-Now install some python dependencies with pip (note, there's issues building a .app if you install this in a virtualenv):
+If you don't have it already, install pipenv (`pip3 install --user pipenv`). Then install dependencies:
 
 ```sh
-pip3 install -r install/requirements.txt
-pip3 install -r install/requirements-tests.txt
-pip3 install -r install/requirements-macos.txt
-pip3 install -r install/requirements-package.txt
+pipenv install --dev
 ```
 
 Here's how you run GPG Sync, without having to build an app bundle:
 
 ```sh
-./dev_scripts/gpgsync
+pipenv run ./dev_scripts/gpgsync
 ```
 
 Here's how you build an app bundle:
@@ -42,24 +39,20 @@ Now you should have `dist/GPGSync-{version}.pkg`.
 
 ## Windows
 
-Download Python 3.7.4, 32-bit (x86) from https://www.python.org/downloads/release/python-374/. I downloaded `python-3.7.4.exe`. When installing it, make sure to check the "Add Python 3.7 to PATH" checkbox on the first page of the installer.
+Download Python 3.8.0, 32-bit (x86) from https://www.python.org/downloads/release/python-380/. I downloaded `python-3.8.0.exe`. When installing it, make sure to check the "Add Python 3.8 to PATH" checkbox on the first page of the installer.
 
-Open a command prompt, cd to the gpgsync folder, and install dependencies with pip:
+Open a command prompt and cd to the gpgsync folder. If you don't have it already, install pipenv (`pip install pipenv`). Then install dependencies:
 
 ```cmd
-pip install -r install\requirements.txt
-pip install -r install\requirements-tests.txt
-pip install -r install\requirements-windows.txt
-# skip this if you're building for distribution
-pip install -r install\requirements-package.txt
+pipenv install --dev
 ```
 
-Install the Qt 5.13.0 from https://www.qt.io/download-open-source/. I downloaded `qt-opensource-windows-x86-5.13.0.exe`. In the installer, you can skip making an account, and all you need `Qt` > `Qt 5.13.0` > `MSVC 2017 32-bit`.
+Install the Qt 5.13.2 from https://www.qt.io/offline-installers. I downloaded `qt-opensource-windows-x86-5.13.2.exe`. In the installer, you can skip making an account, and all you need `Qt` > `Qt 5.13.2` > `MSVC 2017 32-bit`.
 
 After that you can launch GPG Sync during development with:
 
 ```
-python dev_scripts\gpg_sync --debug
+pipenv run python dev_scripts\gpgsync -v
 ```
 
 ### To make a .exe:
@@ -232,7 +225,7 @@ Note that one of the tests will fail if you don't have SOCKS5 proxy server liste
 
 # Release instructions
 
-This section documents the release process. Unless you're a GPG Developer developer making a release, you'll probably never need to follow it.
+This section documents the release process. Unless you're a GPG Sync developer making a release, you'll probably never need to follow it.
 
 ## Changelog, version, and signed git tag
 
@@ -240,8 +233,8 @@ Before making a release, all of these should be complete:
 
 - `share/version` should have the correct version
 - `install/gpgsync.nsi` should have the correct version, for the Windows installer
-- CHANGELOG.md should be updated to include a list of all major changes since the last release
-- There must be a PGP-signed git tag for the version, e.g. for GPG Sync 0.3.4, the tag must be v0.3.4
+- `CHANGELOG.md` should be updated to include a list of all major changes since the last release
+- There must be a PGP-signed git tag for the version, e.g. for GPG Sync 0.3.4, the tag must be `v0.3.4`
 
 The first step for the macOS and Windows releases is the same:
 
@@ -264,7 +257,7 @@ To make a macOS release, go to macOS build machine:
 
 - Build machine should be running macOS 10.13
 - Verify and checkout the git tag for this release
-- Run `./install.build_app.sh`; this will make `dist/GPG Sync.app` but won't codesign it
+- Run `./install/build_app.sh`; this will make `dist/GPG Sync.app` but won't codesign it
 - Copy `dist/GPG Sync.app` from the build machine to the `dist` folder on the release machine
 
 Then move to the macOS release machine:
@@ -277,8 +270,6 @@ Then move to the macOS release machine:
 - Notarize it: `xcrun altool --notarize-app --primary-bundle-id "org.firstlook.gpgsync" -u "micah@firstlook.org" -p "@keychain:gpgsync-notarize" --file GPGSync-$VERSION.pkg`
 - Wait for it to get approved, check status with: `xcrun altool --notarization-history 0 -u "micah@firstlook.org" -p "@keychain:gpgsync-notarize"`
 - After it's approved, staple the ticket: `xcrun stapler staple GPGSync-$VERSION.pkg`
-
-- Copy `GPGSync-$VERSION.pkg` to developer machine
 
 This process ends up with the final file:
 
@@ -305,5 +296,5 @@ gpgsync-$VERSION-setup.exe
 
 To publish the release:
 
-- Create a new release on GitHub, put the changelog in the description of the release, and the Windows and macOS installers
+- Create a new release on GitHub, put the changelog in the description of the release, and upload the Windows and macOS installers
 - Make a PR to [homebrew-cask](https://github.com/homebrew/homebrew-cask) to update the macOS version
