@@ -1,5 +1,11 @@
 # GPG Sync Changelog
 
+## 0.3.5
+
+* Notarized package in macOS
+* Better linux packaging
+* Better python dependency management
+
 ## 0.3.4
 
 * Uses modern keyserver, keys.openpgp.org, by default
