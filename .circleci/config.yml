@@ -1,13 +1,7 @@
-workflows:
-  version: 2
-  test:
-    jobs:
-      - test
-version: 2
+version: 2.1
+
 jobs:
   test:
-    environment:
-      FLM_ENV: "test"
     docker:
       - image: circleci/python:3.7-buster
     steps:
@@ -17,7 +11,7 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y gnupg2 python3-pyqt5 tor xvfb
       - run:
-          name: start tor service
+          name: Start tor service
           command: sudo service tor start
       - checkout
       - run:
@@ -26,3 +20,9 @@ jobs:
       - run:
           name: Run tests
           command: pipenv run xvfb-run -s "-screen 0 1280x1024x24" python setup.py pytest
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - test
