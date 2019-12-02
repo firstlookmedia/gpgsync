@@ -99,7 +99,7 @@ workflows:
   test:
     jobs:
       - test
-  - build-tags:
+  build-tags:
     jobs:
       - build-ubuntu-bionic:
           filters:
