@@ -4,9 +4,9 @@
 
 Install Xcode from the Mac App Store. Once it's installed, run it for the first time to set it up. Also, run this to make sure command line tools are installed: `xcode-select --install`. And finally, open Xcode, go to Preferences > Locations, and make sure under Command Line Tools you select an installed version from the dropdown. (This is required for installing Qt5.)
 
-Download and install Python 3.7.4 from https://www.python.org/downloads/release/python-374/. I downloaded `python-3.7.4-macosx10.9.pkg`.
+Download and install Python 3.8.0 from https://www.python.org/downloads/release/python-380/. I downloaded `python-3.8.0-macosx10.9.pkg`.
 
-Install Qt 5.13.0 for macOS from https://www.qt.io/offline-installers. I downloaded `qt-opensource-mac-x64-5.13.0.dmg`. In the installer, you can skip making an account, and all you need is `Qt` > `Qt 5.13.0` > `macOS`.
+Install Qt 5.13.2 for macOS from https://www.qt.io/offline-installers. I downloaded `qt-opensource-mac-x64-5.13.2.dmg`. In the installer, you can skip making an account, and all you need is `Qt` > `Qt 5.13.2` > `macOS`. (The Qt installer has not been notarized yet, so if you're running macOS Catalina, it will take a very long time to open the first time and you'll see an error. To get past it you'll need to right-click on the dmg file, choose Open, and when you see the popup saying the software can't be authenticated, click Open again.)
 
 If you don't have it already, install pipenv (`pip3 install --user pipenv`). Then install dependencies:
 
@@ -39,7 +39,7 @@ Now you should have `dist/GPGSync-{version}.pkg`.
 
 ## Windows
 
-Download Python 3.7.4, 32-bit (x86) from https://www.python.org/downloads/release/python-374/. I downloaded `python-3.7.4.exe`. When installing it, make sure to check the "Add Python 3.7 to PATH" checkbox on the first page of the installer.
+Download Python 3.8.0, 32-bit (x86) from https://www.python.org/downloads/release/python-380/. I downloaded `python-3.8.0.exe`. When installing it, make sure to check the "Add Python 3.8 to PATH" checkbox on the first page of the installer.
 
 Open a command prompt and cd to the gpgsync folder. If you don't have it already, install pipenv (`pip install pipenv`). Then install dependencies:
 
@@ -47,7 +47,7 @@ Open a command prompt and cd to the gpgsync folder. If you don't have it already
 pipenv install --dev
 ```
 
-Install the Qt 5.13.0 from https://www.qt.io/offline-installers. I downloaded `qt-opensource-windows-x86-5.13.0.exe`. In the installer, you can skip making an account, and all you need `Qt` > `Qt 5.13.0` > `MSVC 2017 32-bit`.
+Install the Qt 5.13.2 from https://www.qt.io/offline-installers. I downloaded `qt-opensource-windows-x86-5.13.2.exe`. In the installer, you can skip making an account, and all you need `Qt` > `Qt 5.13.2` > `MSVC 2017 32-bit`.
 
 After that you can launch GPG Sync during development with:
 
