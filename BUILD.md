@@ -23,7 +23,7 @@ pipenv run ./dev_scripts/gpgsync
 Here's how you build an app bundle:
 
 ```sh
-install/build_app.sh
+pipenv run install/build_app.sh
 ```
 
 Now you should have `dist/GPG Sync.app`.
@@ -31,8 +31,8 @@ Now you should have `dist/GPG Sync.app`.
 To build a .pkg for distribution:
 
 ```sh
-install/build_pkg.sh # this requires codesigning certificates
-install/build_pkg.sh --without-codesign # this doesn't
+pipenv run install/build_pkg.sh # this requires codesigning certificates
+pipenv run install/build_pkg.sh --without-codesign # this doesn't
 ```
 
 Now you should have `dist/GPGSync-{version}.pkg`.
@@ -44,7 +44,7 @@ Download Python 3.8.0, 32-bit (x86) from https://www.python.org/downloads/releas
 Open a command prompt and cd to the gpgsync folder. If you don't have it already, install pipenv (`pip install pipenv`). Then install dependencies:
 
 ```cmd
-pipenv install --dev
+python -m pipenv install --dev
 ```
 
 Install the Qt 5.13.2 from https://www.qt.io/offline-installers. I downloaded `qt-opensource-windows-x86-5.13.2.exe`. In the installer, you can skip making an account, and all you need `Qt` > `Qt 5.13.2` > `MSVC 2017 32-bit`.
@@ -52,7 +52,7 @@ Install the Qt 5.13.2 from https://www.qt.io/offline-installers. I downloaded `q
 After that you can launch GPG Sync during development with:
 
 ```
-pipenv run python dev_scripts\gpgsync -v
+python -m pipenv run python dev_scripts\gpgsync -v
 ```
 
 ### To make a .exe:
@@ -257,7 +257,7 @@ To make a macOS release, go to macOS build machine:
 
 - Build machine should be running macOS 10.13
 - Verify and checkout the git tag for this release
-- Run `./install/build_app.sh`; this will make `dist/GPG Sync.app` but won't codesign it
+- Run `pipenv run ./install/build_app.sh`; this will make `dist/GPG Sync.app` but won't codesign it
 - Copy `dist/GPG Sync.app` from the build machine to the `dist` folder on the release machine
 
 Then move to the macOS release machine:
@@ -266,7 +266,7 @@ Then move to the macOS release machine:
   - Apple-trusted `Developer ID Application: FIRST LOOK PRODUCTIONS, INC.` and `Developer ID Installer: FIRST LOOK PRODUCTIONS, INC.` code-signing certificates installed
   - An app-specific Apple ID password saved in the login keychain called `gpgsync-notarize`
 - Verify and checkout the git tag for this release
-- Run `./install/build_pkg.sh`; this will make a codesigned installer package called `dist/GPGSync-$VERSION.pkg`
+- Run `pipenv run ./install/build_pkg.sh`; this will make a codesigned installer package called `dist/GPGSync-$VERSION.pkg`
 - Notarize it: `xcrun altool --notarize-app --primary-bundle-id "org.firstlook.gpgsync" -u "micah@firstlook.org" -p "@keychain:gpgsync-notarize" --file GPGSync-$VERSION.pkg`
 - Wait for it to get approved, check status with: `xcrun altool --notarization-history 0 -u "micah@firstlook.org" -p "@keychain:gpgsync-notarize"`
 - After it's approved, staple the ticket: `xcrun stapler staple GPGSync-$VERSION.pkg`
