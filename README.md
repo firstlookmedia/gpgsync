@@ -17,7 +17,11 @@ single trusted person in your organization. As a member of an organization,
 you install GPG Sync on your computer, configure it with a few settings,
 and then you forget about it. GPG Sync takes care of everything else.
 
-GPG Sync complies with the in-progress [Distributing OpenPGP Keys with Signed Keylist Subscriptions](https://datatracker.ietf.org/doc/draft-mccain-keylist/)
+A single keylist is used by GPG Sync to keep keys in sync. This keylist
+must follow a specific JSON format, see [our example](https://github.com/firstlookmedia/gpgsync/blob/develop/example-keylist/keylist.json)
+for guidance on creating one for your organization if it does not already
+exist. GPG Sync complies with the in-progress
+[Distributing OpenPGP Keys with Signed Keylist Subscriptions](https://datatracker.ietf.org/doc/draft-mccain-keylist/)
 internet standard draft.
 
 ## Learn More
