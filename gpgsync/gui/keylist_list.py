@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import queue
 import time
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PySide2 import QtCore, QtWidgets, QtGui
 
 from .keylist_dialog import KeylistDialog
 from .threads import RefresherThread
@@ -28,7 +28,7 @@ from ..keylist import Keylist, RefresherMessageQueue
 
 
 class KeylistList(QtWidgets.QWidget):
-    refresh = QtCore.pyqtSignal()
+    refresh = QtCore.Signal()
 
     def __init__(self, common):
         super(KeylistList, self).__init__()
@@ -76,7 +76,7 @@ class KeylistList(QtWidgets.QWidget):
 
 
 class KeylistWidget(QtWidgets.QWidget):
-    refresh = QtCore.pyqtSignal()
+    refresh = QtCore.Signal()
 
     def __init__(self, common, keylist):
         super(KeylistWidget, self).__init__()
