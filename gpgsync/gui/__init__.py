@@ -19,6 +19,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import sys
+import platform
+import os
 from PySide2 import QtCore, QtWidgets
 
 from .gui_common import GuiCommon
@@ -33,6 +35,10 @@ class Application(QtWidgets.QApplication):
 
 
 def main(common):
+    # Required for macOS Big Sur: https://stackoverflow.com/a/64878899
+    if platform.system() == "Darwin":
+        os.environ["QT_MAC_WANTS_LAYER"] = "1"
+
     # Create the Qt app
     app = Application(common.os)
 
