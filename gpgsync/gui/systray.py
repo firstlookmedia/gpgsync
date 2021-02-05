@@ -19,16 +19,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import queue
-from PyQt5 import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets
 
 
 class SysTray(QtWidgets.QSystemTrayIcon):
-    show_signal = QtCore.pyqtSignal()
-    sync_now_signal = QtCore.pyqtSignal(bool)
-    check_updates_now_signal = QtCore.pyqtSignal(bool)
-    show_settings_window_signal = QtCore.pyqtSignal(bool)
-    quit_signal = QtCore.pyqtSignal()
-    clicked_applet_signal = QtCore.pyqtSignal()
+    show_signal = QtCore.Signal()
+    sync_now_signal = QtCore.Signal(bool)
+    check_updates_now_signal = QtCore.Signal(bool)
+    show_settings_window_signal = QtCore.Signal(bool)
+    quit_signal = QtCore.Signal()
+    clicked_applet_signal = QtCore.Signal()
 
     def __init__(self, common, version):
         super(SysTray, self).__init__(common.gui.systray_icon)
