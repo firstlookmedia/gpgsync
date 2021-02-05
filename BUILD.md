@@ -2,7 +2,7 @@
 
 ## Mac OS X
 
-Download and install Python 3.9.1 from https://www.python.org/downloads/release/python-391/. I downloaded `python-3.9.1-macosx10.9.pkg`.
+Download and install Python 3.8.7 from https://www.python.org/downloads/release/python-387/. I downloaded `python-3.8.7-macosx10.9.pkg`.
 
 Make sure you have `poetry` installed (`pip3 install --user poetry`), then install dependencies:
 

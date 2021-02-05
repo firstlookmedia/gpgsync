@@ -11,13 +11,12 @@ PySide2 = "^5.15.2"
 PySocks = "^1.7.1"
 python-dateutil = "^2.8.1"
 requests = "^2.25.1"
-pywin32 = {version = "^300", platform = "win32"}
-pyobjc-core = {version = "7.0.1", platform = "darwin"}
-pyobjc-framework-cocoa = {version = "7.0.1", platform = "darwin"}
-pyobjc-framework-quartz = {version = "7.0.1", platform = "darwin"}
 packaging = "^20.9"
+pywin32 = {version = "^300", platform = "win32"}
 
 [tool.poetry.dev-dependencies]
+pip = "^21.0.1"
+pyinstaller = "^4.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
