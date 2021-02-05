@@ -19,7 +19,7 @@ poetry run ./dev_scripts/gpgsync
 Here's how you build an app bundle:
 
 ```sh
-poetry run install/build_app.sh
+poetry run install/build_mac.py
 ```
 
 Now you should have `dist/GPG Sync.app`.
@@ -27,11 +27,10 @@ Now you should have `dist/GPG Sync.app`.
 To build a .pkg for distribution:
 
 ```sh
-poetry run install/build_pkg.sh # this requires codesigning certificates
-poetry run install/build_pkg.sh --without-codesign # this doesn't
+poetry run install/build_mac.py --with-codesign
 ```
 
-Now you should have `dist/GPGSync-{version}.pkg`.
+Now you should have `dist/GPGSync.pkg`.
 
 ## Windows
 
