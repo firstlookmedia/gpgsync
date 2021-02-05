@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "gpgsync"
+version = "0.3.6"
+description = "GPG Sync is designed to let users always have up-to-date public keys for other members of their organization"
+authors = ["Micah Lee <micah.lee@firstlook.media>"]
+license = "GPLv3"
+
+[tool.poetry.dependencies]
+python = ">=3.8,<3.10"
+PySide2 = "^5.15.2"
+PySocks = "^1.7.1"
+python-dateutil = "^2.8.1"
+requests = "^2.25.1"
+packaging = "^20.9"
+pywin32 = {version = "^300", platform = "win32"}
+
+[tool.poetry.dev-dependencies]
+pip = "^21.0.1"
+pyinstaller = "^4.2"
+pytest = "^6.2.2"
+pytest-runner = "^5.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

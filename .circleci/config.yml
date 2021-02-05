@@ -4,23 +4,23 @@ jobs:
 
   test:
     docker:
-      - image: circleci/python:3.7-buster
+      - image: circleci/python:3.8-buster
     steps:
       - run:
           name: Install dependencies
           command: |
             sudo apt-get update
-            sudo apt-get install -y gnupg2 python3-pyqt5 tor xvfb
+            sudo apt-get install -y gnupg2 tor xvfb
       - run:
           name: Start tor service
           command: sudo service tor start
       - checkout
       - run:
           name: Install python dependencies
-          command: pipenv install --dev
+          command: poetry install
       - run:
           name: Run tests
-          command: pipenv run xvfb-run -s "-screen 0 1280x1024x24" python setup.py pytest
+          command: poetry run xvfb-run -s "-screen 0 1280x1024x24" python setup.py pytest
 
   build-ubuntu-bionic:
     docker:

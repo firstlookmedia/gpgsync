@@ -2,7 +2,6 @@
 import pytest
 import sys
 import tempfile
-from PyQt5 import QtWidgets
 
 from gpgsync.common import Common
 from gpgsync.gnupg import GnuPG
@@ -10,9 +9,6 @@ from gpgsync.keylist import Keylist, LegacyKeylist
 
 # Set GPG Sync to dev mode, so it looks for resources in the right place
 sys.gpgsync_dev = True
-
-# Setup Qt
-qt_app = QtWidgets.QApplication(sys.argv)
 
 
 # Generate a Common singleton

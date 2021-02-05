@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import queue
 import datetime
-from PyQt5 import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets
 from ..keylist import Keylist, ValidatorMessageQueue, RefresherMessageQueue
 
 
@@ -30,8 +30,8 @@ class AuthorityKeyValidatorThread(QtCore.QThread):
     fetch the authority key from a keyserver. But in order to do that, we need
     to first download the keylist, to learn what keyserver we should be using.
     """
-    alert_error = QtCore.pyqtSignal(str, str)
-    success = QtCore.pyqtSignal()
+    alert_error = QtCore.Signal(str, str)
+    success = QtCore.Signal()
 
     def __init__(self, common, fingerprint, url, use_modern_keyserver, keyserver, use_proxy, proxy_host, proxy_port):
         super(AuthorityKeyValidatorThread, self).__init__()
@@ -80,7 +80,7 @@ class AuthorityKeyValidatorThread(QtCore.QThread):
 
 
 class RefresherThread(QtCore.QThread):
-    finished = QtCore.pyqtSignal()
+    finished = QtCore.Signal()
 
     def __init__(self, common, keylist, force=False):
         super(RefresherThread, self).__init__()

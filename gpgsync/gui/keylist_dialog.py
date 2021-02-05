@@ -19,14 +19,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import queue
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PySide2 import QtCore, QtWidgets, QtGui
 
 from ..keylist import Keylist, ValidatorMessageQueue
 from .threads import AuthorityKeyValidatorThread
 
 
 class KeylistDialog(QtWidgets.QDialog):
-    saved = QtCore.pyqtSignal(Keylist)
+    saved = QtCore.Signal(Keylist)
 
     def __init__(self, common, keylist=None):
         super(KeylistDialog, self).__init__()
@@ -201,7 +201,7 @@ class KeylistDialog(QtWidgets.QDialog):
 
 
 class ValidatorDialog(QtWidgets.QDialog):
-    success = QtCore.pyqtSignal()
+    success = QtCore.Signal()
 
     def __init__(self, common, fingerprint, url, use_modern_keyserver, keyserver, use_proxy, proxy_host, proxy_port):
         super(ValidatorDialog, self).__init__()
