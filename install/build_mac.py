@@ -56,8 +56,9 @@ def main():
     print("○ Deleting old build and dist")
     if os.path.exists(build_path):
         shutil.rmtree(build_path)
-    if os.path.exists(dist_root_path):
-        shutil.rmtree(dist_root_path)
+    if os.path.exists(dist_path):
+        shutil.rmtree(dist_path)
+    os.makedirs(dist_root_path)
 
     print("○ Building app bundle")
     run(["pyinstaller", os.path.join(root, "install/pyinstaller.spec"), "--clean"])
