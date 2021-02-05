@@ -2,7 +2,7 @@
 import pytest
 import sys
 import tempfile
-from PyQt5 import QtWidgets
+from PySide2 import QtWidgets
 
 from gpgsync.common import Common
 from gpgsync.gnupg import GnuPG
