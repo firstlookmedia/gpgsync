@@ -17,6 +17,8 @@ pywin32 = {version = "^300", platform = "win32"}
 [tool.poetry.dev-dependencies]
 pip = "^21.0.1"
 pyinstaller = "^4.2"
+pytest = "^6.2.2"
+pytest-runner = "^5.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
