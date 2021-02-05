@@ -40,92 +40,42 @@ Download Python 3.8.7, 32-bit (x86) from https://www.python.org/downloads/releas
 Open a command prompt and cd to the gpgsync folder. If you don't have it already, install poetry (`pip install poetry`). Then install dependencies:
 
 ```cmd
-python -m poetry install
+poetry install
 ```
 
 After that you can launch GPG Sync during development with:
 
-```
-python -m poetry run python dev_scripts\gpgsync -v
+```cmd
+poetry run python dev_scripts\gpgsync -v
 ```
 
 ### To make a .exe:
 
 These instructions include adding folders to the path in Windows. To do this, go to Start and type "advanced system settings", and open "View advanced system settings" in the Control Panel. Click Environment Variables. Under "System variables" double-click on Path. From there you can add and remove folders that are available in the PATH.
 
-Download and install the 32-bit [Visual C++ Redistributable for Visual Studio 2015](https://www.microsoft.com/en-us/download/details.aspx?id=48145). I downloaded `vc_redist.x86.exe`.
-
-Download and install the standalone [Windows 10 SDK](https://dev.windows.com/en-us/downloads/windows-10-sdk). Note that you may not need this if you already have Visual Studio.
+Download and install the standalone [Windows 10 SDK](https://developer.microsoft.com/en-US/windows/downloads/windows-10-sdk/).
 
 Add the following directories to the path:
 
-* `C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x86`
-* `C:\Program Files (x86)\Windows Kits\10\Redist\10.0.18362.0\ucrt\DLLs\x86`
-* `C:\Users\user\AppData\Local\Programs\Python\Python37-32\Lib\site-packages\PyQt5\Qt\bin`
+* `C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x86`
+* `C:\Program Files (x86)\Windows Kits\10\Redist\10.0.19041.0\ucrt\DLLs\x86`
 
-Finally, open a command prompt, cd into the gpgsync directory, and type: `pyinstaller install\pyinstaller.spec`. `gpgsync.exe` and all of their supporting files will get created inside the `dist` folder.
+Finally, open a command prompt, cd into the gpgsync directory, and run:
 
-### If you want the .exe to not get falsely flagged as malicious by anti-virus software
-
-GPG Sync uses PyInstaller to turn the python source code into Windows executable `.exe` file. Apparently, malware developers also use PyInstaller, and some anti-virus vendors have included snippets of PyInstaller code in their virus definitions. To avoid this, you have to compile the Windows PyInstaller bootloader yourself instead of using the pre-compiled one that comes with PyInstaller.
-
-(If you don't care about this, you can install PyInstaller with `pip install PyInstaller==3.4`.)
-
-Here's how to compile the PyInstaller bootloader:
-
-Download and install [Microsoft Build Tools for Visual Studio 2017](https://www.visualstudio.com/downloads/#build-tools-for-visual-studio-2017). I downloaded `vs_buildtools.exe`. In the installer, check the box next to "Visual C++ build tools". Click "Individual components", and under "Compilers, build tools and runtimes", check "Windows Universal CRT SDK". Then click install. When installation is done, you may have to reboot your computer.
-
-Then, enable the 32-bit Visual C++ Toolset on the Command Line like this:
-
-```
-cd "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build"
-vcvars32.bat
+```cmd
+poetry run pyinstaller install\pyinstaller.spec
 ```
 
-Make sure you have a new enough `setuptools`:
-
-```
-pip install --upgrade setuptools
-```
-
-Now make sure you don't have PyInstaller installed from pip:
-
-```
-pip uninstall PyInstaller
-rmdir C:\Users\user\AppData\Local\Programs\Python\Python37-32\Lib\site-packages\PyInstaller /S
-```
-
-Change to a folder where you keep source code, and clone the PyInstaller git repo:
-
-```
-git clone https://github.com/pyinstaller/pyinstaller.git
-git checkout v4.2
-```
-
-And compile the bootloader, following [these instructions](https://pythonhosted.org/PyInstaller/bootloader-building.html). To compile, run this:
-
-```
-cd bootloader
-python waf distclean all --target-arch=32bit --msvc_targets=x86
-```
-
-Finally, install the PyInstaller module into your local site-packages:
-
-```
-cd ..
-python setup.py install
-```
-
-Now the next time you use PyInstaller to build GPG Sync, the `.exe` file should not be flagged as malicious by anti-virus.
+`gpgsync.exe` and all of their supporting files will get created inside the `dist` folder.
 
 ### To build the installer:
 
-* Go to http://nsis.sourceforge.net/Download and download the latest NSIS. I downloaded `nsis-3.04-setup.exe`.
+* Go to http://nsis.sourceforge.net/Download and download the latest NSIS. I downloaded `nsis-3.06.1-setup.exe`.
 * Add `C:\Program Files (x86)\NSIS` to the path.
 
 Now install the Processes NSIS plugin.
 
-* Go to https://nsis.sourceforge.io/NsProcess_plugin and download NsProcess. I donwnloaded `nsProcess_1_6.7z` (with sha256 hash `fc19fc66a5219a233570fafd5daeb0c9b85387b379f6df5ac8898159a57c5944`)
+* Go to https://nsis.sourceforge.io/NsProcess_plugin and download NsProcess. I downloaded `nsProcess_1_6.7z` (with sha256 hash `fc19fc66a5219a233570fafd5daeb0c9b85387b379f6df5ac8898159a57c5944`)
 * Decompress it. You will probably need [7-Zip](https://www.7-zip.org/)
 * Copy `nsProcess_1.6/Plugin/*.dll` to `C:\Program Files (x86)\NSIS\Plugins\x86-ansi`
 * Copy `nsProcess_1.6/Include/ncProcess.nsh` to `C:\Program Files (x86)\NSIS\Include`
@@ -137,7 +87,11 @@ If you want to sign binaries with Authenticode:
 
 Note that you must have a codesigning certificate installed in order to use the `install\build_exe.bat` script, because it codesigns `gpgsync.exe`, `uninstall.exe`, and `gpgsync-setup.exe`.
 
-Open a command prompt, cd to the gpgsync directory, and type: `install\build_exe.bat`
+Open a command prompt, cd to the gpgsync directory, and run:
+
+```cmd
+poetry run install\build_exe.bat
+```
 
 This will prompt you to codesign three binaries and execute one unsigned binary. When you're done clicking through everything you will have `dist\gpgsync-setup.exe`.
 
