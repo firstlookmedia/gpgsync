@@ -35,15 +35,13 @@ Now you should have `dist/GPGSync-{version}.pkg`.
 
 ## Windows
 
-Download Python 3.8.0, 32-bit (x86) from https://www.python.org/downloads/release/python-380/. I downloaded `python-3.8.0.exe`. When installing it, make sure to check the "Add Python 3.8 to PATH" checkbox on the first page of the installer.
+Download Python 3.8.7, 32-bit (x86) from https://www.python.org/downloads/release/python-387/. I downloaded `python-3.8.7.exe`. When installing it, make sure to check the "Add Python 3.8 to PATH" checkbox on the first page of the installer.
 
 Open a command prompt and cd to the gpgsync folder. If you don't have it already, install poetry (`pip install poetry`). Then install dependencies:
 
 ```cmd
 python -m poetry install
 ```
-
-Install the Qt 5.13.2 from https://www.qt.io/offline-installers. I downloaded `qt-opensource-windows-x86-5.13.2.exe`. In the installer, you can skip making an account, and all you need `Qt` > `Qt 5.13.2` > `MSVC 2017 32-bit`.
 
 After that you can launch GPG Sync during development with:
 
@@ -87,7 +85,7 @@ vcvars32.bat
 Make sure you have a new enough `setuptools`:
 
 ```
-pip install setuptools==40.6.3
+pip install --upgrade setuptools
 ```
 
 Now make sure you don't have PyInstaller installed from pip:
@@ -101,25 +99,7 @@ Change to a folder where you keep source code, and clone the PyInstaller git rep
 
 ```
 git clone https://github.com/pyinstaller/pyinstaller.git
-```
-
-To verify the git tag, you first need the signing key's PGP key, which means you need `gpg`. If you installed git from git-scm.com, you can run this from Git Bash:
-
-```
-gpg --keyserver hkps://keyserver.ubuntu.com:443 --recv-key 0xD4AD8B9C167B757C4F08E8777B752811BF773B65
-```
-
-And now verify the tag:
-
-```
-cd pyinstaller
-git tag -v v3.4
-```
-
-It should say `Good signature from "Hartmut Goebel <h.goebel@goebel-consult.de>`. If it verified successfully, checkout the tag:
-
-```
-git checkout v3.4
+git checkout v4.2
 ```
 
 And compile the bootloader, following [these instructions](https://pythonhosted.org/PyInstaller/bootloader-building.html). To compile, run this:
