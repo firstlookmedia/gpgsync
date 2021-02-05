@@ -149,14 +149,14 @@ This will prompt you to codesign three binaries and execute one unsigned binary.
 Install dependencies:
 
 ```sh
-sudo apt install -y python3-pyqt5 python3-pytest python3-pytest-runner python3-stdeb python3-requests python3-socks python3-packaging python3-dateutil gnupg2
+sudo apt install -y python-all dh-python python3-pytest python3-pytest-runner python3-stdeb python3-pyside2.qtcore python3-pyside2.qtwidgets python3-pyside2.qtgui python3-requests python3-socks python3-packaging python3-dateutil gnupg2
 ```
 
 Make and install a .deb:
 
 ```sh
 ./install/build_deb.sh
-sudo dpkg -i deb_dist/gpgsync_*.deb
+sudo apt install deb_dist/gpgsync_*.deb
 ```
 
 *Fedora*
@@ -164,14 +164,14 @@ sudo dpkg -i deb_dist/gpgsync_*.deb
 Install dependencies:
 
 ```sh
-sudo dnf install -y rpm-build python3-qt5 python3-requests python3-pytest-runner python3-packaging python3-dateutil gnupg2
+sudo dnf install -y rpm-build python3-pytest-runner python3-pyside2 python3-requests python3-packaging python3-dateutil gnupg2
 ```
 
 Make and install a .rpm:
 
 ```sh
 ./install/build_rpm.sh
-sudo dnf install dist/gpgsync_*.rpm
+sudo dnf install dist/gpgsync-*-1.noarch.rpm
 ```
 
 ## Alternatively utilize Docker to build the relevant debian/rpm
