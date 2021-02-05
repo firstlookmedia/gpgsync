@@ -58,7 +58,6 @@ def main():
         shutil.rmtree(build_path)
     if os.path.exists(dist_path):
         shutil.rmtree(dist_path)
-    os.makedirs(dist_root_path)
 
     print("○ Building app bundle")
     run(["pyinstaller", os.path.join(root, "install/pyinstaller.spec"), "--clean"])
@@ -86,6 +85,9 @@ def main():
         ):
             codesign(path, entitlements_plist_path, identity_name_application)
         print(f"○ Signed app bundle: {app_path}")
+
+        os.makedirs(os.path.join(dist_root_path, "Applications"))
+        shutil.move(app_path, os.path.join(dist_root_path, "Applications"))
 
         run(
             [
