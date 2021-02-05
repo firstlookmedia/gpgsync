@@ -114,6 +114,9 @@ def main():
             pkg_path
         ])
 
+        shutil.rmtree(os.path.join(dist_root_path))
+        os.remove(component_pkg_path)
+
         print(f"○ Finished building package: {pkg_path}")
 
     else:
