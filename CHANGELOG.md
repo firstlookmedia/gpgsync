@@ -1,5 +1,10 @@
 # GPG Sync Changelog
 
+## 0.3.6
+
+* Support macOS Big Sur
+* Switch dependencies to PySide2, poetry
+
 ## 0.3.5
 
 * Notarized package in macOS
