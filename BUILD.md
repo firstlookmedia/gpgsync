@@ -48,6 +48,47 @@ After that you can launch GPG Sync during development with:
 poetry run python dev_scripts\gpgsync -v
 ```
 
+### Compiling PyInstaller
+
+GPG Sync uses PyInstaller to turn the python source code into Windows executable `.exe` file. Malware developers also use PyInstaller, and some anti-virus vendors have included snippets of PyInstaller code in their virus definitions. To avoid this, you have to compile the Windows PyInstaller bootloader yourself instead of using the pre-compiled one that comes with PyInstaller.
+
+Here's how to compile the PyInstaller bootloader:
+
+Download and install [Microsoft Build Tools for Visual Studio 2019](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2019). I downloaded `vs_buildtools.exe`. In the installer, check the box next to "Visual C++ build tools". Click "Individual components", and under "Compilers, build tools and runtimes", check "Windows Universal CRT SDK". Then click install. When installation is done, you may have to reboot your computer.
+
+Then, enable the 32-bit Visual C++ Toolset on the Command Line like this:
+
+```
+cd "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build"
+vcvars32.bat
+```
+
+Change to a folder where you keep source code, and clone the PyInstaller git repo:
+
+```
+git clone https://github.com/pyinstaller/pyinstaller.git
+git checkout v4.2
+```
+
+And compile the bootloader, following [these instructions](https://pythonhosted.org/PyInstaller/bootloader-building.html). To compile, run this:
+
+```
+cd bootloader
+python waf distclean all --target-arch=32bit --msvc_targets=x86
+```
+
+Finally, install the PyInstaller module into your virtual environment:
+
+```
+cd ..\..\gpgsync
+poetry shell
+cd ..\pyinstaller
+python setup.py install
+exit
+```
+
+Now the next time you use PyInstaller to build GPG Sync, the `.exe` file should not be flagged as malicious by anti-virus.
+
 ### To make a .exe:
 
 These instructions include adding folders to the path in Windows. To do this, go to Start and type "advanced system settings", and open "View advanced system settings" in the Control Panel. Click Environment Variables. Under "System variables" double-click on Path. From there you can add and remove folders that are available in the PATH.
