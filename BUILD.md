@@ -59,7 +59,7 @@ Download and install [Microsoft Build Tools for Visual Studio 2019](https://visu
 Then, enable the 32-bit Visual C++ Toolset on the Command Line like this:
 
 ```
-cd "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build"
+cd "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build"
 vcvars32.bat
 ```
 
@@ -130,7 +130,7 @@ Note that you must have a codesigning certificate installed in order to use the 
 Open a command prompt, cd to the gpgsync directory, and run:
 
 ```cmd
-poetry run install\build_exe.bat
+install\build_exe.bat
 ```
 
 This will prompt you to codesign three binaries and execute one unsigned binary. When you're done clicking through everything you will have `dist\gpgsync-setup.exe`.
