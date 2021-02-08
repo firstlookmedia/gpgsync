@@ -130,7 +130,7 @@ Note that you must have a codesigning certificate installed in order to use the 
 Open a command prompt, cd to the gpgsync directory, and run:
 
 ```cmd
-install\build_exe.bat
+poetry run install\build_exe.bat
 ```
 
 This will prompt you to codesign three binaries and execute one unsigned binary. When you're done clicking through everything you will have `dist\gpgsync-setup.exe`.
